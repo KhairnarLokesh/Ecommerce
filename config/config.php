@@ -73,3 +73,14 @@ defined('SESSION_LIFETIME') or define('SESSION_LIFETIME', 86400 * 7); // 7 days
 
 // Demo OTP Configuration (Disabled by default in production; enabled in dev/test)
 defined('DEMO_OTP_ENABLED') or define('DEMO_OTP_ENABLED', (getenv('DEMO_OTP_ENABLED') !== false ? filter_var(getenv('DEMO_OTP_ENABLED'), FILTER_VALIDATE_BOOLEAN) : (APP_ENV !== 'production')));
+
+// Transactional SMTP Email Delivery (for sending real OTPs and notifications)
+defined('SMTP_ENABLED') or define('SMTP_ENABLED', (getenv('SMTP_ENABLED') !== false ? filter_var(getenv('SMTP_ENABLED'), FILTER_VALIDATE_BOOLEAN) : false));
+defined('SMTP_HOST') or define('SMTP_HOST', getenv('SMTP_HOST') ?: ''); // e.g., 'smtp.gmail.com' or 'mail.kalikaenterprises.com'
+defined('SMTP_PORT') or define('SMTP_PORT', (int)(getenv('SMTP_PORT') ?: 587)); // 587 (TLS) or 465 (SSL)
+defined('SMTP_SECURE') or define('SMTP_SECURE', getenv('SMTP_SECURE') ?: 'tls'); // 'tls' or 'ssl'
+defined('SMTP_USER') or define('SMTP_USER', getenv('SMTP_USER') ?: ''); // e.g., 'your-email@gmail.com'
+defined('SMTP_PASS') or define('SMTP_PASS', getenv('SMTP_PASS') ?: ''); // e.g., Google App Password (16 characters)
+defined('SMTP_FROM_EMAIL') or define('SMTP_FROM_EMAIL', getenv('SMTP_FROM_EMAIL') ?: '');
+defined('SMTP_FROM_NAME') or define('SMTP_FROM_NAME', getenv('SMTP_FROM_NAME') ?: 'Kalika Enterprises');
+

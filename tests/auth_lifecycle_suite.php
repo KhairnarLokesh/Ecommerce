@@ -356,6 +356,12 @@ run_test("Recovery: Production Rule (Demo mode disabled if APP_ENV === 'producti
     return true; // Config rule verified
 });
 
+run_test("Recovery: Mailer Module & Email Privacy Masking", function() {
+    require_once __DIR__ . '/../includes/mailer.php';
+    $masked = mask_email('deepakpawar4312@gmail.com');
+    return function_exists('send_otp_email') && function_exists('send_smtp_mail') && str_starts_with($masked, 'd*') && str_ends_with($masked, '2@gmail.com');
+});
+
 // =====================================================================
 // 5. CUSTOMER DATA ISOLATION & IDOR TESTS
 // =====================================================================

@@ -155,9 +155,9 @@ This file tracks the implementation milestones across all 11 phases of the proje
 ---
 
 ### [ ] Phase 11 (Optional) – Post-Launch Improvements
-- **Status**: Deferred (Post-Launch)
+- **Status**: In Progress (Email OTP Live)
 - **Items**:
   - [ ] Order notification emails via SMTP
-  - [ ] Direct Email OTP integration
+  - [x] Direct Email OTP integration via SMTP mailer (`includes/mailer.php`)
   - [ ] Low-stock administrative email alerts
   - [ ] Sales & territory reporting

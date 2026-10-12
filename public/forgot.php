@@ -11,6 +11,7 @@ require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/csrf.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/mailer.php';
 
 require_guest();
 
@@ -75,11 +76,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                         ");
                         $insertStmt->execute([$userId, $otpHash]);
 
+                        // Attempt Real Email Delivery via SMTP if configured
+                        $emailSent = false;
+                        $userEmail = !empty($user['email']) ? trim($user['email']) : '';
+                        $userName = !empty($user['name']) ? trim($user['name']) : 'Retailer Partner';
+
+                        if (!empty($userEmail) && filter_var($userEmail, FILTER_VALIDATE_EMAIL)) {
+                            if (is_smtp_configured()) {
+                                $mailResult = send_otp_email($userEmail, $userName, $rawOtp);
+                                $emailSent = $mailResult['success'];
+                                if (!$emailSent) {
+                                    error_log("Failed to send OTP email: " . $mailResult['message']);
+                                }
+                            }
+                        }
+
                         // Demo Mode vs Production Rule:
-                        // Only store raw OTP in session for display if DEMO_OTP_ENABLED is active
                         $isDemoEnabled = defined('DEMO_OTP_ENABLED') && DEMO_OTP_ENABLED;
 
-                        $_SESSION['demo_otp_display'] = $isDemoEnabled ? $rawOtp : null;
+                        $_SESSION['otp_delivery_channel'] = $emailSent ? 'email' : 'demo';
+                        $_SESSION['otp_masked_destination'] = !empty($userEmail) ? mask_email($userEmail) : '';
+                        // Display demo OTP on-screen only in demo mode OR if SMTP is not configured
+                        $_SESSION['demo_otp_display'] = ($isDemoEnabled || !$emailSent) ? $rawOtp : null;
                         $_SESSION['demo_otp_identifier'] = $identifier;
                         $_SESSION['demo_otp_user_id'] = $userId;
                         $_SESSION['demo_otp_expires'] = time() + 300; // 5 mins
@@ -217,6 +235,8 @@ require_once __DIR__ . '/../includes/header.php';
 
 $demoOtpCode = $_SESSION['demo_otp_display'] ?? null;
 $demoTarget  = $_SESSION['demo_otp_identifier'] ?? '';
+$deliveryChannel = $_SESSION['otp_delivery_channel'] ?? 'demo';
+$maskedDest = $_SESSION['otp_masked_destination'] ?? '';
 $isDemoMode  = defined('DEMO_OTP_ENABLED') && DEMO_OTP_ENABLED;
 ?>
 
@@ -230,6 +250,16 @@ $isDemoMode  = defined('DEMO_OTP_ENABLED') && DEMO_OTP_ENABLED;
                 <h1 class="auth-form-card__title">Verify 6-Digit Code</h1>
                 <p class="auth-form-card__sub">Verification requested for <strong><?= e($demoTarget ?: 'your account') ?></strong></p>
 
+                <?php if ($deliveryChannel === 'email' && !empty($maskedDest)): ?>
+                    <div style="background: #ECFDF5; border: 1px solid #A7F3D0; border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 20px; font-size: 13.5px; color: #065F46; line-height: 1.5; display: flex; align-items: flex-start; gap: 12px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0; margin-top: 2px;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                        <div>
+                            <strong>OTP Sent via Email!</strong><br>
+                            A 6-digit verification code has been dispatched to your registered email <strong><?= e($maskedDest) ?></strong>. Please check your inbox and spam folder.
+                        </div>
+                    </div>
+                <?php endif; ?>
+
                 <?php if ($isDemoMode && !empty($demoOtpCode)): ?>
                     <!-- FREE DEMO OTP NOTIFICATION DISPLAY BOX -->
                     <div class="otp-demo-box">
@@ -237,10 +267,10 @@ $isDemoMode  = defined('DEMO_OTP_ENABLED') && DEMO_OTP_ENABLED;
                         <div class="otp-demo-box__code"><?= e($demoOtpCode) ?></div>
                         <div class="otp-demo-box__note">
                             Valid for 5 minutes &bull; Single-use verification.<br>
-                            <em>(Development / Demo Mode: Displayed on-screen without requiring third-party SMS gateway).</em>
+                            <em>(<?= $deliveryChannel === 'email' ? 'Email sent via SMTP &bull; Also displayed on-screen for development convenience' : 'Development / Demo Mode: Displayed on-screen without requiring third-party SMS/email gateway' ?>).</em>
                         </div>
                     </div>
-                <?php else: ?>
+                <?php elseif ($deliveryChannel !== 'email'): ?>
                     <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 20px; font-size: 13px; color: var(--text-color); line-height: 1.4;">
                         <strong>Code Dispatched:</strong> A 6-digit single-use OTP has been dispatched to your registered contact channel. Please enter it below.
                     </div>

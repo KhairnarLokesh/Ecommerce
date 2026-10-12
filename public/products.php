@@ -136,6 +136,12 @@ require_once __DIR__ . '/../includes/header.php';
         </p>
     </div>
 
+    <?php if (!$pdo && !empty($GLOBALS['db_connection_error'])): ?>
+        <div style="background:#fee2e2; border:1px solid #ef4444; color:#991b1b; padding:12px 16px; margin-bottom:20px; border-radius:6px; font-size:13px; font-family: monospace;">
+            <strong>Database Connection Diagnostic:</strong> <?= htmlspecialchars($GLOBALS['db_connection_error']) ?>
+        </div>
+    <?php endif; ?>
+
     <!-- Mobile Filter Bar (Visible <= 900px) -->
     <div class="mobile-filter-bar">
         <div>

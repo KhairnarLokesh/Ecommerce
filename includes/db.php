@@ -49,6 +49,24 @@ function get_db_connection(bool $throwOnError = false): ?PDO
         $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
     }
 
+    // Enable SSL transport for cloud hosts (e.g. TiDB Cloud / Aiven)
+    if (defined('DB_HOST') && (str_contains(DB_HOST, 'tidbcloud.com') || str_contains(DB_HOST, 'aivencloud.com'))) {
+        $caPaths = [
+            '/etc/pki/tls/certs/ca-bundle.crt',
+            '/etc/ssl/certs/ca-certificates.crt',
+            '/etc/ssl/cert.pem',
+        ];
+        foreach ($caPaths as $ca) {
+            if (file_exists($ca)) {
+                $options[PDO::MYSQL_ATTR_SSL_CA] = $ca;
+                break;
+            }
+        }
+        if (!isset($options[PDO::MYSQL_ATTR_SSL_CA]) && defined('PDO::MYSQL_ATTR_SSL_CA')) {
+            $options[PDO::MYSQL_ATTR_SSL_CA] = true;
+        }
+    }
+
     try {
         $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
         return $pdo;

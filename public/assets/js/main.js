@@ -293,5 +293,66 @@ document.addEventListener('DOMContentLoaded', () => {
 
     startAutoplay();
   }
+
+  // --------------------------------------------------------------------------
+  // 9. AJAX Add to Cart Form Handler
+  // --------------------------------------------------------------------------
+  document.addEventListener('submit', (e) => {
+    const form = e.target.closest('.add-to-cart-form');
+    if (!form) return;
+
+    e.preventDefault();
+    const btn = form.querySelector('button[type="submit"]') || form.querySelector('.add-cart-btn') || form.querySelector('.btn-add-cart');
+    const originalContent = btn ? btn.innerHTML : '';
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<span style="font-weight:600;">Adding...</span>';
+    }
+
+    const formData = new FormData(form);
+    formData.append('ajax', '1');
+
+    fetch(form.action, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        'Accept': 'application/json'
+      }
+    })
+    .then(async (res) => {
+      if (!res.ok && res.status !== 403) {
+        throw new Error('HTTP ' + res.status);
+      }
+      return res.json();
+    })
+    .then((data) => {
+      if (data && data.success) {
+        if (btn) {
+          btn.innerHTML = '<span style="font-weight:700; color:#15803d;">✓ Added</span>';
+          setTimeout(() => {
+            btn.disabled = false;
+            btn.innerHTML = originalContent;
+          }, 1500);
+        }
+        if (data.cart && typeof data.cart.item_count !== 'undefined') {
+          window.updateCartBadge(data.cart.item_count);
+        }
+        const cartUrl = form.action.replace(/\/products\.php.*$/, '/cart.php');
+        window.showToast(data.message || 'Item added to wholesale cart!', 'View Cart', cartUrl);
+      } else {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = originalContent;
+        }
+        window.showToast((data && data.message) ? data.message : 'Could not add item to cart.', null, null, 4000);
+      }
+    })
+    .catch((err) => {
+      console.warn('AJAX cart add fallback to standard submit:', err);
+      // Fallback: submit standard form if AJAX or JSON parser fails
+      form.submit();
+    });
+  });
 });
 

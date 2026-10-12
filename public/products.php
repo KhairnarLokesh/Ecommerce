@@ -448,14 +448,14 @@ require_once __DIR__ . '/../includes/header.php';
                             <form action="<?= public_url('cart.php') ?>" method="POST" class="add-to-cart-form" style="margin-top: var(--space-12); border-top: 1px solid var(--border-color); padding-top: var(--space-12);">
                                 <?= csrf_field() ?>
                                 <input type="hidden" name="action" value="add">
-                                <input type="hidden" name="variant_id" class="selected-variant-id" value="<?= (int)$firstVariant['id'] ?>">
+                                <input type="hidden" name="variant_id_fallback" class="selected-variant-id" value="<?= (int)$firstVariant['id'] ?>">
 
                                 <!-- Pack / Bottle Size Selector -->
                                 <div style="margin-bottom: var(--space-8);">
                                     <label style="display: block; font-size: var(--font-size-12); color: var(--text-muted); margin-bottom: 2px;">
                                         Pack Size:
                                     </label>
-                                    <select class="form-control variant-selector" style="width: 100%; min-height: 36px; padding: 6px 8px; font-size: var(--font-size-14);" aria-label="Select size for <?= e($product['name']) ?>">
+                                    <select name="variant_id" class="form-control variant-selector" style="width: 100%; min-height: 36px; padding: 6px 8px; font-size: var(--font-size-14);" aria-label="Select size for <?= e($product['name']) ?>">
                                         <?php foreach ($product['variants'] as $idx => $variant): ?>
                                             <option value="<?= (int)$variant['id'] ?>"
                                                     data-price="<?= (float)$variant['price'] ?>"
@@ -601,14 +601,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const hiddenId = card.querySelector('.selected-variant-id');
         const addBtn = card.querySelector('.add-cart-btn');
 
-        if (selector && priceDisplay && stockBadge && hiddenId && addBtn) {
+        if (selector && priceDisplay && stockBadge && addBtn) {
             selector.addEventListener('change', () => {
                 const selectedOption = selector.options[selector.selectedIndex];
                 const price = parseFloat(selectedOption.getAttribute('data-price')) || 0;
                 const stock = selectedOption.getAttribute('data-stock');
                 const variantId = selectedOption.value;
 
-                hiddenId.value = variantId;
+                if (hiddenId) {
+                    hiddenId.value = variantId;
+                }
 
                 priceDisplay.textContent = '₹' + price.toLocaleString('en-IN', {
                     minimumFractionDigits: 2,

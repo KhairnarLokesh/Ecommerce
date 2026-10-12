@@ -20,9 +20,28 @@ if (session_status() === PHP_SESSION_NONE) {
 function csrf_token(): string
 {
     if (empty($_SESSION['_csrf_token'])) {
-        $_SESSION['_csrf_token'] = bin2hex(random_bytes(32));
+        if (!empty($_COOKIE['_csrf_token']) && strlen($_COOKIE['_csrf_token']) === 64) {
+            $_SESSION['_csrf_token'] = $_COOKIE['_csrf_token'];
+        } else {
+            $_SESSION['_csrf_token'] = bin2hex(random_bytes(32));
+        }
     }
-    return (string)$_SESSION['_csrf_token'];
+    $token = (string)$_SESSION['_csrf_token'];
+    if (empty($_COOKIE['_csrf_token']) || $_COOKIE['_csrf_token'] !== $token) {
+        $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+            || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+        if (!headers_sent()) {
+            setcookie('_csrf_token', $token, [
+                'expires'  => 0,
+                'path'     => '/',
+                'secure'   => $isHttps,
+                'httponly' => true,
+                'samesite' => 'Lax',
+            ]);
+        }
+        $_COOKIE['_csrf_token'] = $token;
+    }
+    return $token;
 }
 
 /**
@@ -48,11 +67,22 @@ function csrf_verify(?string $token = null): bool
         $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? null;
     }
 
-    if (empty($token) || empty($_SESSION['_csrf_token'])) {
+    if (empty($token) || !is_string($token)) {
         return false;
     }
 
-    return hash_equals((string)$_SESSION['_csrf_token'], (string)$token);
+    // 1. Check against active session token
+    if (!empty($_SESSION['_csrf_token']) && hash_equals((string)$_SESSION['_csrf_token'], (string)$token)) {
+        return true;
+    }
+
+    // 2. Check against double-submit cookie token (handles stateless serverless container switching)
+    if (!empty($_COOKIE['_csrf_token']) && hash_equals((string)$_COOKIE['_csrf_token'], (string)$token)) {
+        $_SESSION['_csrf_token'] = $token;
+        return true;
+    }
+
+    return false;
 }
 
 /**

@@ -165,8 +165,15 @@ function get_cart_count(): int
         }
     }
 
-    // Fallback to session guest cart
+    // Fallback to session guest cart or cookie
     $cart = $_SESSION['cart'] ?? [];
+    if (empty($cart) && !empty($_COOKIE['kalika_cart'])) {
+        $c = json_decode($_COOKIE['kalika_cart'], true);
+        if (is_array($c)) {
+            $cart = $c;
+        }
+    }
+
     $total = 0;
     foreach ($cart as $item) {
         $total += is_array($item) ? (int)($item['quantity'] ?? 0) : (int)$item;

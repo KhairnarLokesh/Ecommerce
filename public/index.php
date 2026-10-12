@@ -481,7 +481,7 @@ $brandLogosList = [
                         </div>
 
                         <!-- Action Button -->
-                        <form action="<?= public_url('cart.php') ?>" method="POST" style="margin-top: 10px;">
+                        <form action="<?= public_url('cart.php') ?>" method="POST" class="add-to-cart-form" style="margin-top: 10px;">
                             <?= csrf_field() ?>
                             <input type="hidden" name="action" value="add">
                             <input type="hidden" name="variant_id" value="<?= (int)$item['default_variant_id'] ?>">

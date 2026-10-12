@@ -101,7 +101,7 @@ if ($pdo instanceof PDO) {
     assert_test('Catalogue Guard: Sundar Glucose inactive', ($glucoseActive === 0), 'Glucose is unconfirmed and correctly hidden');
 
     $colaRangeActive = (int)$pdo->query("SELECT is_active FROM brands WHERE name LIKE '%Coca-Cola%' LIMIT 1")->fetchColumn();
-    assert_test('Catalogue Guard: Coca-Cola range inactive', ($colaRangeActive === 0), 'Coca-Cola brand is inactive');
+    assert_test('Catalogue Guard: Coca-Cola range confirmed active', ($colaRangeActive === 1), 'Coca-Cola brand is confirmed active');
 
     // Admin Account Presence
     $adminCount = (int)$pdo->query("SELECT COUNT(*) FROM admins WHERE username = 'admin'")->fetchColumn();

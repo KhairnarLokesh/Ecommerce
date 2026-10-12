@@ -37,9 +37,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $success = true;
 
     if ($action === 'add') {
-        $variantId = (int)($_POST['variant_id'] ?? 0);
+        $variantId = (int)($_POST['variant_id'] ?? $_POST['variant_id_select'] ?? 0);
         $qty = max(1, min(999, (int)($_POST['quantity'] ?? 1)));
-        if ($variantId > 0 && $pdo) {
+        if ($variantId > 0) {
             $added = cart_add($pdo, $variantId, $qty);
             if ($added) {
                 $msg = 'Item added to your wholesale cart.';
@@ -54,21 +54,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($action === 'update') {
         $variantId = (int)($_POST['variant_id'] ?? 0);
         $qty = (int)($_POST['quantity'] ?? 0);
-        if ($variantId > 0 && $pdo) {
+        if ($variantId > 0) {
             cart_update($pdo, $variantId, $qty);
             $msg = ($qty <= 0) ? 'Item removed from your cart.' : 'Cart quantity updated.';
         }
     } elseif ($action === 'remove') {
         $variantId = (int)($_POST['variant_id'] ?? 0);
-        if ($variantId > 0 && $pdo) {
+        if ($variantId > 0) {
             cart_remove($pdo, $variantId);
             $msg = 'Item removed from your cart.';
         }
     } elseif ($action === 'clear') {
-        if ($pdo) {
-            cart_clear($pdo);
-            $msg = 'Your cart has been cleared.';
-        }
+        cart_clear($pdo);
+        $msg = 'Your cart has been cleared.';
     }
 
     if ($isAjax) {

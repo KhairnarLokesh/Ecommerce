@@ -3,18 +3,21 @@
   "functions": {
     "api/index.php": {
       "runtime": "vercel-php@0.7.3",
-      "includeFiles": [
-        "config/**",
-        "includes/**",
-        "public/**",
-        "admin/**"
-      ]
+      "includeFiles": "{config,includes,public,admin}/**"
     }
   },
   "routes": [
     {
+      "src": "/public/assets/(.*)",
+      "dest": "/public/assets/$1"
+    },
+    {
       "src": "/assets/(.*)",
       "dest": "/public/assets/$1"
+    },
+    {
+      "src": "/public/uploads/(.*)",
+      "dest": "/public/uploads/$1"
     },
     {
       "src": "/uploads/(.*)",

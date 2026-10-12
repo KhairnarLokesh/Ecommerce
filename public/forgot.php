@@ -69,6 +69,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 error_log("OTP generation failed: " . $e->getMessage());
                 $error = 'A database error occurred. Please try again.';
             }
+        } else {
+            // Serverless Free Demo OTP generation
+            $rawOtp = str_pad((string)random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
+            $userId = (int)(substr($mobile, -4)) ?: 1001;
+
+            $_SESSION['demo_otp_display'] = $rawOtp;
+            $_SESSION['demo_otp_mobile']  = $mobile;
+            $_SESSION['demo_otp_user_id'] = $userId;
+            $_SESSION['demo_otp_expires'] = time() + 300; // 5 mins
+
+            $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+                || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+
+            if (!headers_sent()) {
+                setcookie('demo_otp', json_encode([
+                    'code' => $rawOtp,
+                    'mobile' => $mobile,
+                    'user_id' => $userId,
+                    'expires' => time() + 300
+                ]), [
+                    'expires'  => time() + 300,
+                    'path'     => '/',
+                    'secure'   => $isHttps,
+                    'httponly' => true,
+                    'samesite' => 'Lax'
+                ]);
+            }
+
+            redirect(public_url('forgot.php?step=verify'));
         }
     }
 }
@@ -80,13 +109,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     } else {
         $enteredOtp = trim($_POST['otp'] ?? '');
         $userId = $_SESSION['demo_otp_user_id'] ?? null;
+        if (empty($userId) && !empty($_COOKIE['demo_otp'])) {
+            $c = json_decode($_COOKIE['demo_otp'], true);
+            if (is_array($c) && !empty($c['user_id'])) {
+                $userId = (int)$c['user_id'];
+                $_SESSION['demo_otp_user_id'] = $userId;
+                $_SESSION['demo_otp_display'] = $c['code'] ?? '';
+                $_SESSION['demo_otp_mobile'] = $c['mobile'] ?? '';
+                $_SESSION['demo_otp_expires'] = $c['expires'] ?? (time() + 300);
+            }
+        }
 
         if (empty($enteredOtp) || !preg_match('/^\d{6}$/', $enteredOtp)) {
             $error = 'Please enter a valid 6-digit verification code.';
-        } elseif (!$userId || !$pdo) {
+        } elseif (!$userId) {
             $error = 'Your session has expired. Please enter your mobile number again.';
             $step = 'request';
-        } else {
+        } elseif ($pdo) {
             try {
                 // Fetch the latest active OTP record for this user
                 $otpStmt = $pdo->prepare("
@@ -128,6 +167,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                         $_SESSION['reset_authorized_user_id'] = $userId;
                         $_SESSION['reset_token'] = bin2hex(random_bytes(16));
 
+                        // Set signed cookie for serverless lambda continuity
+                        $resetCookie = auth_sign_reset($userId);
+                        $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+                            || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+                        if (!headers_sent()) {
+                            setcookie('kalika_reset', $resetCookie, [
+                                'expires'  => time() + 900,
+                                'path'     => '/',
+                                'secure'   => $isHttps,
+                                'httponly' => true,
+                                'samesite' => 'Lax'
+                            ]);
+                        }
+
                         // Clear demo OTP display session
                         unset($_SESSION['demo_otp_display'], $_SESSION['demo_otp_mobile'], $_SESSION['demo_otp_user_id'], $_SESSION['demo_otp_expires']);
 
@@ -141,6 +194,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             } catch (PDOException $e) {
                 error_log("OTP verification failed: " . $e->getMessage());
                 $error = 'Database error during verification. Please try again.';
+            }
+        } else {
+            // Serverless fallback verification
+            $savedOtp = $_SESSION['demo_otp_display'] ?? '';
+            $expires = $_SESSION['demo_otp_expires'] ?? 0;
+            if (empty($savedOtp) && !empty($_COOKIE['demo_otp'])) {
+                $c = json_decode($_COOKIE['demo_otp'], true);
+                if (is_array($c)) {
+                    $savedOtp = $c['code'] ?? '';
+                    $expires = $c['expires'] ?? 0;
+                }
+            }
+
+            if (time() > $expires) {
+                $error = 'Verification code has expired. Please request a new code.';
+                $step = 'request';
+            } elseif (!empty($savedOtp) && $savedOtp === $enteredOtp) {
+                $_SESSION['reset_authorized_user_id'] = $userId;
+                $_SESSION['reset_token'] = bin2hex(random_bytes(16));
+
+                // Set signed cookie for serverless lambda continuity
+                $resetCookie = auth_sign_reset($userId);
+                $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+                    || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+                if (!headers_sent()) {
+                    setcookie('kalika_reset', $resetCookie, [
+                        'expires'  => time() + 900,
+                        'path'     => '/',
+                        'secure'   => $isHttps,
+                        'httponly' => true,
+                        'samesite' => 'Lax'
+                    ]);
+                    setcookie('demo_otp', '', ['expires' => time() - 3600, 'path' => '/']);
+                }
+                unset($_SESSION['demo_otp_display'], $_SESSION['demo_otp_mobile'], $_SESSION['demo_otp_user_id'], $_SESSION['demo_otp_expires']);
+                set_flash('success', 'Mobile identity verified! Please create your new account password.');
+                redirect(public_url('reset.php'));
+            } else {
+                $error = 'Invalid verification code. Please check the 6-digit OTP displayed above.';
             }
         }
     }

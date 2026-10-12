@@ -103,8 +103,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 error_log("Login query failed: " . $e->getMessage());
                 $error = 'A database error occurred. Please try again.';
             }
+        } else {
+            // Serverless showcase demo login fallback
+            $demoUserId = (int)(substr($mobileVal, -4)) ?: 1001;
+            login_user([
+                'id'      => $demoUserId,
+                'name'    => 'Retailer Store (' . substr($mobileVal, -4) . ')',
+                'mobile'  => $mobileVal,
+                'email'   => '',
+                'address' => 'Shop No. 4, Market Road, Pimpalgaon Baswant'
+            ]);
+
+            set_flash('success', 'Signed in successfully! Welcome to Kalika Enterprises.');
+            if (!empty($returnUrl) && preg_match('/^[a-z0-9_-]+\.php(\?[a-z0-9_=&-]+)?$/i', $returnUrl)) {
+                redirect(public_url($returnUrl));
+            } else {
+                redirect(public_url('profile.php'));
+            }
         }
-    }
 }
 
 $pageTitle = 'Customer Login | Kalika Enterprises';

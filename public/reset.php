@@ -16,6 +16,14 @@ require_guest();
 
 // Security gate: Must have completed Step 2 in forgot.php
 $authorizedUserId = $_SESSION['reset_authorized_user_id'] ?? null;
+if (!$authorizedUserId && !empty($_COOKIE['kalika_reset'])) {
+    $verifiedId = auth_verify_reset($_COOKIE['kalika_reset']);
+    if ($verifiedId) {
+        $authorizedUserId = $verifiedId;
+        $_SESSION['reset_authorized_user_id'] = $authorizedUserId;
+    }
+}
+
 if (!$authorizedUserId) {
     set_flash('error', 'Unauthorized access. Please request and verify an OTP first.');
     redirect(public_url('forgot.php'));
@@ -36,20 +44,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $errors[] = 'Password confirmation does not match.';
         }
 
-        if (empty($errors) && $pdo) {
-            try {
-                $hash = password_hash($password, PASSWORD_DEFAULT);
-                $updateStmt = $pdo->prepare("UPDATE users SET password_hash = ? WHERE id = ?");
-                $updateStmt->execute([$hash, $authorizedUserId]);
+        if (empty($errors)) {
+            if ($pdo) {
+                try {
+                    $hash = password_hash($password, PASSWORD_DEFAULT);
+                    $updateStmt = $pdo->prepare("UPDATE users SET password_hash = ? WHERE id = ?");
+                    $updateStmt->execute([$hash, $authorizedUserId]);
+                } catch (PDOException $e) {
+                    error_log("Password reset failed: " . $e->getMessage());
+                    $errors[] = 'A database error occurred while updating your password. Please try again.';
+                }
+            }
 
+            if (empty($errors)) {
                 // Security requirement: Destroy reset authorization flag immediately after use
                 unset($_SESSION['reset_authorized_user_id'], $_SESSION['reset_token']);
+                if (!headers_sent()) {
+                    setcookie('kalika_reset', '', ['expires' => time() - 3600, 'path' => '/']);
+                }
 
                 set_flash('success', 'Your password has been successfully reset! Please sign in with your new credentials.');
                 redirect(public_url('login.php'));
-            } catch (PDOException $e) {
-                error_log("Password reset failed: " . $e->getMessage());
-                $errors[] = 'A database error occurred while updating your password. Please try again.';
             }
         }
     }

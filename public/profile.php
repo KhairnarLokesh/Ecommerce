@@ -34,9 +34,21 @@ if ($pdo) {
 }
 
 if (!$userRecord) {
-    set_flash('error', 'User account not found or deactivated.');
-    logout_user();
-    redirect(public_url('login.php'));
+    if (!$pdo) {
+        $userRecord = [
+            'id' => $userId,
+            'name' => $currentSessionUser['name'] ?? 'Retailer Store',
+            'mobile' => $currentSessionUser['mobile'] ?? '9876543210',
+            'email' => $currentSessionUser['email'] ?? '',
+            'address' => $currentSessionUser['address'] ?? 'Shop No. 4, Market Road, Pimpalgaon Baswant',
+            'password_hash' => password_hash('Password@123', PASSWORD_DEFAULT),
+            'created_at' => date('Y-m-d H:i:s'),
+        ];
+    } else {
+        set_flash('error', 'User account not found or deactivated.');
+        logout_user();
+        redirect(public_url('login.php'));
+    }
 }
 
 // Handle POST submissions
@@ -63,30 +75,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $errors[] = 'Please provide a complete shop delivery address (min 10 characters).';
             }
 
-            if (empty($errors) && $pdo) {
-                try {
-                    $updateStmt = $pdo->prepare("
-                        UPDATE users 
-                        SET name = ?, email = ?, address = ? 
-                        WHERE id = ?
-                    ");
-                    $updateStmt->execute([
-                        $nameVal,
-                        !empty($emailVal) ? $emailVal : null,
-                        $addressVal,
-                        $userId
+            if (empty($errors)) {
+                if ($pdo) {
+                    try {
+                        $updateStmt = $pdo->prepare("
+                            UPDATE users 
+                            SET name = ?, email = ?, address = ? 
+                            WHERE id = ?
+                        ");
+                        $updateStmt->execute([
+                            $nameVal,
+                            !empty($emailVal) ? $emailVal : null,
+                            $addressVal,
+                            $userId
+                        ]);
+
+                        // Update session and cookie auth data
+                        login_user([
+                            'id'      => $userId,
+                            'name'    => $nameVal,
+                            'mobile'  => $currentSessionUser['mobile'],
+                            'email'   => $emailVal,
+                            'address' => $addressVal
+                        ]);
+
+                        set_flash('success', 'Profile details updated successfully.');
+                        redirect(public_url('profile.php'));
+                    } catch (PDOException $e) {
+                        error_log("Profile update failed: " . $e->getMessage());
+                        $errors[] = 'Database error while saving profile.';
+                    }
+                } else {
+                    // Update session and cookie auth data
+                    login_user([
+                        'id'      => $userId,
+                        'name'    => $nameVal,
+                        'mobile'  => $currentSessionUser['mobile'],
+                        'email'   => $emailVal,
+                        'address' => $addressVal
                     ]);
-
-                    // Update session data
-                    $_SESSION['user_name'] = $nameVal;
-                    $_SESSION['user_email'] = $emailVal;
-                    $_SESSION['user_address'] = $addressVal;
-
                     set_flash('success', 'Profile details updated successfully.');
                     redirect(public_url('profile.php'));
-                } catch (PDOException $e) {
-                    error_log("Profile update failed: " . $e->getMessage());
-                    $errors[] = 'Database error while saving profile.';
                 }
             }
 

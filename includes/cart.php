@@ -405,9 +405,9 @@ function cart_clear(?PDO $pdo): void
 /**
  * Merge guest session cart into database cart on customer login.
  */
-function cart_merge_on_login(PDO $pdo, int $userId): void
+function cart_merge_on_login(?PDO $pdo, int $userId): void
 {
-    if (empty($_SESSION['cart']) || !is_array($_SESSION['cart'])) {
+    if (empty($_SESSION['cart']) || !is_array($_SESSION['cart']) || !$pdo) {
         return;
     }
 

@@ -70,9 +70,111 @@ if (session_status() === PHP_SESSION_NONE) {
  *
  * @return bool
  */
+/**
+ * Sign user payload with HMAC-SHA256 for stateless serverless auth continuity.
+ */
+function auth_sign_user(array $user): string
+{
+    $secret = defined('APP_KEY') ? APP_KEY : 'kalika_auth_secret_key_892348912';
+    $json = base64_encode(json_encode([
+        'id'      => $user['id'],
+        'name'    => $user['name'],
+        'mobile'  => $user['mobile'],
+        'email'   => $user['email'] ?? '',
+        'address' => $user['address'] ?? '',
+        'time'    => time(),
+    ]));
+    $sig = hash_hmac('sha256', $json, $secret);
+    return $json . '.' . $sig;
+}
+
+/**
+ * Verify and decode HMAC-signed user cookie.
+ */
+function auth_verify_user(string $token): ?array
+{
+    $parts = explode('.', $token);
+    if (count($parts) !== 2) {
+        return null;
+    }
+    [$json, $sig] = $parts;
+    $secret = defined('APP_KEY') ? APP_KEY : 'kalika_auth_secret_key_892348912';
+    if (!hash_equals(hash_hmac('sha256', $json, $secret), $sig)) {
+        return null;
+    }
+    $data = json_decode(base64_decode($json), true);
+    if (!is_array($data) || empty($data['id'])) {
+        return null;
+    }
+    if (!empty($data['time']) && (time() - $data['time'] > 86400 * 7)) {
+        return null;
+    }
+    return $data;
+}
+
+/**
+ * Sign password reset authorization token (valid for 15 minutes).
+ */
+function auth_sign_reset(int $userId): string
+{
+    $secret = defined('APP_KEY') ? APP_KEY : 'kalika_auth_secret_key_892348912';
+    $json = base64_encode(json_encode([
+        'user_id' => $userId,
+        'time'    => time(),
+    ]));
+    $sig = hash_hmac('sha256', $json, $secret);
+    return $json . '.' . $sig;
+}
+
+/**
+ * Verify HMAC-signed password reset token.
+ */
+function auth_verify_reset(string $token): ?int
+{
+    $parts = explode('.', $token);
+    if (count($parts) !== 2) {
+        return null;
+    }
+    [$json, $sig] = $parts;
+    $secret = defined('APP_KEY') ? APP_KEY : 'kalika_auth_secret_key_892348912';
+    if (!hash_equals(hash_hmac('sha256', $json, $secret), $sig)) {
+        return null;
+    }
+    $data = json_decode(base64_decode($json), true);
+    if (!is_array($data) || empty($data['user_id'])) {
+        return null;
+    }
+    // 15-minute validity window for resetting password
+    if (!empty($data['time']) && (time() - $data['time'] > 900)) {
+        return null;
+    }
+    return (int)$data['user_id'];
+}
+
+/**
+ * Check if a customer is currently authenticated.
+ *
+ * @return bool
+ */
 function is_logged_in(): bool
 {
-    return !empty($_SESSION['user_id']);
+    if (!empty($_SESSION['user_id'])) {
+        return true;
+    }
+
+    if (!empty($_COOKIE['kalika_auth'])) {
+        $recovered = auth_verify_user($_COOKIE['kalika_auth']);
+        if ($recovered) {
+            $_SESSION['user_id']      = $recovered['id'];
+            $_SESSION['user_name']    = $recovered['name'];
+            $_SESSION['user_mobile']  = $recovered['mobile'];
+            $_SESSION['user_email']   = $recovered['email'] ?? '';
+            $_SESSION['user_address'] = $recovered['address'] ?? '';
+            return true;
+        }
+    }
+
+    return false;
 }
 
 /**
@@ -101,12 +203,29 @@ function current_user(): ?array
  */
 function login_user(array $user): void
 {
-    session_regenerate_id(true);
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_regenerate_id(true);
+    }
     $_SESSION['user_id']      = $user['id'];
     $_SESSION['user_name']    = $user['name'];
     $_SESSION['user_mobile']  = $user['mobile'];
     $_SESSION['user_email']   = $user['email'] ?? '';
     $_SESSION['user_address'] = $user['address'] ?? '';
+
+    $token = auth_sign_user($user);
+    $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+
+    if (!headers_sent()) {
+        setcookie('kalika_auth', $token, [
+            'expires'  => time() + (86400 * 7),
+            'path'     => '/',
+            'secure'   => $isHttps,
+            'httponly' => true,
+            'samesite' => 'Lax'
+        ]);
+    }
+    $_COOKIE['kalika_auth'] = $token;
 }
 
 /**
@@ -122,7 +241,23 @@ function logout_user(): void
         $_SESSION['user_address'],
         $_SESSION['cart']
     );
-    session_regenerate_id(true);
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_regenerate_id(true);
+    }
+
+    $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+
+    if (!headers_sent()) {
+        setcookie('kalika_auth', '', [
+            'expires'  => time() - 3600,
+            'path'     => '/',
+            'secure'   => $isHttps,
+            'httponly' => true,
+            'samesite' => 'Lax'
+        ]);
+    }
+    unset($_COOKIE['kalika_auth']);
 }
 
 /**

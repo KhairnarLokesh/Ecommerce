@@ -107,7 +107,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $errors[] = 'A database error occurred during registration. Please try again.';
                 }
             } else {
-                $errors[] = 'Database connection error. Please try again later.';
+                // Serverless showcase demo registration (when remote MySQL is not yet configured)
+                $demoUserId = (int)(substr($mobileVal, -4)) ?: 1001;
+                login_user([
+                    'id'      => $demoUserId,
+                    'name'    => $nameVal,
+                    'mobile'  => $mobileVal,
+                    'email'   => $emailVal,
+                    'address' => $addressVal
+                ]);
+
+                // Merge guest cart items
+                cart_merge_on_login(null, $demoUserId);
+
+                set_flash('success', 'Account created successfully! Welcome to Kalika Enterprises wholesale distribution.');
+
+                if (!empty($returnUrl) && preg_match('/^[a-z0-9_-]+\.php(\?[a-z0-9_=&-]+)?$/i', $returnUrl)) {
+                    redirect(public_url($returnUrl));
+                } else {
+                    redirect(public_url('profile.php'));
+                }
             }
         }
     }

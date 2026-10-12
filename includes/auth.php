@@ -158,23 +158,56 @@ function auth_verify_reset(string $token): ?int
  */
 function is_logged_in(): bool
 {
-    if (!empty($_SESSION['user_id'])) {
-        return true;
-    }
+    $candidateId = $_SESSION['user_id'] ?? null;
 
-    if (!empty($_COOKIE['kalika_auth'])) {
+    if (!$candidateId && !empty($_COOKIE['kalika_auth'])) {
         $recovered = auth_verify_user($_COOKIE['kalika_auth']);
-        if ($recovered) {
-            $_SESSION['user_id']      = $recovered['id'];
+        if ($recovered && !empty($recovered['id'])) {
+            $candidateId = (int)$recovered['id'];
+            $_SESSION['user_id']      = $candidateId;
             $_SESSION['user_name']    = $recovered['name'];
             $_SESSION['user_mobile']  = $recovered['mobile'];
             $_SESSION['user_email']   = $recovered['email'] ?? '';
             $_SESSION['user_address'] = $recovered['address'] ?? '';
-            return true;
         }
     }
 
-    return false;
+    if (!$candidateId) {
+        return false;
+    }
+
+    // Verify against DB if DB connection is active
+    if (function_exists('get_db_connection')) {
+        $pdo = get_db_connection();
+        if ($pdo) {
+            static $validated = [];
+            if (!isset($validated[$candidateId])) {
+                try {
+                    $chk = $pdo->prepare("SELECT id, name, mobile, email, address, is_active FROM users WHERE id = ? LIMIT 1");
+                    $chk->execute([$candidateId]);
+                    $userRow = $chk->fetch();
+                    if ($userRow && (int)$userRow['is_active'] === 1) {
+                        $validated[$candidateId] = true;
+                        $_SESSION['user_name']    = $userRow['name'];
+                        $_SESSION['user_mobile']  = $userRow['mobile'];
+                        $_SESSION['user_email']   = $userRow['email'] ?? '';
+                        $_SESSION['user_address'] = $userRow['address'] ?? '';
+                    } else {
+                        // User does not exist or suspended in live DB: clean up immediately!
+                        $validated[$candidateId] = false;
+                        logout_user();
+                        return false;
+                    }
+                } catch (Exception $e) {
+                    // Fallback gracefully on query error
+                }
+            } elseif ($validated[$candidateId] === false) {
+                return false;
+            }
+        }
+    }
+
+    return true;
 }
 
 /**

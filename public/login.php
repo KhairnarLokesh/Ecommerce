@@ -13,7 +13,10 @@ require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/cart.php';
 
-require_guest();
+// Only redirect GET requests away if already authenticated; always allow POST to authenticate
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    require_guest();
+}
 
 $error = '';
 $loginVal = trim($_POST['login'] ?? $_POST['email'] ?? $_POST['mobile'] ?? '');

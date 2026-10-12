@@ -8,6 +8,7 @@ This document provides the Entity-Relationship (ER) model, table definitions, in
 
 ```mermaid
 erDiagram
+    CATEGORIES ||--o{ PRODUCTS : classifies
     BRANDS ||--o{ PRODUCTS : categorizes
     PRODUCTS ||--|{ PRODUCT_VARIANTS : has
     USERS ||--o{ ORDERS : places
@@ -17,6 +18,16 @@ erDiagram
     USERS ||--o{ PASSWORD_OTPS : requests
     ADMINS ||--o{ ORDERS : manages
     SETTINGS ||--|| ORDERS : configures
+
+    CATEGORIES {
+        int id PK
+        string name
+        string slug UK
+        text description
+        string image
+        tinyint is_active
+        int sort_order
+    }
 
     BRANDS {
         int id PK
@@ -28,6 +39,7 @@ erDiagram
 
     PRODUCTS {
         int id PK
+        int category_id FK
         int brand_id FK
         string name
         string slug UK

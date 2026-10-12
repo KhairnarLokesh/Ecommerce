@@ -26,12 +26,27 @@ $cartCount = get_cart_count();
 $user = current_user();
 
 $selectedBrand = trim($_GET['brand'] ?? '');
+$selectedCategory = trim($_GET['category'] ?? '');
 $searchQuery = trim($_GET['q'] ?? '');
 
-// Active verified brands with confirmed GST
+// Active verified categories and brands with confirmed GST
+$headerCategories = [];
 $headerBrands = [];
 if ($pdo) {
     try {
+        $catStmt = $pdo->query("
+            SELECT c.id, c.name, c.slug
+            FROM categories c
+            WHERE c.is_active = 1
+              AND EXISTS (
+                  SELECT 1 FROM products p
+                  INNER JOIN product_variants v ON v.product_id = p.id AND v.is_active = 1
+                  WHERE p.category_id = c.id AND p.is_active = 1 AND p.gst_percent IS NOT NULL
+              )
+            ORDER BY c.sort_order ASC, c.name ASC
+        ");
+        $headerCategories = $catStmt->fetchAll();
+
         $stmt = $pdo->query("
             SELECT b.id, b.name, b.slug
             FROM brands b
@@ -45,13 +60,19 @@ if ($pdo) {
         ");
         $headerBrands = $stmt->fetchAll();
     } catch (PDOException $e) {
+        $headerCategories = [];
         $headerBrands = [];
     }
 }
 
-if (empty($headerBrands) && function_exists('get_catalog_fallback')) {
+if (function_exists('get_catalog_fallback')) {
     $fallbackCatalog = get_catalog_fallback();
-    $headerBrands = $fallbackCatalog['brands'] ?? [];
+    if (empty($headerCategories)) {
+        $headerCategories = $fallbackCatalog['categories'] ?? [];
+    }
+    if (empty($headerBrands)) {
+        $headerBrands = $fallbackCatalog['brands'] ?? [];
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -222,9 +243,27 @@ if (empty($headerBrands) && function_exists('get_catalog_fallback')) {
                             Home
                         </a>
                         <a href="<?= public_url('products.php') ?>"
-                            class="nav-item <?= $currentPage === 'products' && empty($selectedBrand) ? 'active' : '' ?>">
+                            class="nav-item <?= $currentPage === 'products' && empty($selectedBrand) && empty($selectedCategory) ? 'active' : '' ?>">
                             All Products
                         </a>
+                        <div class="nav-item-dropdown-wrap">
+                            <a href="<?= public_url('products.php') ?>"
+                                class="nav-item <?= !empty($selectedCategory) ? 'active' : '' ?>">
+                                Categories
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5">
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
+                            </a>
+                            <div class="nav-dropdown-menu">
+                                <?php foreach ($headerCategories as $hc): ?>
+                                    <a href="<?= public_url('products.php?category=' . urlencode($hc['slug'])) ?>"
+                                        class="nav-dropdown-link <?= $selectedCategory === $hc['slug'] ? 'active' : '' ?>">
+                                        <?= e($hc['name']) ?>
+                                    </a>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
                         <div class="nav-item-dropdown-wrap">
                             <a href="<?= public_url('products.php') ?>"
                                 class="nav-item <?= !empty($selectedBrand) ? 'active' : '' ?>">
@@ -291,6 +330,16 @@ if (empty($headerBrands) && function_exists('get_catalog_fallback')) {
                     class="drawer-link-item <?= $currentPage === 'home' ? 'active' : '' ?>">Home</a>
                 <a href="<?= public_url('products.php') ?>"
                     class="drawer-link-item <?= $currentPage === 'products' ? 'active' : '' ?>">All Products</a>
+                <div
+                    style="padding: 12px 16px 4px; font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">
+                    Categories
+                </div>
+                <?php foreach ($headerCategories as $hc): ?>
+                    <a href="<?= public_url('products.php?category=' . urlencode($hc['slug'])) ?>" class="drawer-link-item"
+                        style="padding-left: 24px; font-size: 14px;">
+                        <?= e($hc['name']) ?>
+                    </a>
+                <?php endforeach; ?>
                 <div
                     style="padding: 12px 16px 4px; font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">
                     Brands

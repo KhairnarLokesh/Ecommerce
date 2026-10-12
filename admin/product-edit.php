@@ -34,10 +34,12 @@ if ($isEditing && $pdo) {
     $variants = $varStmt->fetchAll();
 }
 
-// Fetch active brands
+// Fetch active brands and categories
 $brands = [];
+$categories = [];
 if ($pdo) {
     $brands = $pdo->query("SELECT id, name FROM brands ORDER BY name ASC")->fetchAll();
+    $categories = $pdo->query("SELECT id, name FROM categories ORDER BY sort_order ASC, name ASC")->fetchAll();
 }
 
 // Handle Form Submissions
@@ -51,6 +53,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($formType === 'product') {
             $name = trim($_POST['name'] ?? '');
             $brandId = (int)($_POST['brand_id'] ?? 0);
+            $categoryId = (int)($_POST['category_id'] ?? 0);
+            $catParam = $categoryId > 0 ? $categoryId : null;
             $description = trim($_POST['description'] ?? '');
             $gstInput = trim($_POST['gst_percent'] ?? '');
             $isActive = isset($_POST['is_active']) ? 1 : 0;
@@ -119,18 +123,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($isEditing) {
                     $stmt = $pdo->prepare("
                         UPDATE products 
-                        SET brand_id = ?, name = ?, description = ?, image = ?, gst_percent = ?, is_active = ?
+                        SET brand_id = ?, category_id = ?, name = ?, description = ?, image = ?, gst_percent = ?, is_active = ?
                         WHERE id = ?
                     ");
-                    $stmt->execute([$brandId, $name, $description, $imageFilename, $gstPercent, $isActive, $productId]);
+                    $stmt->execute([$brandId, $catParam, $name, $description, $imageFilename, $gstPercent, $isActive, $productId]);
                     set_flash('success', "Product '{$name}' updated successfully.");
                     redirect(admin_url("product-edit.php?id={$productId}"));
                 } else {
                     $stmt = $pdo->prepare("
-                        INSERT INTO products (brand_id, name, description, image, gst_percent, is_active)
-                        VALUES (?, ?, ?, ?, ?, ?)
+                        INSERT INTO products (brand_id, category_id, name, description, image, gst_percent, is_active)
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
                     ");
-                    $stmt->execute([$brandId, $name, $description, $imageFilename, $gstPercent, $isActive]);
+                    $stmt->execute([$brandId, $catParam, $name, $description, $imageFilename, $gstPercent, $isActive]);
                     $newId = (int)$pdo->lastInsertId();
                     set_flash('success', "Product '{$name}' created! Now add at least one size variant below.");
                     redirect(admin_url("product-edit.php?id={$newId}"));
@@ -242,20 +246,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <input type="text" id="prod_name" name="name" class="form-control" value="<?= e($product['name'] ?? $_POST['name'] ?? '') ?>" required placeholder="e.g. Campa Cola, Euro Chips Masala">
             </div>
 
-            <!-- Brand Selection -->
-            <div class="form-group">
-                <label class="form-label" for="prod_brand">Brand *</label>
-                <select id="prod_brand" name="brand_id" class="form-control" required>
-                    <option value="">-- Select Brand --</option>
-                    <?php 
-                    $selectedBrand = (int)($product['brand_id'] ?? $_POST['brand_id'] ?? 0);
-                    foreach ($brands as $b): 
-                    ?>
-                        <option value="<?= (int)$b['id'] ?>" <?= $selectedBrand === (int)$b['id'] ? 'selected' : '' ?>>
-                            <?= e($b['name']) ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
+            <div class="grid grid-cols-2" style="gap: 1.5rem;">
+                <!-- Brand Selection -->
+                <div class="form-group">
+                    <label class="form-label" for="prod_brand">Brand *</label>
+                    <select id="prod_brand" name="brand_id" class="form-control" required>
+                        <option value="">-- Select Brand --</option>
+                        <?php 
+                        $selectedBrand = (int)($product['brand_id'] ?? $_POST['brand_id'] ?? 0);
+                        foreach ($brands as $b): 
+                        ?>
+                            <option value="<?= (int)$b['id'] ?>" <?= $selectedBrand === (int)$b['id'] ? 'selected' : '' ?>>
+                                <?= e($b['name']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <!-- Category Selection -->
+                <div class="form-group">
+                    <label class="form-label" for="prod_category">Category</label>
+                    <select id="prod_category" name="category_id" class="form-control">
+                        <option value="">-- Select Category (Optional) --</option>
+                        <?php 
+                        $selectedCategory = (int)($product['category_id'] ?? $_POST['category_id'] ?? 0);
+                        foreach ($categories as $c): 
+                        ?>
+                            <option value="<?= (int)$c['id'] ?>" <?= $selectedCategory === (int)$c['id'] ? 'selected' : '' ?>>
+                                <?= e($c['name']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
             </div>
         </div>
 

@@ -14,12 +14,32 @@ $pageDescription = 'Kalika Enterprises: Food and beverage distribution for Nipha
 
 require_once __DIR__ . '/../includes/header.php';
 
-// Fetch active brands with product count (confirmed brands with active products only)
+// Fetch active categories and active brands with product count
+$activeCategories = [];
 $activeBrands = [];
 $brandProducts = [];
 
 if ($pdo) {
     try {
+        // Categories query with featured product preview image
+        $catStmt = $pdo->query("
+            SELECT c.id, c.name, c.slug, c.description, COUNT(p.id) as product_count,
+                   (
+                       SELECT p2.image 
+                       FROM products p2 
+                       WHERE p2.category_id = c.id AND p2.is_active = 1 AND p2.image IS NOT NULL AND p2.image != ''
+                       ORDER BY p2.id ASC 
+                       LIMIT 1
+                   ) AS sample_image
+            FROM categories c
+            INNER JOIN products p ON p.category_id = c.id AND p.is_active = 1 AND p.gst_percent IS NOT NULL
+            INNER JOIN product_variants v ON v.product_id = p.id AND v.is_active = 1
+            WHERE c.is_active = 1
+            GROUP BY c.id, c.name, c.slug, c.description, c.sort_order
+            ORDER BY c.sort_order ASC, c.name ASC
+        ");
+        $activeCategories = $catStmt->fetchAll(PDO::FETCH_ASSOC);
+
         // Brands query with featured product preview image
         $stmt = $pdo->prepare("
             SELECT b.id, b.name, b.slug, COUNT(p.id) as product_count,
@@ -34,7 +54,7 @@ if ($pdo) {
             INNER JOIN products p ON p.brand_id = b.id AND p.is_active = 1 AND p.gst_percent IS NOT NULL
             INNER JOIN product_variants v ON v.product_id = p.id AND v.is_active = 1
             WHERE b.is_active = 1
-            GROUP BY b.id, b.name, b.slug
+            GROUP BY b.id, b.name, b.slug, b.sort_order
             ORDER BY b.sort_order ASC, b.name ASC
         ");
         $stmt->execute();
@@ -44,15 +64,17 @@ if ($pdo) {
         $prodStmt = $pdo->query("
             SELECT p.id, p.name, p.slug, p.image, p.gst_percent, 
                    b.id as brand_id, b.name as brand_name, b.slug as brand_slug,
+                   c.name as category_name, c.slug as category_slug,
                    MIN(v.price) as min_price,
                    MIN(v.id) as default_variant_id
             FROM products p
             INNER JOIN brands b ON b.id = p.brand_id
+            LEFT JOIN categories c ON c.id = p.category_id
             INNER JOIN product_variants v ON v.product_id = p.id AND v.is_active = 1
             WHERE p.is_active = 1 
               AND p.gst_percent IS NOT NULL 
               AND b.is_active = 1
-            GROUP BY p.id, p.name, p.slug, p.image, p.gst_percent, b.id, b.name, b.slug, b.sort_order
+            GROUP BY p.id, p.name, p.slug, p.image, p.gst_percent, b.id, b.name, b.slug, b.sort_order, c.name, c.slug
             ORDER BY b.sort_order ASC, p.name ASC
         ");
         while ($row = $prodStmt->fetch(PDO::FETCH_ASSOC)) {
@@ -63,18 +85,32 @@ if ($pdo) {
     }
 }
 
-if (empty($activeBrands) && function_exists('get_catalog_fallback')) {
+if ((empty($activeBrands) || empty($activeCategories)) && function_exists('get_catalog_fallback')) {
     $fallbackCatalog = get_catalog_fallback();
-    $activeBrands = $fallbackCatalog['brands'] ?? [];
-    foreach ($activeBrands as &$ab) {
-        foreach ($fallbackCatalog['products'] ?? [] as $fp) {
-            if ($fp['brand_id'] == $ab['id'] && !empty($fp['image'])) {
-                $ab['sample_image'] = $fp['image'];
-                break;
+    if (empty($activeCategories)) {
+        $activeCategories = $fallbackCatalog['categories'] ?? [];
+        foreach ($activeCategories as &$ac) {
+            foreach ($fallbackCatalog['products'] ?? [] as $fp) {
+                if (($fp['category_id'] ?? 0) == $ac['id'] && !empty($fp['image'])) {
+                    $ac['sample_image'] = $fp['image'];
+                    break;
+                }
             }
         }
+        unset($ac);
     }
-    unset($ab);
+    if (empty($activeBrands)) {
+        $activeBrands = $fallbackCatalog['brands'] ?? [];
+        foreach ($activeBrands as &$ab) {
+            foreach ($fallbackCatalog['products'] ?? [] as $fp) {
+                if ($fp['brand_id'] == $ab['id'] && !empty($fp['image'])) {
+                    $ab['sample_image'] = $fp['image'];
+                    break;
+                }
+            }
+        }
+        unset($ab);
+    }
 
     foreach ($fallbackCatalog['products'] ?? [] as $fp) {
         $minPrice = null;
@@ -169,8 +205,51 @@ $brandLogosList = [
 </section>
 
 <div class="container">
+    <!-- 2.5 Shop by Category Grid -->
+    <section class="landing-section" style="padding-top: var(--space-48);">
+        <div class="section-header">
+            <div>
+                <h2 class="section-title">Shop by Category</h2>
+                <p class="section-sub-copy">Direct distribution across cold drinks, fruit beverages, mineral water, biscuits &amp; savory snacks</p>
+            </div>
+            <a href="<?= public_url('products.php') ?>" class="section-link">
+                View All Categories
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: -1px; margin-left: 2px;"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </a>
+        </div>
+        <div class="brand-tiles-grid" style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));">
+            <?php foreach ($activeCategories as $cat): ?>
+                <a href="<?= public_url('products.php?category=' . urlencode($cat['slug'])) ?>" class="brand-tile-card">
+                    <div class="brand-tile-media" style="background: #ffffff; padding: 12px; display: flex; align-items: center; justify-content: center; height: 160px;">
+                        <?php if (!empty($cat['sample_image']) && file_exists(__DIR__ . '/uploads/products/' . $cat['sample_image'])): ?>
+                            <img 
+                                src="<?= public_url('uploads/products/' . rawurlencode($cat['sample_image'])) ?>" 
+                                alt="<?= e($cat['name']) ?>" 
+                                class="brand-tile-img"
+                                style="max-height: 130px; object-fit: contain;"
+                                loading="lazy"
+                            >
+                        <?php else: ?>
+                            <div class="brand-tile-icon-square" aria-hidden="true">
+                                <?= strtoupper(substr($cat['name'], 0, 1)) ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                    <div class="brand-tile-body">
+                        <div class="brand-tile-name" style="font-size: 15px; font-weight: 700; color: var(--color-navy);"><?= e($cat['name']) ?></div>
+                        <div class="brand-tile-count"><?= (int)$cat['product_count'] ?> Products In Stock</div>
+                        <span class="brand-tile-cta" style="margin-top: 6px;">
+                            Browse Category
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: -1px; margin-left: 2px;"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                        </span>
+                    </div>
+                </a>
+            <?php endforeach; ?>
+        </div>
+    </section>
+
     <!-- 3. Shop by Brand Grid (Clean White Cards) -->
-    <section class="landing-section">
+    <section class="landing-section" style="padding-top: var(--space-32);">
         <div class="section-header">
             <div>
                 <h2 class="section-title">Shop by Brand</h2>

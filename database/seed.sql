@@ -1,7 +1,6 @@
 -- =====================================================================
--- Kalika Enterprises - Seed Baseline Data
+-- Kalika Enterprises - Seed Baseline Data (Updated with 18 Catalogue Items & Categories)
 -- Engine: MySQL / MariaDB (utf8mb4)
--- Note: Admin passwords are NOT seeded here; use create_admin.php
 -- =====================================================================
 
 SET FOREIGN_KEY_CHECKS = 0;
@@ -9,105 +8,121 @@ SET FOREIGN_KEY_CHECKS = 0;
 TRUNCATE TABLE `product_variants`;
 TRUNCATE TABLE `products`;
 TRUNCATE TABLE `brands`;
-TRUNCATE TABLE `settings`;
+TRUNCATE TABLE `categories`;
 
--- 1. SEED BRANDS (7 Confirmed Brands)
+-- 1. SEED CATEGORIES
+INSERT INTO `categories` (`id`, `name`, `slug`, `description`, `image`, `is_active`, `sort_order`) VALUES
+(1, 'Cold Drinks & Soft Drinks', 'cold-drinks', 'Carbonated cola, lemon, orange, and spiced sodas', 'campa-cola.jpg', 1, 1),
+(2, 'Juices & Mango Drinks', 'juices', 'Thick mango fruit beverages and refreshing juices', 'maaza-mango.jpg', 1, 2),
+(3, 'Packaged Drinking Water', 'packaged-water', 'Pure, mineral-enriched packaged drinking water', 'bisleri-mineral-water.jpg', 1, 3),
+(4, 'Biscuits & Bakery', 'biscuits', 'Crispy tea-time Marie, chocolate Bourbon, and Coconut biscuits', 'sunder-marie.jpg', 1, 4),
+(5, 'Snacks & Chips', 'snacks', 'Savory Indian chatpata potato chips and wafers', 'euro-chips-masti-masala.jpg', 1, 5);
+
+-- 2. SEED BRANDS
 INSERT INTO `brands` (`id`, `name`, `slug`, `is_active`, `sort_order`) VALUES
 (1, 'Campa', 'campa', 1, 1),
-(2, 'Sundar Marie', 'sundar-marie', 1, 2),
-(3, 'Sundar Bourbon', 'sundar-bourbon', 1, 3),
-(4, 'Sundar Coconut', 'sundar-coconut', 1, 4),
-(5, 'Sundar Glucose', 'sundar-glucose', 0, 5), -- Inactive until GST confirmation
-(6, 'Euro Chips', 'euro-chips', 1, 6),
-(7, 'Coca-Cola Range', 'coca-cola-range', 0, 7); -- Inactive until confirmed specs
+(2, 'Coca-Cola Range', 'coca-cola-range', 1, 2),
+(3, 'PepsiCo Range', 'pepsico', 1, 3),
+(4, 'Bisleri', 'bisleri', 1, 4),
+(5, 'Oxycool', 'oxycool', 1, 5),
+(6, 'Sundar Biscuits', 'sundar-biscuits', 1, 6),
+(7, 'Euro Chips', 'euro-chips', 1, 7);
 
--- 2. SEED PRODUCTS (13 Products)
-INSERT INTO `products` (`id`, `brand_id`, `name`, `slug`, `image`, `description`, `gst_percent`, `is_active`) VALUES
--- Campa Range (GST 28% provided, verify)
-(1, 1, 'Campa Cola', 'campa-cola', NULL, 'Classic Indian cola cold drink with strong fizzy refreshment.', 28.00, 1),
-(2, 1, 'Campa Orange', 'campa-orange', NULL, 'Zesty sparkling orange fruit-flavored beverage.', 28.00, 1),
-(3, 1, 'Campa Jeera', 'campa-jeera', NULL, 'Digestive spiced jeera soda beverage.', 28.00, 1),
-(4, 1, 'Campa Lemon', 'campa-lemon', NULL, 'Crisp citrus clear lemon lime soda.', 28.00, 1),
+-- 3. SEED PRODUCTS (18 Products)
+INSERT INTO `products` (`id`, `brand_id`, `category_id`, `name`, `slug`, `image`, `description`, `gst_percent`, `is_active`) VALUES
+(1, 1, 1, 'Campa Cola', 'campa-cola', 'campa-cola.jpg', 'Classic Indian fizzy cola beverage with bold, refreshing carbonation.', 28.00, 1),
+(2, 1, 1, 'Campa Orange', 'campa-orange', 'campa-orange.jpg', 'Sparkling tangy orange fruit-flavoured carbonated beverage.', 28.00, 1),
+(3, 1, 1, 'Campa Jeera Up', 'campa-jeera', 'campa-jeera.jpg', 'Digestive spiced jeera masala carbonated refreshment soda.', 28.00, 1),
+(4, 1, 1, 'Campa Lemon', 'campa-lemon', 'campa-lemon.jpg', 'Crisp citrus lemon-lime carbonated soda drink.', 28.00, 1),
+(5, 2, 1, 'Thums Up Cola', 'thums-up-cola', 'thums-up-cola.jpg', 'Iconic strong fizzy cola beverage with intense taste and high carbonation.', 28.00, 1),
+(6, 2, 1, 'Sprite Lemon-Lime', 'sprite-lemon-lime', 'sprite-lemon-lime.jpg', 'Clean, crisp lemon-lime sparkling drink for instant refreshment.', 28.00, 1),
+(7, 2, 1, 'Fanta Orange', 'fanta-orange', 'fanta-orange.jpg', 'Vibrantly fruity, sweet and bubbly orange-flavoured carbonated soft drink.', 28.00, 1),
+(8, 2, 1, 'Limca Lemon Drink', 'limca-lemon', 'limca-lemon.jpg', 'Cloudy lemon-lime carbonated beverage with crisp citrusy punch.', 28.00, 1),
+(9, 2, 2, 'Maaza Mango Drink', 'maaza-mango', 'maaza-mango.jpg', 'Made with real Alphonso mango pulp for thick, rich mango indulgence.', 12.00, 1),
+(10, 3, 1, 'Mirinda Orange', 'mirinda-orange', 'mirinda-orange.jpg', 'Deliciously intense sparkling orange soda with vibrant fruity bubbles.', 28.00, 1),
+(11, 3, 1, '7UP Lemon-Lime', '7up-lemon-lime', '7up-lemon-lime.jpg', 'Clear, crisp bubbly lemon-lime soda with mood-lifting refreshment.', 28.00, 1),
+(12, 3, 2, 'Slice Mango Drink', 'slice-mango', 'slice-mango.jpg', 'Thick and tasty mango fruit drink crafted from handpicked mangoes.', 12.00, 1),
+(13, 4, 3, 'Bisleri Mineral Water', 'bisleri-mineral-water', 'bisleri-mineral-water.jpg', 'Pure, ozonated packaged drinking water enriched with vital minerals.', 18.00, 1),
+(14, 5, 3, 'Oxycool Mineral Water', 'oxycool-mineral-water', 'oxycool-mineral-water.jpg', 'Multi-stage purified packaged drinking water with essential minerals.', 18.00, 1),
+(15, 6, 4, 'Sunder Marie Biscuit', 'sunder-marie-biscuit', 'sunder-marie.jpg', 'Crispy, light golden-baked Marie Go Round tea-time biscuits.', 5.00, 1),
+(16, 6, 4, 'Sunder Bourbon Biscuit', 'sunder-bourbon-biscuit', 'sunder-bourbon.jpg', 'Rich chocolate cream filled crunchy Bourbon sandwich biscuits with sugar crystal topping.', 18.00, 1),
+(17, 6, 4, 'Sunder Coconut Biscuit', 'sunder-coconut-biscuit', 'sunder-coconut.jpg', 'Crunchy baked Super Coconut biscuits infused with aromatic roasted coconut flakes.', 18.00, 1),
+(18, 7, 5, 'Euro Chips Masti Masala', 'euro-chips-masti-masala', 'euro-chips-masti-masala.jpg', 'Crispy, thin-sliced potato chips generously dusted with spicy chatpata Indian masala.', 12.00, 1);
 
--- Sundar Range
-(5, 2, 'Sundar Marie', 'sundar-marie-biscuit', NULL, 'Crisp, light tea-time Marie biscuits.', 5.00, 1),
-(6, 3, 'Sundar Bourbon', 'sundar-bourbon-biscuit', NULL, 'Rich chocolate cream filled Bourbon sandwich biscuits.', 18.00, 1),
-(7, 4, 'Sundar Coconut', 'sundar-coconut-biscuit', NULL, 'Crunchy sweet baked biscuits infused with toasted coconut.', 18.00, 1),
-(8, 5, 'Sundar Glucose', 'sundar-glucose-biscuit', NULL, 'Classic energy glucose biscuits. (Seeded inactive: GST rate pending confirmation)', NULL, 0),
-
--- Euro Chips (GST 12% provided, verify)
-(9, 6, 'Euro Chips Salted', 'euro-chips-salted', NULL, 'Classic thin cut lightly salted crispy potato chips.', 12.00, 1),
-(10, 6, 'Euro Chips Masala', 'euro-chips-masala', NULL, 'Spicy savory chatpata masala seasoned potato chips.', 12.00, 1),
-(11, 6, 'Euro Banana Chips', 'euro-banana-chips', NULL, 'Traditional golden yellow savory crispy banana wafers.', 12.00, 1),
-
--- Coca-Cola Range (Seeded INACTIVE with NO variants as per master context)
-(12, 7, 'Thums Up', 'thums-up', NULL, 'Strong carbonated cola beverage. Specifications unconfirmed.', 28.00, 0),
-(13, 7, 'Sprite', 'sprite', NULL, 'Clear lemon-lime carbonated beverage. Specifications unconfirmed.', NULL, 0);
-
--- 3. SEED PRODUCT VARIANTS (39 Variants)
+-- 4. SEED PRODUCT VARIANTS
 INSERT INTO `product_variants` (`id`, `product_id`, `size_label`, `price`, `stock_qty`, `stock_status`, `is_active`) VALUES
--- Campa Cola (200ml, 500ml, 700ml, 1L)
 (1, 1, '200ml', 10.00, 100, 'in_stock', 1),
 (2, 1, '500ml', 20.00, 100, 'in_stock', 1),
 (3, 1, '700ml', 35.00, 100, 'in_stock', 1),
 (4, 1, '1L', 80.00, 100, 'in_stock', 1),
-
--- Campa Orange (200ml, 500ml, 700ml, 1L)
 (5, 2, '200ml', 10.00, 100, 'in_stock', 1),
 (6, 2, '500ml', 20.00, 100, 'in_stock', 1),
 (7, 2, '700ml', 35.00, 100, 'in_stock', 1),
 (8, 2, '1L', 80.00, 100, 'in_stock', 1),
-
--- Campa Jeera (200ml, 500ml, 700ml, 1L)
 (9, 3, '200ml', 10.00, 100, 'in_stock', 1),
 (10, 3, '500ml', 20.00, 100, 'in_stock', 1),
 (11, 3, '700ml', 35.00, 100, 'in_stock', 1),
 (12, 3, '1L', 80.00, 100, 'in_stock', 1),
-
--- Campa Lemon (200ml, 500ml, 700ml, 1L)
 (13, 4, '200ml', 10.00, 100, 'in_stock', 1),
 (14, 4, '500ml', 20.00, 100, 'in_stock', 1),
 (15, 4, '700ml', 35.00, 100, 'in_stock', 1),
 (16, 4, '1L', 80.00, 100, 'in_stock', 1),
+(17, 5, '250ml', 20.00, 100, 'in_stock', 1),
+(18, 5, '750ml', 40.00, 100, 'in_stock', 1),
+(19, 5, '1.25L', 65.00, 100, 'in_stock', 1),
+(20, 5, '2.25L', 99.00, 100, 'in_stock', 1),
+(21, 6, '250ml', 20.00, 100, 'in_stock', 1),
+(22, 6, '750ml', 40.00, 100, 'in_stock', 1),
+(23, 6, '1.25L', 65.00, 100, 'in_stock', 1),
+(24, 6, '2.25L', 99.00, 100, 'in_stock', 1),
+(25, 7, '250ml', 20.00, 100, 'in_stock', 1),
+(26, 7, '750ml', 40.00, 100, 'in_stock', 1),
+(27, 7, '1.25L', 65.00, 100, 'in_stock', 1),
+(28, 7, '2.25L', 99.00, 100, 'in_stock', 1),
+(29, 8, '250ml', 20.00, 100, 'in_stock', 1),
+(30, 8, '750ml', 40.00, 100, 'in_stock', 1),
+(31, 8, '1.25L', 65.00, 100, 'in_stock', 1),
+(32, 8, '2L', 90.00, 100, 'in_stock', 1),
+(33, 9, '150ml', 10.00, 120, 'in_stock', 1),
+(34, 9, '250ml', 20.00, 120, 'in_stock', 1),
+(35, 9, '600ml', 40.00, 120, 'in_stock', 1),
+(36, 9, '1.2L', 75.00, 100, 'in_stock', 1),
+(37, 10, '250ml', 20.00, 100, 'in_stock', 1),
+(38, 10, '750ml', 40.00, 100, 'in_stock', 1),
+(39, 10, '1.25L', 65.00, 100, 'in_stock', 1),
+(40, 10, '2.25L', 99.00, 100, 'in_stock', 1),
+(41, 11, '250ml', 20.00, 100, 'in_stock', 1),
+(42, 11, '750ml', 40.00, 100, 'in_stock', 1),
+(43, 11, '1.25L', 65.00, 100, 'in_stock', 1),
+(44, 11, '2.25L', 99.00, 100, 'in_stock', 1),
+(45, 12, '160ml', 10.00, 120, 'in_stock', 1),
+(46, 12, '250ml', 20.00, 120, 'in_stock', 1),
+(47, 12, '600ml', 40.00, 120, 'in_stock', 1),
+(48, 12, '1.2L', 75.00, 100, 'in_stock', 1),
+(49, 13, '250ml', 6.00, 200, 'in_stock', 1),
+(50, 13, '500ml', 10.00, 200, 'in_stock', 1),
+(51, 13, '1L', 20.00, 200, 'in_stock', 1),
+(52, 13, '2L', 30.00, 150, 'in_stock', 1),
+(53, 14, '500ml', 10.00, 200, 'in_stock', 1),
+(54, 14, '1L', 20.00, 200, 'in_stock', 1),
+(55, 14, '2L', 30.00, 150, 'in_stock', 1),
+(56, 14, '20L', 80.00, 50, 'in_stock', 1),
+(57, 15, '20g', 5.00, 150, 'in_stock', 1),
+(58, 15, '45g', 10.00, 150, 'in_stock', 1),
+(59, 15, '95g', 20.00, 150, 'in_stock', 1),
+(60, 15, '250g', 35.00, 100, 'in_stock', 1),
+(61, 16, '150g', 20.00, 120, 'in_stock', 1),
+(62, 16, '500g', 65.00, 100, 'in_stock', 1),
+(63, 17, '20g', 5.00, 120, 'in_stock', 1),
+(64, 17, '50g', 10.00, 120, 'in_stock', 1),
+(65, 17, '200g', 30.00, 100, 'in_stock', 1),
+(66, 17, '400g', 55.00, 100, 'in_stock', 1),
+(67, 18, '16g', 5.00, 120, 'in_stock', 1),
+(68, 18, '35g', 10.00, 120, 'in_stock', 1),
+(69, 18, '70g', 20.00, 120, 'in_stock', 1),
+(70, 18, '160g', 50.00, 100, 'in_stock', 1);
 
--- Sundar Marie (20g Rs5, 45g Rs10, 95g Rs20)
-(17, 5, '20g', 5.00, 150, 'in_stock', 1),
-(18, 5, '45g', 10.00, 150, 'in_stock', 1),
-(19, 5, '95g', 20.00, 150, 'in_stock', 1),
-
--- Sundar Bourbon (500g Rs65)
-(20, 6, '500g', 65.00, 80, 'in_stock', 1),
-
--- Sundar Coconut (20g Rs5, 50g Rs10, 200g Rs30, 400g Rs55)
-(21, 7, '20g', 5.00, 100, 'in_stock', 1),
-(22, 7, '50g', 10.00, 100, 'in_stock', 1),
-(23, 7, '200g', 30.00, 100, 'in_stock', 1),
-(24, 7, '400g', 55.00, 100, 'in_stock', 1),
-
--- Sundar Glucose (Inactive variants pending GST confirmation)
-(25, 8, '20g', 5.00, 100, 'in_stock', 0),
-(26, 8, '45g', 10.00, 100, 'in_stock', 0),
-(27, 8, '95g', 20.00, 100, 'in_stock', 0),
-
--- Euro Chips Salted (16g Rs5, 35g Rs10, 70g Rs20, 160g Rs50)
-(28, 9, '16g', 5.00, 120, 'in_stock', 1),
-(29, 9, '35g', 10.00, 120, 'in_stock', 1),
-(30, 9, '70g', 20.00, 120, 'in_stock', 1),
-(31, 9, '160g', 50.00, 120, 'in_stock', 1),
-
--- Euro Chips Masala (16g Rs5, 35g Rs10, 70g Rs20, 160g Rs50)
-(32, 10, '16g', 5.00, 120, 'in_stock', 1),
-(33, 10, '35g', 10.00, 120, 'in_stock', 1),
-(34, 10, '70g', 20.00, 120, 'in_stock', 1),
-(35, 10, '160g', 50.00, 120, 'in_stock', 1),
-
--- Euro Banana Chips (16g Rs5, 35g Rs10, 70g Rs20, 160g Rs50)
-(36, 11, '16g', 5.00, 120, 'in_stock', 1),
-(37, 11, '35g', 10.00, 120, 'in_stock', 1),
-(38, 11, '70g', 20.00, 120, 'in_stock', 1),
-(39, 11, '160g', 50.00, 120, 'in_stock', 1);
-
--- 4. SEED SETTINGS
+-- 5. SEED SETTINGS
 INSERT INTO `settings` (`setting_key`, `setting_value`) VALUES
 ('business_name', 'Kalika Enterprises'),
 ('business_tagline', 'Wholesale Food & Beverage Distribution'),
@@ -123,6 +138,7 @@ INSERT INTO `settings` (`setting_key`, `setting_value`) VALUES
 ('delivery_timeline', '2-3 working days'),
 ('order_confirmation_timeline', 'Within 24 hours'),
 ('refund_policy_days', '2'),
-('refund_policy_text', 'Returns and refunds are accepted within 2 days of delivery for damaged or expired items subject to inspection. Settlement handled offline.');
+('refund_policy_text', 'Returns and refunds are accepted within 2 days of delivery for damaged or expired items subject to inspection. Settlement handled offline.')
+ON DUPLICATE KEY UPDATE `setting_value` = VALUES(`setting_value`);
 
 SET FOREIGN_KEY_CHECKS = 1;

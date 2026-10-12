@@ -32,7 +32,22 @@ CREATE TABLE `admins` (
     INDEX `idx_admins_username` (`username`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 3. Brands
+-- 3. Categories
+DROP TABLE IF EXISTS `categories`;
+CREATE TABLE `categories` (
+    `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `name` VARCHAR(100) NOT NULL,
+    `slug` VARCHAR(100) NOT NULL UNIQUE,
+    `description` TEXT NULL,
+    `image` VARCHAR(255) NULL,
+    `is_active` TINYINT(1) UNSIGNED NOT NULL DEFAULT 1,
+    `sort_order` INT NOT NULL DEFAULT 0,
+    `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX `idx_categories_slug` (`slug`),
+    INDEX `idx_categories_active_sort` (`is_active`, `sort_order`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 4. Brands
 DROP TABLE IF EXISTS `brands`;
 CREATE TABLE `brands` (
     `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -45,11 +60,12 @@ CREATE TABLE `brands` (
     INDEX `idx_brands_active_sort` (`is_active`, `sort_order`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 4. Products
+-- 5. Products
 DROP TABLE IF EXISTS `products`;
 CREATE TABLE `products` (
     `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     `brand_id` INT UNSIGNED NOT NULL,
+    `category_id` INT UNSIGNED NULL,
     `name` VARCHAR(150) NOT NULL,
     `slug` VARCHAR(150) NOT NULL UNIQUE,
     `image` VARCHAR(255) NULL COMMENT 'Relative path to approved photo or NULL for placeholder',
@@ -59,7 +75,9 @@ CREATE TABLE `products` (
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT `fk_products_brand` FOREIGN KEY (`brand_id`) REFERENCES `brands` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_products_category` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE SET NULL,
     INDEX `idx_products_brand` (`brand_id`),
+    INDEX `idx_products_category` (`category_id`),
     INDEX `idx_products_slug` (`slug`),
     INDEX `idx_products_active` (`is_active`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

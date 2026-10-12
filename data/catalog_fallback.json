@@ -1,4 +1,56 @@
 {
+    "categories": [
+        {
+            "id": 1,
+            "name": "Cold Drinks & Soft Drinks",
+            "slug": "cold-drinks",
+            "description": "Carbonated cola, lemon, orange, and spiced sodas",
+            "image": "campa-cola.jpg",
+            "sort_order": 1,
+            "is_active": 1,
+            "product_count": 40
+        },
+        {
+            "id": 2,
+            "name": "Juices & Mango Drinks",
+            "slug": "juices",
+            "description": "Thick mango fruit beverages and refreshing juices",
+            "image": "maaza-mango.jpg",
+            "sort_order": 2,
+            "is_active": 1,
+            "product_count": 8
+        },
+        {
+            "id": 3,
+            "name": "Packaged Drinking Water",
+            "slug": "packaged-water",
+            "description": "Pure, mineral-enriched packaged drinking water",
+            "image": "bisleri-mineral-water.jpg",
+            "sort_order": 3,
+            "is_active": 1,
+            "product_count": 8
+        },
+        {
+            "id": 4,
+            "name": "Biscuits & Bakery",
+            "slug": "biscuits",
+            "description": "Crispy tea-time Marie, chocolate Bourbon, and Coconut biscuits",
+            "image": "sunder-marie.jpg",
+            "sort_order": 4,
+            "is_active": 1,
+            "product_count": 10
+        },
+        {
+            "id": 5,
+            "name": "Snacks & Chips",
+            "slug": "snacks",
+            "description": "Savory Indian chatpata potato chips and wafers",
+            "image": "euro-chips-masti-masala.jpg",
+            "sort_order": 5,
+            "is_active": 1,
+            "product_count": 4
+        }
+    ],
     "brands": [
         {
             "id": 1,
@@ -6,75 +58,69 @@
             "slug": "campa",
             "sort_order": 1,
             "is_active": 1,
-            "product_count": 25
+            "product_count": 16
         },
         {
             "id": 2,
+            "name": "Coca-Cola Range",
+            "slug": "coca-cola-range",
+            "sort_order": 2,
+            "is_active": 1,
+            "product_count": 20
+        },
+        {
+            "id": 3,
+            "name": "PepsiCo Range",
+            "slug": "pepsico",
+            "sort_order": 3,
+            "is_active": 1,
+            "product_count": 12
+        },
+        {
+            "id": 4,
+            "name": "Bisleri",
+            "slug": "bisleri",
+            "sort_order": 4,
+            "is_active": 1,
+            "product_count": 4
+        },
+        {
+            "id": 5,
+            "name": "Oxycool",
+            "slug": "oxycool",
+            "sort_order": 5,
+            "is_active": 1,
+            "product_count": 4
+        },
+        {
+            "id": 6,
             "name": "Sundar Biscuits",
             "slug": "sundar-biscuits",
-            "sort_order": 2,
+            "sort_order": 6,
             "is_active": 1,
             "product_count": 10
         },
         {
-            "id": 6,
+            "id": 7,
             "name": "Euro Chips",
             "slug": "euro-chips",
-            "sort_order": 3,
+            "sort_order": 7,
             "is_active": 1,
-            "product_count": 18
-        },
-        {
-            "id": 7,
-            "name": "Coca-Cola Beverages",
-            "slug": "coca-cola-range",
-            "sort_order": 4,
-            "is_active": 1,
-            "product_count": 9
+            "product_count": 4
         }
     ],
     "products": [
-        {
-            "id": 16,
-            "name": "Campa Club Soda",
-            "slug": "campa-club-soda",
-            "image": "campa-soda.jpg",
-            "description": "Extra fizzy purified club soda for mixers and refreshment.",
-            "gst_percent": "28.00",
-            "is_active": 1,
-            "brand_id": 1,
-            "brand_name": "Campa",
-            "brand_slug": "campa",
-            "brand_sort_order": 1,
-            "variants": [
-                {
-                    "id": 45,
-                    "product_id": 16,
-                    "size_label": "500ml",
-                    "price": "15.00",
-                    "stock_qty": 140,
-                    "stock_status": "in_stock",
-                    "is_active": 1
-                },
-                {
-                    "id": 46,
-                    "product_id": 16,
-                    "size_label": "750ml",
-                    "price": "20.00",
-                    "stock_qty": 90,
-                    "stock_status": "in_stock",
-                    "is_active": 1
-                }
-            ]
-        },
         {
             "id": 1,
             "name": "Campa Cola",
             "slug": "campa-cola",
             "image": "campa-cola.jpg",
-            "description": "Classic Indian cola cold drink with strong fizzy refreshment.",
+            "description": "Classic Indian fizzy cola beverage with bold, refreshing carbonation.",
             "gst_percent": "28.00",
             "is_active": 1,
+            "category_id": 1,
+            "category_name": "Cold Drinks & Soft Drinks",
+            "category_slug": "cold-drinks",
             "brand_id": 1,
             "brand_name": "Campa",
             "brand_slug": "campa",
@@ -119,79 +165,16 @@
             ]
         },
         {
-            "id": 17,
-            "name": "Campa Diet Cola",
-            "slug": "campa-diet-cola",
-            "image": "campa-diet-cola.jpg",
-            "description": "Zero sugar and zero calorie classic cola with punchy carbonation.",
-            "gst_percent": "28.00",
-            "is_active": 1,
-            "brand_id": 1,
-            "brand_name": "Campa",
-            "brand_slug": "campa",
-            "brand_sort_order": 1,
-            "variants": [
-                {
-                    "id": 47,
-                    "product_id": 17,
-                    "size_label": "300ml Can",
-                    "price": "20.00",
-                    "stock_qty": 75,
-                    "stock_status": "in_stock",
-                    "is_active": 1
-                },
-                {
-                    "id": 48,
-                    "product_id": 17,
-                    "size_label": "500ml PET",
-                    "price": "30.00",
-                    "stock_qty": 90,
-                    "stock_status": "in_stock",
-                    "is_active": 1
-                }
-            ]
-        },
-        {
-            "id": 14,
-            "name": "Campa Energy Drink",
-            "slug": "campa-energy-drink",
-            "image": "campa-energy.jpg",
-            "description": "High energy carbonated drink with taurine and B-vitamins for instant alertness.",
-            "gst_percent": "28.00",
-            "is_active": 1,
-            "brand_id": 1,
-            "brand_name": "Campa",
-            "brand_slug": "campa",
-            "brand_sort_order": 1,
-            "variants": [
-                {
-                    "id": 40,
-                    "product_id": 14,
-                    "size_label": "250ml Can",
-                    "price": "20.00",
-                    "stock_qty": 120,
-                    "stock_status": "in_stock",
-                    "is_active": 1
-                },
-                {
-                    "id": 41,
-                    "product_id": 14,
-                    "size_label": "500ml PET",
-                    "price": "35.00",
-                    "stock_qty": 80,
-                    "stock_status": "in_stock",
-                    "is_active": 1
-                }
-            ]
-        },
-        {
             "id": 3,
-            "name": "Campa Jeera",
+            "name": "Campa Jeera Up",
             "slug": "campa-jeera",
             "image": "campa-jeera.jpg",
-            "description": "Digestive spiced jeera soda beverage.",
+            "description": "Digestive spiced jeera masala carbonated refreshment soda.",
             "gst_percent": "28.00",
             "is_active": 1,
+            "category_id": 1,
+            "category_name": "Cold Drinks & Soft Drinks",
+            "category_slug": "cold-drinks",
             "brand_id": 1,
             "brand_name": "Campa",
             "brand_slug": "campa",
@@ -240,9 +223,12 @@
             "name": "Campa Lemon",
             "slug": "campa-lemon",
             "image": "campa-lemon.jpg",
-            "description": "Crisp citrus clear lemon lime soda.",
+            "description": "Crisp citrus lemon-lime carbonated soda drink.",
             "gst_percent": "28.00",
             "is_active": 1,
+            "category_id": 1,
+            "category_name": "Cold Drinks & Soft Drinks",
+            "category_slug": "cold-drinks",
             "brand_id": 1,
             "brand_name": "Campa",
             "brand_slug": "campa",
@@ -287,55 +273,16 @@
             ]
         },
         {
-            "id": 15,
-            "name": "Campa Mango Fizz",
-            "slug": "campa-mango-fizz",
-            "image": "campa-mango.jpg",
-            "description": "Sparkling juicy alphonso mango fruit drink with authentic Indian sweetness.",
-            "gst_percent": "28.00",
-            "is_active": 1,
-            "brand_id": 1,
-            "brand_name": "Campa",
-            "brand_slug": "campa",
-            "brand_sort_order": 1,
-            "variants": [
-                {
-                    "id": 42,
-                    "product_id": 15,
-                    "size_label": "200ml",
-                    "price": "10.00",
-                    "stock_qty": 150,
-                    "stock_status": "in_stock",
-                    "is_active": 1
-                },
-                {
-                    "id": 43,
-                    "product_id": 15,
-                    "size_label": "500ml",
-                    "price": "20.00",
-                    "stock_qty": 100,
-                    "stock_status": "in_stock",
-                    "is_active": 1
-                },
-                {
-                    "id": 44,
-                    "product_id": 15,
-                    "size_label": "1L",
-                    "price": "80.00",
-                    "stock_qty": 60,
-                    "stock_status": "in_stock",
-                    "is_active": 1
-                }
-            ]
-        },
-        {
             "id": 2,
             "name": "Campa Orange",
             "slug": "campa-orange",
             "image": "campa-orange.jpg",
-            "description": "Zesty sparkling orange fruit-flavored beverage.",
+            "description": "Sparkling tangy orange fruit-flavoured carbonated beverage.",
             "gst_percent": "28.00",
             "is_active": 1,
+            "category_id": 1,
+            "category_name": "Cold Drinks & Soft Drinks",
+            "category_slug": "cold-drinks",
             "brand_id": 1,
             "brand_name": "Campa",
             "brand_slug": "campa",
@@ -380,96 +327,618 @@
             ]
         },
         {
-            "id": 6,
-            "name": "Sundar Bourbon",
-            "slug": "sundar-bourbon-biscuit",
-            "image": "sundar-bourbon-biscuit.jpg",
-            "description": "Rich chocolate cream filled Bourbon sandwich biscuits.",
-            "gst_percent": "18.00",
+            "id": 7,
+            "name": "Fanta Orange",
+            "slug": "fanta-orange",
+            "image": "fanta-orange.jpg",
+            "description": "Vibrantly fruity, sweet and bubbly orange-flavoured carbonated soft drink.",
+            "gst_percent": "28.00",
             "is_active": 1,
+            "category_id": 1,
+            "category_name": "Cold Drinks & Soft Drinks",
+            "category_slug": "cold-drinks",
             "brand_id": 2,
-            "brand_name": "Sundar Biscuits",
-            "brand_slug": "sundar-biscuits",
+            "brand_name": "Coca-Cola Range",
+            "brand_slug": "coca-cola-range",
             "brand_sort_order": 2,
             "variants": [
                 {
-                    "id": 20,
-                    "product_id": 6,
-                    "size_label": "500g",
-                    "price": "65.00",
-                    "stock_qty": 80,
-                    "stock_status": "in_stock",
-                    "is_active": 1
-                }
-            ]
-        },
-        {
-            "id": 21,
-            "name": "Sundar Butter Cookies",
-            "slug": "sundar-butter-cookies",
-            "image": "sundar-butter-cookies.jpg",
-            "description": "Rich golden bakery butter cookies with melt-in-mouth texture.",
-            "gst_percent": "18.00",
-            "is_active": 1,
-            "brand_id": 2,
-            "brand_name": "Sundar Biscuits",
-            "brand_slug": "sundar-biscuits",
-            "brand_sort_order": 2,
-            "variants": [
-                {
-                    "id": 55,
-                    "product_id": 21,
-                    "size_label": "150g Box",
-                    "price": "30.00",
+                    "id": 25,
+                    "product_id": 7,
+                    "size_label": "250ml",
+                    "price": "20.00",
                     "stock_qty": 100,
                     "stock_status": "in_stock",
                     "is_active": 1
                 },
                 {
-                    "id": 56,
-                    "product_id": 21,
-                    "size_label": "300g Tin",
-                    "price": "60.00",
-                    "stock_qty": 60,
+                    "id": 26,
+                    "product_id": 7,
+                    "size_label": "750ml",
+                    "price": "40.00",
+                    "stock_qty": 100,
+                    "stock_status": "in_stock",
+                    "is_active": 1
+                },
+                {
+                    "id": 27,
+                    "product_id": 7,
+                    "size_label": "1.25L",
+                    "price": "65.00",
+                    "stock_qty": 100,
+                    "stock_status": "in_stock",
+                    "is_active": 1
+                },
+                {
+                    "id": 28,
+                    "product_id": 7,
+                    "size_label": "2.25L",
+                    "price": "99.00",
+                    "stock_qty": 100,
                     "stock_status": "in_stock",
                     "is_active": 1
                 }
             ]
         },
         {
-            "id": 7,
-            "name": "Sundar Coconut",
-            "slug": "sundar-coconut-biscuit",
-            "image": "sundar-coconut-biscuit.jpg",
-            "description": "Crunchy sweet baked biscuits infused with toasted coconut.",
-            "gst_percent": "18.00",
+            "id": 8,
+            "name": "Limca Lemon Drink",
+            "slug": "limca-lemon",
+            "image": "limca-lemon.jpg",
+            "description": "Cloudy lemon-lime carbonated beverage with crisp citrusy punch.",
+            "gst_percent": "28.00",
             "is_active": 1,
+            "category_id": 1,
+            "category_name": "Cold Drinks & Soft Drinks",
+            "category_slug": "cold-drinks",
             "brand_id": 2,
-            "brand_name": "Sundar Biscuits",
-            "brand_slug": "sundar-biscuits",
+            "brand_name": "Coca-Cola Range",
+            "brand_slug": "coca-cola-range",
+            "brand_sort_order": 2,
+            "variants": [
+                {
+                    "id": 29,
+                    "product_id": 8,
+                    "size_label": "250ml",
+                    "price": "20.00",
+                    "stock_qty": 100,
+                    "stock_status": "in_stock",
+                    "is_active": 1
+                },
+                {
+                    "id": 30,
+                    "product_id": 8,
+                    "size_label": "750ml",
+                    "price": "40.00",
+                    "stock_qty": 100,
+                    "stock_status": "in_stock",
+                    "is_active": 1
+                },
+                {
+                    "id": 31,
+                    "product_id": 8,
+                    "size_label": "1.25L",
+                    "price": "65.00",
+                    "stock_qty": 100,
+                    "stock_status": "in_stock",
+                    "is_active": 1
+                },
+                {
+                    "id": 32,
+                    "product_id": 8,
+                    "size_label": "2L",
+                    "price": "90.00",
+                    "stock_qty": 100,
+                    "stock_status": "in_stock",
+                    "is_active": 1
+                }
+            ]
+        },
+        {
+            "id": 6,
+            "name": "Sprite Lemon-Lime",
+            "slug": "sprite-lemon-lime",
+            "image": "sprite-lemon-lime.jpg",
+            "description": "Clean, crisp lemon-lime sparkling drink for instant refreshment.",
+            "gst_percent": "28.00",
+            "is_active": 1,
+            "category_id": 1,
+            "category_name": "Cold Drinks & Soft Drinks",
+            "category_slug": "cold-drinks",
+            "brand_id": 2,
+            "brand_name": "Coca-Cola Range",
+            "brand_slug": "coca-cola-range",
             "brand_sort_order": 2,
             "variants": [
                 {
                     "id": 21,
-                    "product_id": 7,
-                    "size_label": "20g",
-                    "price": "5.00",
+                    "product_id": 6,
+                    "size_label": "250ml",
+                    "price": "20.00",
                     "stock_qty": 100,
                     "stock_status": "in_stock",
                     "is_active": 1
                 },
                 {
                     "id": 22,
-                    "product_id": 7,
-                    "size_label": "50g",
-                    "price": "10.00",
+                    "product_id": 6,
+                    "size_label": "750ml",
+                    "price": "40.00",
                     "stock_qty": 100,
                     "stock_status": "in_stock",
                     "is_active": 1
                 },
                 {
                     "id": 23,
-                    "product_id": 7,
+                    "product_id": 6,
+                    "size_label": "1.25L",
+                    "price": "65.00",
+                    "stock_qty": 100,
+                    "stock_status": "in_stock",
+                    "is_active": 1
+                },
+                {
+                    "id": 24,
+                    "product_id": 6,
+                    "size_label": "2.25L",
+                    "price": "99.00",
+                    "stock_qty": 100,
+                    "stock_status": "in_stock",
+                    "is_active": 1
+                }
+            ]
+        },
+        {
+            "id": 5,
+            "name": "Thums Up Cola",
+            "slug": "thums-up-cola",
+            "image": "thums-up-cola.jpg",
+            "description": "Iconic strong fizzy cola beverage with intense taste and high carbonation.",
+            "gst_percent": "28.00",
+            "is_active": 1,
+            "category_id": 1,
+            "category_name": "Cold Drinks & Soft Drinks",
+            "category_slug": "cold-drinks",
+            "brand_id": 2,
+            "brand_name": "Coca-Cola Range",
+            "brand_slug": "coca-cola-range",
+            "brand_sort_order": 2,
+            "variants": [
+                {
+                    "id": 17,
+                    "product_id": 5,
+                    "size_label": "250ml",
+                    "price": "20.00",
+                    "stock_qty": 100,
+                    "stock_status": "in_stock",
+                    "is_active": 1
+                },
+                {
+                    "id": 18,
+                    "product_id": 5,
+                    "size_label": "750ml",
+                    "price": "40.00",
+                    "stock_qty": 100,
+                    "stock_status": "in_stock",
+                    "is_active": 1
+                },
+                {
+                    "id": 19,
+                    "product_id": 5,
+                    "size_label": "1.25L",
+                    "price": "65.00",
+                    "stock_qty": 100,
+                    "stock_status": "in_stock",
+                    "is_active": 1
+                },
+                {
+                    "id": 20,
+                    "product_id": 5,
+                    "size_label": "2.25L",
+                    "price": "99.00",
+                    "stock_qty": 100,
+                    "stock_status": "in_stock",
+                    "is_active": 1
+                }
+            ]
+        },
+        {
+            "id": 11,
+            "name": "7UP Lemon-Lime",
+            "slug": "7up-lemon-lime",
+            "image": "7up-lemon-lime.jpg",
+            "description": "Clear, crisp bubbly lemon-lime soda with mood-lifting refreshment.",
+            "gst_percent": "28.00",
+            "is_active": 1,
+            "category_id": 1,
+            "category_name": "Cold Drinks & Soft Drinks",
+            "category_slug": "cold-drinks",
+            "brand_id": 3,
+            "brand_name": "PepsiCo Range",
+            "brand_slug": "pepsico",
+            "brand_sort_order": 3,
+            "variants": [
+                {
+                    "id": 41,
+                    "product_id": 11,
+                    "size_label": "250ml",
+                    "price": "20.00",
+                    "stock_qty": 100,
+                    "stock_status": "in_stock",
+                    "is_active": 1
+                },
+                {
+                    "id": 42,
+                    "product_id": 11,
+                    "size_label": "750ml",
+                    "price": "40.00",
+                    "stock_qty": 100,
+                    "stock_status": "in_stock",
+                    "is_active": 1
+                },
+                {
+                    "id": 43,
+                    "product_id": 11,
+                    "size_label": "1.25L",
+                    "price": "65.00",
+                    "stock_qty": 100,
+                    "stock_status": "in_stock",
+                    "is_active": 1
+                },
+                {
+                    "id": 44,
+                    "product_id": 11,
+                    "size_label": "2.25L",
+                    "price": "99.00",
+                    "stock_qty": 100,
+                    "stock_status": "in_stock",
+                    "is_active": 1
+                }
+            ]
+        },
+        {
+            "id": 10,
+            "name": "Mirinda Orange",
+            "slug": "mirinda-orange",
+            "image": "mirinda-orange.jpg",
+            "description": "Deliciously intense sparkling orange soda with vibrant fruity bubbles.",
+            "gst_percent": "28.00",
+            "is_active": 1,
+            "category_id": 1,
+            "category_name": "Cold Drinks & Soft Drinks",
+            "category_slug": "cold-drinks",
+            "brand_id": 3,
+            "brand_name": "PepsiCo Range",
+            "brand_slug": "pepsico",
+            "brand_sort_order": 3,
+            "variants": [
+                {
+                    "id": 37,
+                    "product_id": 10,
+                    "size_label": "250ml",
+                    "price": "20.00",
+                    "stock_qty": 100,
+                    "stock_status": "in_stock",
+                    "is_active": 1
+                },
+                {
+                    "id": 38,
+                    "product_id": 10,
+                    "size_label": "750ml",
+                    "price": "40.00",
+                    "stock_qty": 100,
+                    "stock_status": "in_stock",
+                    "is_active": 1
+                },
+                {
+                    "id": 39,
+                    "product_id": 10,
+                    "size_label": "1.25L",
+                    "price": "65.00",
+                    "stock_qty": 100,
+                    "stock_status": "in_stock",
+                    "is_active": 1
+                },
+                {
+                    "id": 40,
+                    "product_id": 10,
+                    "size_label": "2.25L",
+                    "price": "99.00",
+                    "stock_qty": 100,
+                    "stock_status": "in_stock",
+                    "is_active": 1
+                }
+            ]
+        },
+        {
+            "id": 9,
+            "name": "Maaza Mango Drink",
+            "slug": "maaza-mango",
+            "image": "maaza-mango.jpg",
+            "description": "Made with real Alphonso mango pulp for thick, rich mango indulgence.",
+            "gst_percent": "12.00",
+            "is_active": 1,
+            "category_id": 2,
+            "category_name": "Juices & Mango Drinks",
+            "category_slug": "juices",
+            "brand_id": 2,
+            "brand_name": "Coca-Cola Range",
+            "brand_slug": "coca-cola-range",
+            "brand_sort_order": 2,
+            "variants": [
+                {
+                    "id": 33,
+                    "product_id": 9,
+                    "size_label": "150ml",
+                    "price": "10.00",
+                    "stock_qty": 120,
+                    "stock_status": "in_stock",
+                    "is_active": 1
+                },
+                {
+                    "id": 34,
+                    "product_id": 9,
+                    "size_label": "250ml",
+                    "price": "20.00",
+                    "stock_qty": 120,
+                    "stock_status": "in_stock",
+                    "is_active": 1
+                },
+                {
+                    "id": 35,
+                    "product_id": 9,
+                    "size_label": "600ml",
+                    "price": "40.00",
+                    "stock_qty": 120,
+                    "stock_status": "in_stock",
+                    "is_active": 1
+                },
+                {
+                    "id": 36,
+                    "product_id": 9,
+                    "size_label": "1.2L",
+                    "price": "75.00",
+                    "stock_qty": 100,
+                    "stock_status": "in_stock",
+                    "is_active": 1
+                }
+            ]
+        },
+        {
+            "id": 12,
+            "name": "Slice Mango Drink",
+            "slug": "slice-mango",
+            "image": "slice-mango.jpg",
+            "description": "Thick and tasty mango fruit drink crafted from handpicked mangoes.",
+            "gst_percent": "12.00",
+            "is_active": 1,
+            "category_id": 2,
+            "category_name": "Juices & Mango Drinks",
+            "category_slug": "juices",
+            "brand_id": 3,
+            "brand_name": "PepsiCo Range",
+            "brand_slug": "pepsico",
+            "brand_sort_order": 3,
+            "variants": [
+                {
+                    "id": 45,
+                    "product_id": 12,
+                    "size_label": "160ml",
+                    "price": "10.00",
+                    "stock_qty": 120,
+                    "stock_status": "in_stock",
+                    "is_active": 1
+                },
+                {
+                    "id": 46,
+                    "product_id": 12,
+                    "size_label": "250ml",
+                    "price": "20.00",
+                    "stock_qty": 120,
+                    "stock_status": "in_stock",
+                    "is_active": 1
+                },
+                {
+                    "id": 47,
+                    "product_id": 12,
+                    "size_label": "600ml",
+                    "price": "40.00",
+                    "stock_qty": 120,
+                    "stock_status": "in_stock",
+                    "is_active": 1
+                },
+                {
+                    "id": 48,
+                    "product_id": 12,
+                    "size_label": "1.2L",
+                    "price": "75.00",
+                    "stock_qty": 100,
+                    "stock_status": "in_stock",
+                    "is_active": 1
+                }
+            ]
+        },
+        {
+            "id": 13,
+            "name": "Bisleri Mineral Water",
+            "slug": "bisleri-mineral-water",
+            "image": "bisleri-mineral-water.jpg",
+            "description": "Pure, ozonated packaged drinking water enriched with vital minerals.",
+            "gst_percent": "18.00",
+            "is_active": 1,
+            "category_id": 3,
+            "category_name": "Packaged Drinking Water",
+            "category_slug": "packaged-water",
+            "brand_id": 4,
+            "brand_name": "Bisleri",
+            "brand_slug": "bisleri",
+            "brand_sort_order": 4,
+            "variants": [
+                {
+                    "id": 49,
+                    "product_id": 13,
+                    "size_label": "250ml",
+                    "price": "6.00",
+                    "stock_qty": 200,
+                    "stock_status": "in_stock",
+                    "is_active": 1
+                },
+                {
+                    "id": 50,
+                    "product_id": 13,
+                    "size_label": "500ml",
+                    "price": "10.00",
+                    "stock_qty": 200,
+                    "stock_status": "in_stock",
+                    "is_active": 1
+                },
+                {
+                    "id": 51,
+                    "product_id": 13,
+                    "size_label": "1L",
+                    "price": "20.00",
+                    "stock_qty": 200,
+                    "stock_status": "in_stock",
+                    "is_active": 1
+                },
+                {
+                    "id": 52,
+                    "product_id": 13,
+                    "size_label": "2L",
+                    "price": "30.00",
+                    "stock_qty": 150,
+                    "stock_status": "in_stock",
+                    "is_active": 1
+                }
+            ]
+        },
+        {
+            "id": 14,
+            "name": "Oxycool Mineral Water",
+            "slug": "oxycool-mineral-water",
+            "image": "oxycool-mineral-water.jpg",
+            "description": "Multi-stage purified packaged drinking water with essential minerals.",
+            "gst_percent": "18.00",
+            "is_active": 1,
+            "category_id": 3,
+            "category_name": "Packaged Drinking Water",
+            "category_slug": "packaged-water",
+            "brand_id": 5,
+            "brand_name": "Oxycool",
+            "brand_slug": "oxycool",
+            "brand_sort_order": 5,
+            "variants": [
+                {
+                    "id": 53,
+                    "product_id": 14,
+                    "size_label": "500ml",
+                    "price": "10.00",
+                    "stock_qty": 200,
+                    "stock_status": "in_stock",
+                    "is_active": 1
+                },
+                {
+                    "id": 54,
+                    "product_id": 14,
+                    "size_label": "1L",
+                    "price": "20.00",
+                    "stock_qty": 200,
+                    "stock_status": "in_stock",
+                    "is_active": 1
+                },
+                {
+                    "id": 55,
+                    "product_id": 14,
+                    "size_label": "2L",
+                    "price": "30.00",
+                    "stock_qty": 150,
+                    "stock_status": "in_stock",
+                    "is_active": 1
+                },
+                {
+                    "id": 56,
+                    "product_id": 14,
+                    "size_label": "20L",
+                    "price": "80.00",
+                    "stock_qty": 50,
+                    "stock_status": "in_stock",
+                    "is_active": 1
+                }
+            ]
+        },
+        {
+            "id": 16,
+            "name": "Sunder Bourbon Biscuit",
+            "slug": "sunder-bourbon-biscuit",
+            "image": "sunder-bourbon.jpg",
+            "description": "Rich chocolate cream filled crunchy Bourbon sandwich biscuits with sugar crystal topping.",
+            "gst_percent": "18.00",
+            "is_active": 1,
+            "category_id": 4,
+            "category_name": "Biscuits & Bakery",
+            "category_slug": "biscuits",
+            "brand_id": 6,
+            "brand_name": "Sundar Biscuits",
+            "brand_slug": "sundar-biscuits",
+            "brand_sort_order": 6,
+            "variants": [
+                {
+                    "id": 61,
+                    "product_id": 16,
+                    "size_label": "150g",
+                    "price": "20.00",
+                    "stock_qty": 120,
+                    "stock_status": "in_stock",
+                    "is_active": 1
+                },
+                {
+                    "id": 62,
+                    "product_id": 16,
+                    "size_label": "500g",
+                    "price": "65.00",
+                    "stock_qty": 100,
+                    "stock_status": "in_stock",
+                    "is_active": 1
+                }
+            ]
+        },
+        {
+            "id": 17,
+            "name": "Sunder Coconut Biscuit",
+            "slug": "sunder-coconut-biscuit",
+            "image": "sunder-coconut.jpg",
+            "description": "Crunchy baked Super Coconut biscuits infused with aromatic roasted coconut flakes.",
+            "gst_percent": "18.00",
+            "is_active": 1,
+            "category_id": 4,
+            "category_name": "Biscuits & Bakery",
+            "category_slug": "biscuits",
+            "brand_id": 6,
+            "brand_name": "Sundar Biscuits",
+            "brand_slug": "sundar-biscuits",
+            "brand_sort_order": 6,
+            "variants": [
+                {
+                    "id": 63,
+                    "product_id": 17,
+                    "size_label": "20g",
+                    "price": "5.00",
+                    "stock_qty": 120,
+                    "stock_status": "in_stock",
+                    "is_active": 1
+                },
+                {
+                    "id": 64,
+                    "product_id": 17,
+                    "size_label": "50g",
+                    "price": "10.00",
+                    "stock_qty": 120,
+                    "stock_status": "in_stock",
+                    "is_active": 1
+                },
+                {
+                    "id": 65,
+                    "product_id": 17,
                     "size_label": "200g",
                     "price": "30.00",
                     "stock_qty": 100,
@@ -477,8 +946,8 @@
                     "is_active": 1
                 },
                 {
-                    "id": 24,
-                    "product_id": 7,
+                    "id": 66,
+                    "product_id": 17,
                     "size_label": "400g",
                     "price": "55.00",
                     "stock_qty": 100,
@@ -488,21 +957,24 @@
             ]
         },
         {
-            "id": 5,
-            "name": "Sundar Marie",
-            "slug": "sundar-marie-biscuit",
-            "image": "sundar-marie-biscuit.jpg",
-            "description": "Crisp, light tea-time Marie biscuits.",
+            "id": 15,
+            "name": "Sunder Marie Biscuit",
+            "slug": "sunder-marie-biscuit",
+            "image": "sunder-marie.jpg",
+            "description": "Crispy, light golden-baked Marie Go Round tea-time biscuits.",
             "gst_percent": "5.00",
             "is_active": 1,
-            "brand_id": 2,
+            "category_id": 4,
+            "category_name": "Biscuits & Bakery",
+            "category_slug": "biscuits",
+            "brand_id": 6,
             "brand_name": "Sundar Biscuits",
             "brand_slug": "sundar-biscuits",
-            "brand_sort_order": 2,
+            "brand_sort_order": 6,
             "variants": [
                 {
-                    "id": 17,
-                    "product_id": 5,
+                    "id": 57,
+                    "product_id": 15,
                     "size_label": "20g",
                     "price": "5.00",
                     "stock_qty": 150,
@@ -510,8 +982,8 @@
                     "is_active": 1
                 },
                 {
-                    "id": 18,
-                    "product_id": 5,
+                    "id": 58,
+                    "product_id": 15,
                     "size_label": "45g",
                     "price": "10.00",
                     "stock_qty": 150,
@@ -519,164 +991,20 @@
                     "is_active": 1
                 },
                 {
-                    "id": 19,
-                    "product_id": 5,
+                    "id": 59,
+                    "product_id": 15,
                     "size_label": "95g",
                     "price": "20.00",
                     "stock_qty": 150,
                     "stock_status": "in_stock",
                     "is_active": 1
-                }
-            ]
-        },
-        {
-            "id": 11,
-            "name": "Euro Banana Chips",
-            "slug": "euro-banana-chips",
-            "image": "euro-banana-chips.jpg",
-            "description": "Traditional golden yellow savory crispy banana wafers.",
-            "gst_percent": "12.00",
-            "is_active": 1,
-            "brand_id": 6,
-            "brand_name": "Euro Chips",
-            "brand_slug": "euro-chips",
-            "brand_sort_order": 3,
-            "variants": [
-                {
-                    "id": 36,
-                    "product_id": 11,
-                    "size_label": "16g",
-                    "price": "5.00",
-                    "stock_qty": 120,
-                    "stock_status": "in_stock",
-                    "is_active": 1
                 },
                 {
-                    "id": 37,
-                    "product_id": 11,
-                    "size_label": "35g",
-                    "price": "10.00",
-                    "stock_qty": 120,
-                    "stock_status": "in_stock",
-                    "is_active": 1
-                },
-                {
-                    "id": 38,
-                    "product_id": 11,
-                    "size_label": "70g",
-                    "price": "20.00",
-                    "stock_qty": 120,
-                    "stock_status": "in_stock",
-                    "is_active": 1
-                },
-                {
-                    "id": 39,
-                    "product_id": 11,
-                    "size_label": "160g",
-                    "price": "50.00",
-                    "stock_qty": 120,
-                    "stock_status": "in_stock",
-                    "is_active": 1
-                }
-            ]
-        },
-        {
-            "id": 10,
-            "name": "Euro Chips Masala",
-            "slug": "euro-chips-masala",
-            "image": "euro-chips-masala.jpg",
-            "description": "Spicy savory chatpata masala seasoned potato chips.",
-            "gst_percent": "12.00",
-            "is_active": 1,
-            "brand_id": 6,
-            "brand_name": "Euro Chips",
-            "brand_slug": "euro-chips",
-            "brand_sort_order": 3,
-            "variants": [
-                {
-                    "id": 32,
-                    "product_id": 10,
-                    "size_label": "16g",
-                    "price": "5.00",
-                    "stock_qty": 120,
-                    "stock_status": "in_stock",
-                    "is_active": 1
-                },
-                {
-                    "id": 33,
-                    "product_id": 10,
-                    "size_label": "35g",
-                    "price": "10.00",
-                    "stock_qty": 120,
-                    "stock_status": "in_stock",
-                    "is_active": 1
-                },
-                {
-                    "id": 34,
-                    "product_id": 10,
-                    "size_label": "70g",
-                    "price": "20.00",
-                    "stock_qty": 120,
-                    "stock_status": "in_stock",
-                    "is_active": 1
-                },
-                {
-                    "id": 35,
-                    "product_id": 10,
-                    "size_label": "160g",
-                    "price": "50.00",
-                    "stock_qty": 120,
-                    "stock_status": "in_stock",
-                    "is_active": 1
-                }
-            ]
-        },
-        {
-            "id": 9,
-            "name": "Euro Chips Salted",
-            "slug": "euro-chips-salted",
-            "image": "euro-chips-salted.jpg",
-            "description": "Classic thin cut lightly salted crispy potato chips.",
-            "gst_percent": "12.00",
-            "is_active": 1,
-            "brand_id": 6,
-            "brand_name": "Euro Chips",
-            "brand_slug": "euro-chips",
-            "brand_sort_order": 3,
-            "variants": [
-                {
-                    "id": 28,
-                    "product_id": 9,
-                    "size_label": "16g",
-                    "price": "5.00",
-                    "stock_qty": 120,
-                    "stock_status": "in_stock",
-                    "is_active": 1
-                },
-                {
-                    "id": 29,
-                    "product_id": 9,
-                    "size_label": "35g",
-                    "price": "10.00",
-                    "stock_qty": 120,
-                    "stock_status": "in_stock",
-                    "is_active": 1
-                },
-                {
-                    "id": 30,
-                    "product_id": 9,
-                    "size_label": "70g",
-                    "price": "20.00",
-                    "stock_qty": 120,
-                    "stock_status": "in_stock",
-                    "is_active": 1
-                },
-                {
-                    "id": 31,
-                    "product_id": 9,
-                    "size_label": "160g",
-                    "price": "50.00",
-                    "stock_qty": 120,
+                    "id": 60,
+                    "product_id": 15,
+                    "size_label": "250g",
+                    "price": "35.00",
+                    "stock_qty": 100,
                     "stock_status": "in_stock",
                     "is_active": 1
                 }
@@ -684,229 +1012,58 @@
         },
         {
             "id": 18,
-            "name": "Euro Cream & Onion Chips",
-            "slug": "euro-chips-cream-onion",
-            "image": "euro-cream-onion.jpg",
-            "description": "Gourmet sour cream and herb seasoned crispy potato wafers.",
+            "name": "Euro Chips Masti Masala",
+            "slug": "euro-chips-masti-masala",
+            "image": "euro-chips-masti-masala.jpg",
+            "description": "Crispy, thin-sliced potato chips generously dusted with spicy chatpata Indian masala.",
             "gst_percent": "12.00",
             "is_active": 1,
-            "brand_id": 6,
+            "category_id": 5,
+            "category_name": "Snacks & Chips",
+            "category_slug": "snacks",
+            "brand_id": 7,
             "brand_name": "Euro Chips",
             "brand_slug": "euro-chips",
-            "brand_sort_order": 3,
+            "brand_sort_order": 7,
             "variants": [
                 {
-                    "id": 49,
+                    "id": 67,
                     "product_id": 18,
-                    "size_label": "30g",
-                    "price": "10.00",
-                    "stock_qty": 150,
+                    "size_label": "16g",
+                    "price": "5.00",
+                    "stock_qty": 120,
                     "stock_status": "in_stock",
                     "is_active": 1
                 },
                 {
-                    "id": 50,
+                    "id": 68,
                     "product_id": 18,
-                    "size_label": "75g",
-                    "price": "20.00",
-                    "stock_qty": 100,
-                    "stock_status": "in_stock",
-                    "is_active": 1
-                }
-            ]
-        },
-        {
-            "id": 20,
-            "name": "Euro Salted Peanuts",
-            "slug": "euro-salted-peanuts",
-            "image": "euro-chips-salted.jpg",
-            "description": "Roasted golden crunch peanuts lightly seasoned with rock salt.",
-            "gst_percent": "12.00",
-            "is_active": 1,
-            "brand_id": 6,
-            "brand_name": "Euro Chips",
-            "brand_slug": "euro-chips",
-            "brand_sort_order": 3,
-            "variants": [
-                {
-                    "id": 53,
-                    "product_id": 20,
-                    "size_label": "50g",
+                    "size_label": "35g",
                     "price": "10.00",
                     "stock_qty": 120,
                     "stock_status": "in_stock",
                     "is_active": 1
                 },
                 {
-                    "id": 54,
-                    "product_id": 20,
-                    "size_label": "150g",
-                    "price": "30.00",
-                    "stock_qty": 80,
-                    "stock_status": "in_stock",
-                    "is_active": 1
-                }
-            ]
-        },
-        {
-            "id": 19,
-            "name": "Euro Tomato Tango Chips",
-            "slug": "euro-chips-tomato",
-            "image": "euro-tomato-chips.jpg",
-            "description": "Tangy sun-ripened tomato seasoned potato chips.",
-            "gst_percent": "12.00",
-            "is_active": 1,
-            "brand_id": 6,
-            "brand_name": "Euro Chips",
-            "brand_slug": "euro-chips",
-            "brand_sort_order": 3,
-            "variants": [
-                {
-                    "id": 51,
-                    "product_id": 19,
-                    "size_label": "30g",
-                    "price": "10.00",
-                    "stock_qty": 140,
-                    "stock_status": "in_stock",
-                    "is_active": 1
-                },
-                {
-                    "id": 52,
-                    "product_id": 19,
-                    "size_label": "75g",
-                    "price": "20.00",
-                    "stock_qty": 90,
-                    "stock_status": "in_stock",
-                    "is_active": 1
-                }
-            ]
-        },
-        {
-            "id": 12,
-            "name": "Coca-Cola Original Taste",
-            "slug": "coca-cola-original",
-            "image": "coca-cola.jpg",
-            "description": "World-famous refreshing sparkling cola beverage ready for retail carton delivery.",
-            "gst_percent": "28.00",
-            "is_active": 1,
-            "brand_id": 7,
-            "brand_name": "Coca-Cola Beverages",
-            "brand_slug": "coca-cola-range",
-            "brand_sort_order": 4,
-            "variants": [
-                {
-                    "id": 57,
-                    "product_id": 12,
-                    "size_label": "250ml Pet (Tray of 24)",
-                    "price": "20.00",
-                    "stock_qty": 150,
-                    "stock_status": "in_stock",
-                    "is_active": 1
-                },
-                {
-                    "id": 58,
-                    "product_id": 12,
-                    "size_label": "750ml Pet (Case of 24)",
-                    "price": "40.00",
-                    "stock_qty": 120,
-                    "stock_status": "in_stock",
-                    "is_active": 1
-                },
-                {
-                    "id": 59,
-                    "product_id": 12,
-                    "size_label": "2L Family Pack (Case of 9)",
-                    "price": "95.00",
-                    "stock_qty": 80,
-                    "stock_status": "in_stock",
-                    "is_active": 1
-                }
-            ]
-        },
-        {
-            "id": 13,
-            "name": "Sprite Crisp Lemon-Lime",
-            "slug": "sprite-lemon-lime",
-            "image": "coca-cola.jpg",
-            "description": "Clear crisp lemon-lime sparkling soft drink.",
-            "gst_percent": "28.00",
-            "is_active": 1,
-            "brand_id": 7,
-            "brand_name": "Coca-Cola Beverages",
-            "brand_slug": "coca-cola-range",
-            "brand_sort_order": 4,
-            "variants": [
-                {
-                    "id": 63,
-                    "product_id": 13,
-                    "size_label": "250ml Pet (Tray of 24)",
+                    "id": 69,
+                    "product_id": 18,
+                    "size_label": "70g",
                     "price": "20.00",
                     "stock_qty": 120,
                     "stock_status": "in_stock",
                     "is_active": 1
                 },
                 {
-                    "id": 64,
-                    "product_id": 13,
-                    "size_label": "750ml Pet (Case of 24)",
-                    "price": "40.00",
+                    "id": 70,
+                    "product_id": 18,
+                    "size_label": "160g",
+                    "price": "50.00",
                     "stock_qty": 100,
-                    "stock_status": "in_stock",
-                    "is_active": 1
-                },
-                {
-                    "id": 65,
-                    "product_id": 13,
-                    "size_label": "2L Family Pack (Case of 9)",
-                    "price": "95.00",
-                    "stock_qty": 60,
-                    "stock_status": "in_stock",
-                    "is_active": 1
-                }
-            ]
-        },
-        {
-            "id": 22,
-            "name": "Thums Up Charged Cola",
-            "slug": "thums-up-cola",
-            "image": "thums-up.jpg",
-            "description": "Strong fizzy dark carbonated Indian cola with iconic spicy punch.",
-            "gst_percent": "28.00",
-            "is_active": 1,
-            "brand_id": 7,
-            "brand_name": "Coca-Cola Beverages",
-            "brand_slug": "coca-cola-range",
-            "brand_sort_order": 4,
-            "variants": [
-                {
-                    "id": 60,
-                    "product_id": 22,
-                    "size_label": "250ml Pet (Tray of 24)",
-                    "price": "20.00",
-                    "stock_qty": 150,
-                    "stock_status": "in_stock",
-                    "is_active": 1
-                },
-                {
-                    "id": 61,
-                    "product_id": 22,
-                    "size_label": "750ml Pet (Case of 24)",
-                    "price": "40.00",
-                    "stock_qty": 120,
-                    "stock_status": "in_stock",
-                    "is_active": 1
-                },
-                {
-                    "id": 62,
-                    "product_id": 22,
-                    "size_label": "2L Family Pack (Case of 9)",
-                    "price": "95.00",
-                    "stock_qty": 80,
                     "stock_status": "in_stock",
                     "is_active": 1
                 }
             ]
         }
     ],
-    "generated_at": "2026-10-12 08:09:41"
+    "generated_at": "2026-10-12 09:42:25"
 }

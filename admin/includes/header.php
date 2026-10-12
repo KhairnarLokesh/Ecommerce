@@ -144,6 +144,9 @@ $businessName = get_setting('business_name', 'Kalika Enterprises');
             <a href="<?= admin_url('products.php') ?>" class="nav-link <?= $adminPage === 'products' ? 'active' : '' ?>">
                 Products &amp; Variants
             </a>
+            <a href="<?= admin_url('categories.php') ?>" class="nav-link <?= $adminPage === 'categories' ? 'active' : '' ?>">
+                Categories
+            </a>
             <a href="<?= admin_url('brands.php') ?>" class="nav-link <?= $adminPage === 'brands' ? 'active' : '' ?>">
                 Brands
             </a>

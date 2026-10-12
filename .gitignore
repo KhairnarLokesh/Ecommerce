@@ -13,6 +13,8 @@ cache/
 tmp/
 .DS_Store
 Thumbs.db
+*(35) WhatsApp Business*
+WhatsApp Unknown*
 
 # IDE, Editor & Agent directories
 .vscode/

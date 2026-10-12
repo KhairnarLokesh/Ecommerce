@@ -1,7 +1,7 @@
 <?php
 /**
  * Kalika Enterprises - Products Catalogue
- * Step 4 & 5: Standardized marketplace product listing with left filter sidebar,
+ * Marketplace product listing with Category & Brand filters,
  * mobile bottom sheet, 1:1 image system, variant selection, and strict tokens.
  */
 
@@ -14,25 +14,48 @@ require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/auth.php';
 
 // Filter parameters from URL
+$pdo = $pdo ?? get_db_connection(false);
+$selectedCategorySlug = trim($_GET['category'] ?? '');
 $selectedBrandSlug = trim($_GET['brand'] ?? '');
 $searchQuery = trim($_GET['q'] ?? '');
 $inStockOnly = (isset($_GET['in_stock']) && $_GET['in_stock'] === '1');
 
+$categoriesList = [];
 $brandsList = [];
 $products = [];
 $totalProducts = 0;
+$currentCategoryName = '';
 $currentBrandName = '';
 
 if ($pdo) {
     try {
-        // 1. Fetch active brands that have active products with confirmed GST and product counts
+        // 1. Fetch active categories that have active products with confirmed GST and variants
+        $catStmt = $pdo->query("
+            SELECT c.id, c.name, c.slug, COUNT(p.id) as product_count
+            FROM categories c
+            INNER JOIN products p ON p.category_id = c.id AND p.is_active = 1 AND p.gst_percent IS NOT NULL
+            INNER JOIN product_variants v ON v.product_id = p.id AND v.is_active = 1
+            WHERE c.is_active = 1
+            GROUP BY c.id, c.name, c.slug, c.sort_order
+            ORDER BY c.sort_order ASC, c.name ASC
+        ");
+        $categoriesList = $catStmt->fetchAll();
+
+        foreach ($categoriesList as $c) {
+            if ($c['slug'] === $selectedCategorySlug) {
+                $currentCategoryName = $c['name'];
+                break;
+            }
+        }
+
+        // 2. Fetch active brands that have active products with confirmed GST and product counts
         $brandStmt = $pdo->query("
             SELECT b.id, b.name, b.slug, COUNT(p.id) as product_count
             FROM brands b
             INNER JOIN products p ON p.brand_id = b.id AND p.is_active = 1 AND p.gst_percent IS NOT NULL
             INNER JOIN product_variants v ON v.product_id = p.id AND v.is_active = 1
             WHERE b.is_active = 1
-            GROUP BY b.id, b.name, b.slug
+            GROUP BY b.id, b.name, b.slug, b.sort_order
             ORDER BY b.sort_order ASC, b.name ASC
         ");
         $brandsList = $brandStmt->fetchAll();
@@ -44,13 +67,15 @@ if ($pdo) {
             }
         }
 
-        // 2. Build parameterized query for products
+        // 3. Build parameterized query for products
         $sql = "
             SELECT 
                 p.id, p.name, p.slug, p.image, p.description, p.gst_percent,
-                b.id AS brand_id, b.name AS brand_name, b.slug AS brand_slug
+                b.id AS brand_id, b.name AS brand_name, b.slug AS brand_slug,
+                c.id AS category_id, c.name AS category_name, c.slug AS category_slug
             FROM products p
             INNER JOIN brands b ON b.id = p.brand_id
+            LEFT JOIN categories c ON c.id = p.category_id
             WHERE p.is_active = 1
               AND p.gst_percent IS NOT NULL
               AND b.is_active = 1
@@ -60,6 +85,11 @@ if ($pdo) {
               )
         ";
         $params = [];
+
+        if (!empty($selectedCategorySlug)) {
+            $sql .= " AND c.slug = :category";
+            $params[':category'] = $selectedCategorySlug;
+        }
 
         if (!empty($selectedBrandSlug)) {
             $sql .= " AND b.slug = :brand";
@@ -74,17 +104,17 @@ if ($pdo) {
         }
 
         if (!empty($searchQuery)) {
-            $sql .= " AND (p.name LIKE :q OR b.name LIKE :q OR p.description LIKE :q)";
+            $sql .= " AND (p.name LIKE :q OR b.name LIKE :q OR c.name LIKE :q OR p.description LIKE :q)";
             $params[':q'] = '%' . $searchQuery . '%';
         }
 
-        $sql .= " ORDER BY b.sort_order ASC, p.name ASC";
+        $sql .= " ORDER BY c.sort_order ASC, b.sort_order ASC, p.name ASC";
 
         $productStmt = $pdo->prepare($sql);
         $productStmt->execute($params);
         $rawProducts = $productStmt->fetchAll();
 
-        // 3. Fetch active variants for each retrieved product
+        // 4. Fetch active variants for each retrieved product
         if (!empty($rawProducts)) {
             $productIds = array_column($rawProducts, 'id');
             $inClause = implode(',', array_fill(0, count($productIds), '?'));
@@ -117,8 +147,19 @@ if ($pdo) {
     }
 }
 
+// Fallback handling if database is down
 if (empty($products) && function_exists('get_catalog_fallback')) {
     $fallbackCatalog = get_catalog_fallback();
+    if (empty($categoriesList)) {
+        $categoriesList = $fallbackCatalog['categories'] ?? [];
+    }
+    foreach ($categoriesList as $c) {
+        if ($c['slug'] === $selectedCategorySlug) {
+            $currentCategoryName = $c['name'];
+            break;
+        }
+    }
+
     if (empty($brandsList)) {
         $brandsList = $fallbackCatalog['brands'] ?? [];
     }
@@ -131,6 +172,9 @@ if (empty($products) && function_exists('get_catalog_fallback')) {
 
     $rawFallbackProds = $fallbackCatalog['products'] ?? [];
     foreach ($rawFallbackProds as $fp) {
+        if (!empty($selectedCategorySlug) && ($fp['category_slug'] ?? '') !== $selectedCategorySlug) {
+            continue;
+        }
         if (!empty($selectedBrandSlug) && ($fp['brand_slug'] ?? '') !== $selectedBrandSlug) {
             continue;
         }
@@ -147,7 +191,7 @@ if (empty($products) && function_exists('get_catalog_fallback')) {
             }
         }
         if (!empty($searchQuery)) {
-            $haystack = strtolower(($fp['name'] ?? '') . ' ' . ($fp['brand_name'] ?? '') . ' ' . ($fp['description'] ?? ''));
+            $haystack = strtolower(($fp['name'] ?? '') . ' ' . ($fp['brand_name'] ?? '') . ' ' . ($fp['category_name'] ?? '') . ' ' . ($fp['description'] ?? ''));
             if (!str_contains($haystack, strtolower($searchQuery))) {
                 continue;
             }
@@ -157,10 +201,40 @@ if (empty($products) && function_exists('get_catalog_fallback')) {
     $totalProducts = count($products);
 }
 
-// Meta tags
-$pageTitle = !empty($currentBrandName) ? $currentBrandName . ' Range' : 'Wholesale Product Catalogue';
+// Helper for filter links
+if (!function_exists('filter_link')) {
+    function filter_link(array $changes): string {
+        global $selectedCategorySlug, $selectedBrandSlug, $inStockOnly, $searchQuery;
+        $state = [
+            'category' => $selectedCategorySlug,
+            'brand' => $selectedBrandSlug,
+            'in_stock' => $inStockOnly ? '1' : '',
+            'q' => $searchQuery
+        ];
+        foreach ($changes as $k => $v) {
+            $state[$k] = $v;
+        }
+        $clean = array_filter($state, fn($val) => $val !== '' && $val !== null);
+        return public_url('products.php' . (!empty($clean) ? '?' . http_build_query($clean) : ''));
+    }
+}
+
+// Meta tags & Titles
+if (!empty($currentBrandName) && !empty($currentCategoryName)) {
+    $pageTitle = $currentBrandName . ' - ' . $currentCategoryName;
+    $displayHeading = e($currentBrandName) . ' &bull; ' . e($currentCategoryName);
+} elseif (!empty($currentCategoryName)) {
+    $pageTitle = $currentCategoryName . ' Wholesale Catalogue';
+    $displayHeading = e($currentCategoryName);
+} elseif (!empty($currentBrandName)) {
+    $pageTitle = $currentBrandName . ' Range';
+    $displayHeading = e($currentBrandName) . ' Range';
+} else {
+    $pageTitle = 'Wholesale Product Catalogue';
+    $displayHeading = 'Wholesale Product Catalogue';
+}
 $currentPage = 'products';
-$pageDescription = 'Browse wholesale distribution catalogue for Campa, Sundar, and Euro. Minimum order Rs 2,000 with free delivery across Niphad, Dindori, Chandwad, Sinnar, and Yeola.';
+$pageDescription = 'Browse wholesale distribution catalogue for Cold Drinks, Juices, Water, Biscuits, and Chips across Niphad, Dindori, Chandwad, Sinnar, and Yeola.';
 
 require_once __DIR__ . '/../includes/header.php';
 ?>
@@ -169,7 +243,7 @@ require_once __DIR__ . '/../includes/header.php';
     <!-- Catalogue Title Banner -->
     <div style="margin-bottom: var(--space-24);">
         <h1 style="font-size: var(--font-size-24); font-weight: var(--font-weight-semibold); color: var(--color-navy); margin-bottom: var(--space-4);">
-            <?= !empty($currentBrandName) ? e($currentBrandName) . ' Range' : 'Wholesale Product Catalogue' ?>
+            <?= $displayHeading ?>
         </h1>
         <p style="font-size: var(--font-size-14); color: var(--text-muted); margin-bottom: 0;">
             Minimum order Rs 2,000 &bull; Free delivery on Rs 2,000+ &bull; Delivery in 2-3 working days
@@ -188,7 +262,7 @@ require_once __DIR__ . '/../includes/header.php';
             <span style="font-size: var(--font-size-14); font-weight: var(--font-weight-semibold); color: var(--text-main);">
                 <?= $totalProducts ?> Products
             </span>
-            <?php if (!empty($selectedBrandSlug) || $inStockOnly || !empty($searchQuery)): ?>
+            <?php if (!empty($selectedCategorySlug) || !empty($selectedBrandSlug) || $inStockOnly || !empty($searchQuery)): ?>
                 <span style="font-size: var(--font-size-12); color: var(--color-orange); margin-left: 6px;">(Filtered)</span>
             <?php endif; ?>
         </div>
@@ -206,23 +280,43 @@ require_once __DIR__ . '/../includes/header.php';
         <aside class="catalogue-sidebar" aria-label="Product filters">
             <div class="sidebar-heading">
                 <span>Filter Products</span>
-                <?php if (!empty($selectedBrandSlug) || $inStockOnly || !empty($searchQuery)): ?>
+                <?php if (!empty($selectedCategorySlug) || !empty($selectedBrandSlug) || $inStockOnly || !empty($searchQuery)): ?>
                     <a href="<?= public_url('products.php') ?>" style="font-size: var(--font-size-12); color: var(--color-orange); font-weight: 400;">
                         Reset All
                     </a>
                 <?php endif; ?>
             </div>
 
+            <!-- Category Filter -->
+            <div class="sidebar-filter-section">
+                <div class="filter-group-title">Categories</div>
+                <div class="filter-link-list">
+                    <a href="<?= filter_link(['category' => '']) ?>" 
+                       class="filter-item-link <?= empty($selectedCategorySlug) ? 'active' : '' ?>">
+                        <span>All Categories</span>
+                    </a>
+                    <?php foreach ($categoriesList as $c): 
+                        $cUrl = filter_link(['category' => $c['slug']]);
+                        $isActive = ($selectedCategorySlug === $c['slug']);
+                    ?>
+                        <a href="<?= $cUrl ?>" class="filter-item-link <?= $isActive ? 'active' : '' ?>">
+                            <span><?= e($c['name']) ?></span>
+                            <span class="filter-count"><?= (int)$c['product_count'] ?></span>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+
             <!-- Brand Filter -->
             <div class="sidebar-filter-section">
                 <div class="filter-group-title">Brands</div>
                 <div class="filter-link-list">
-                    <a href="<?= public_url('products.php' . ($inStockOnly ? '?in_stock=1' : '') . (!empty($searchQuery) ? ($inStockOnly ? '&' : '?') . 'q=' . urlencode($searchQuery) : '')) ?>" 
+                    <a href="<?= filter_link(['brand' => '']) ?>" 
                        class="filter-item-link <?= empty($selectedBrandSlug) ? 'active' : '' ?>">
                         <span>All Brands</span>
                     </a>
                     <?php foreach ($brandsList as $b): 
-                        $brandUrl = public_url('products.php?brand=' . urlencode($b['slug']) . ($inStockOnly ? '&in_stock=1' : '') . (!empty($searchQuery) ? '&q=' . urlencode($searchQuery) : ''));
+                        $brandUrl = filter_link(['brand' => $b['slug']]);
                         $isActive = ($selectedBrandSlug === $b['slug']);
                     ?>
                         <a href="<?= $brandUrl ?>" class="filter-item-link <?= $isActive ? 'active' : '' ?>">
@@ -237,6 +331,9 @@ require_once __DIR__ . '/../includes/header.php';
             <div class="sidebar-filter-section">
                 <div class="filter-group-title">Availability</div>
                 <form action="<?= public_url('products.php') ?>" method="GET" id="stockFilterForm">
+                    <?php if (!empty($selectedCategorySlug)): ?>
+                        <input type="hidden" name="category" value="<?= e($selectedCategorySlug) ?>">
+                    <?php endif; ?>
                     <?php if (!empty($selectedBrandSlug)): ?>
                         <input type="hidden" name="brand" value="<?= e($selectedBrandSlug) ?>">
                     <?php endif; ?>
@@ -253,16 +350,41 @@ require_once __DIR__ . '/../includes/header.php';
 
         <!-- Product Grid Content -->
         <main class="catalogue-content">
-            <div class="catalogue-header-bar">
+            <!-- Filter Pills / Status Line -->
+            <div class="catalogue-header-bar" style="flex-wrap: wrap; gap: 8px;">
                 <div style="font-size: var(--font-size-14); color: var(--text-muted);">
                     Showing <strong style="color: var(--text-main);"><?= $totalProducts ?></strong> products
-                    <?php if (!empty($selectedBrandSlug)): ?>
-                        in <strong style="color: var(--text-main);"><?= e($currentBrandName) ?></strong>
+                    <?php if (!empty($currentCategoryName)): ?>
+                        in Category <strong style="color: var(--text-main);"><?= e($currentCategoryName) ?></strong>
+                    <?php endif; ?>
+                    <?php if (!empty($currentBrandName)): ?>
+                        from Brand <strong style="color: var(--text-main);"><?= e($currentBrandName) ?></strong>
                     <?php endif; ?>
                     <?php if (!empty($searchQuery)): ?>
                         matching "<strong><?= e($searchQuery) ?></strong>"
                     <?php endif; ?>
                 </div>
+
+                <!-- Active Filter Tags -->
+                <?php if (!empty($selectedCategorySlug) || !empty($selectedBrandSlug) || !empty($searchQuery)): ?>
+                    <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-left: auto;">
+                        <?php if (!empty($selectedCategorySlug)): ?>
+                            <a href="<?= filter_link(['category' => '']) ?>" class="badge" style="background: #e0e7ff; color: #3730a3; padding: 4px 8px; font-size: 12px; text-decoration: none; border-radius: 4px;">
+                                <?= e($currentCategoryName) ?> &times;
+                            </a>
+                        <?php endif; ?>
+                        <?php if (!empty($selectedBrandSlug)): ?>
+                            <a href="<?= filter_link(['brand' => '']) ?>" class="badge" style="background: #e2e8f0; color: #1e293b; padding: 4px 8px; font-size: 12px; text-decoration: none; border-radius: 4px;">
+                                <?= e($currentBrandName) ?> &times;
+                            </a>
+                        <?php endif; ?>
+                        <?php if (!empty($searchQuery)): ?>
+                            <a href="<?= filter_link(['q' => '']) ?>" class="badge" style="background: #fef3c7; color: #92400e; padding: 4px 8px; font-size: 12px; text-decoration: none; border-radius: 4px;">
+                                "<?= e($searchQuery) ?>" &times;
+                            </a>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
             </div>
 
             <?php if (!empty($products)): ?>
@@ -275,7 +397,7 @@ require_once __DIR__ . '/../includes/header.php';
                         <div class="product-card" id="product-<?= (int)$product['id'] ?>">
                             <!-- Top section: Image & Info -->
                             <div>
-                                <!-- Step 4 Image System: 1:1 container, contain, 8px padding, white background or grey fallback -->
+                                <!-- Image System: 1:1 container, contain, 8px padding, white background or grey fallback -->
                                 <div class="product-img-box">
                                     <?php if (!empty($product['image']) && file_exists(__DIR__ . '/uploads/products/' . $product['image'])): ?>
                                         <img 
@@ -294,11 +416,18 @@ require_once __DIR__ . '/../includes/header.php';
                                     <?php endif; ?>
                                 </div>
 
-                                <!-- Brand badge & Stock status -->
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4);">
-                                    <span style="font-size: var(--font-size-12); font-weight: var(--font-weight-semibold); color: var(--text-muted);">
-                                        <?= e($product['brand_name']) ?>
-                                    </span>
+                                <!-- Category & Brand Badges -->
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4); gap: 4px; flex-wrap: wrap;">
+                                    <div style="display: flex; gap: 4px; align-items: center; flex-wrap: wrap;">
+                                        <?php if (!empty($product['category_name'])): ?>
+                                            <span style="font-size: 11px; font-weight: 600; color: #4338ca; background: #e0e7ff; padding: 1px 6px; border-radius: 4px;">
+                                                <?= e($product['category_name']) ?>
+                                            </span>
+                                        <?php endif; ?>
+                                        <span style="font-size: var(--font-size-12); font-weight: var(--font-weight-semibold); color: var(--text-muted);">
+                                            <?= e($product['brand_name']) ?>
+                                        </span>
+                                    </div>
                                     <span class="badge-stock <?= $isInitialInStock ? 'badge-in-stock stock-badge-in' : 'badge-out-of-stock stock-badge-out' ?> stock-badge">
                                         <?= $isInitialInStock ? 'In Stock' : 'Out of Stock' ?>
                                     </span>
@@ -397,16 +526,35 @@ require_once __DIR__ . '/../includes/header.php';
             <button type="button" id="closeMobileFilterBtn" style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted);">&times;</button>
         </div>
 
+        <!-- Mobile Categories -->
+        <div style="margin-bottom: var(--space-16);">
+            <div class="filter-group-title">Categories</div>
+            <div class="filter-link-list">
+                <a href="<?= filter_link(['category' => '']) ?>" 
+                   class="filter-item-link <?= empty($selectedCategorySlug) ? 'active' : '' ?>">
+                    <span>All Categories</span>
+                </a>
+                <?php foreach ($categoriesList as $c): 
+                    $cUrl = filter_link(['category' => $c['slug']]);
+                ?>
+                    <a href="<?= $cUrl ?>" class="filter-item-link <?= ($selectedCategorySlug === $c['slug']) ? 'active' : '' ?>">
+                        <span><?= e($c['name']) ?></span>
+                        <span class="filter-count"><?= (int)$c['product_count'] ?></span>
+                    </a>
+                <?php endforeach; ?>
+            </div>
+        </div>
+
         <!-- Mobile Brands -->
         <div style="margin-bottom: var(--space-16);">
             <div class="filter-group-title">Brands</div>
             <div class="filter-link-list">
-                <a href="<?= public_url('products.php' . ($inStockOnly ? '?in_stock=1' : '') . (!empty($searchQuery) ? ($inStockOnly ? '&' : '?') . 'q=' . urlencode($searchQuery) : '')) ?>" 
+                <a href="<?= filter_link(['brand' => '']) ?>" 
                    class="filter-item-link <?= empty($selectedBrandSlug) ? 'active' : '' ?>">
                     <span>All Brands</span>
                 </a>
                 <?php foreach ($brandsList as $b): 
-                    $bUrl = public_url('products.php?brand=' . urlencode($b['slug']) . ($inStockOnly ? '&in_stock=1' : '') . (!empty($searchQuery) ? '&q=' . urlencode($searchQuery) : ''));
+                    $bUrl = filter_link(['brand' => $b['slug']]);
                 ?>
                     <a href="<?= $bUrl ?>" class="filter-item-link <?= ($selectedBrandSlug === $b['slug']) ? 'active' : '' ?>">
                         <span><?= e($b['name']) ?></span>
@@ -420,6 +568,9 @@ require_once __DIR__ . '/../includes/header.php';
         <div style="margin-bottom: var(--space-24);">
             <div class="filter-group-title">Availability</div>
             <form action="<?= public_url('products.php') ?>" method="GET">
+                <?php if (!empty($selectedCategorySlug)): ?>
+                    <input type="hidden" name="category" value="<?= e($selectedCategorySlug) ?>">
+                <?php endif; ?>
                 <?php if (!empty($selectedBrandSlug)): ?>
                     <input type="hidden" name="brand" value="<?= e($selectedBrandSlug) ?>">
                 <?php endif; ?>

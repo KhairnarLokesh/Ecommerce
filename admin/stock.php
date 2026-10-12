@@ -12,6 +12,7 @@ $adminTitle = 'Bulk Stock Manager';
 require_once __DIR__ . '/includes/header.php';
 
 $error = '';
+$categoryFilter = (int)($_GET['category'] ?? 0);
 $brandFilter = (int)($_GET['brand'] ?? 0);
 $stockFilter = trim($_GET['stock'] ?? '');
 
@@ -53,7 +54,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $pdo->commit();
                 set_flash('success', "Bulk inventory updated! {$updatedCount} variant stock records saved.");
-                redirect(admin_url('stock.php' . ($brandFilter > 0 ? '?brand=' . $brandFilter : '')));
+                $redirectUrl = 'stock.php?';
+                if ($categoryFilter > 0) $redirectUrl .= 'category=' . $categoryFilter . '&';
+                if ($brandFilter > 0) $redirectUrl .= 'brand=' . $brandFilter . '&';
+                if (!empty($stockFilter)) $redirectUrl .= 'stock=' . urlencode($stockFilter);
+                redirect(admin_url(rtrim($redirectUrl, '?&')));
 
             } catch (Exception $e) {
                 if ($pdo->inTransaction()) {
@@ -66,15 +71,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Fetch brands for filtering
+// Fetch categories & brands for filtering
+$categories = [];
 $brands = [];
 if ($pdo) {
+    $categories = $pdo->query("SELECT id, name FROM categories ORDER BY sort_order ASC, name ASC")->fetchAll();
     $brands = $pdo->query("SELECT id, name FROM brands ORDER BY name ASC")->fetchAll();
 }
 
 // Build query
 $whereClauses = [];
 $params = [];
+
+if ($categoryFilter > 0) {
+    $whereClauses[] = "p.category_id = ?";
+    $params[] = $categoryFilter;
+}
 
 if ($brandFilter > 0) {
     $whereClauses[] = "p.brand_id = ?";
@@ -103,12 +115,14 @@ if ($pdo) {
                 p.id AS product_id,
                 p.name AS product_name,
                 p.is_active AS product_active,
-                b.name AS brand_name
+                b.name AS brand_name,
+                c.name AS category_name
             FROM product_variants v
             INNER JOIN products p ON p.id = v.product_id
+            LEFT JOIN categories c ON c.id = p.category_id
             INNER JOIN brands b ON b.id = p.brand_id
             {$whereSql}
-            ORDER BY b.name ASC, p.name ASC, v.price ASC
+            ORDER BY c.sort_order ASC, b.name ASC, p.name ASC, v.price ASC
         ");
         $stmt->execute($params);
         $variants = $stmt->fetchAll();
@@ -140,6 +154,15 @@ if ($pdo) {
     <form action="<?= admin_url('stock.php') ?>" method="GET" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
         <label style="font-size: 0.8125rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Filter By:</label>
         
+        <select name="category" class="form-control" style="width: auto; min-width: 180px; font-size: 0.875rem;" onchange="this.form.submit()">
+            <option value="0">All Categories</option>
+            <?php foreach ($categories as $c): ?>
+                <option value="<?= (int)$c['id'] ?>" <?= $categoryFilter === (int)$c['id'] ? 'selected' : '' ?>>
+                    <?= e($c['name']) ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+
         <select name="brand" class="form-control" style="width: auto; min-width: 180px; font-size: 0.875rem;" onchange="this.form.submit()">
             <option value="0">All Brands</option>
             <?php foreach ($brands as $b): ?>
@@ -155,14 +178,21 @@ if ($pdo) {
             <option value="out" <?= $stockFilter === 'out' ? 'selected' : '' ?>>Out of Stock Only</option>
         </select>
 
-        <?php if ($brandFilter > 0 || !empty($stockFilter)): ?>
+        <?php if ($categoryFilter > 0 || $brandFilter > 0 || !empty($stockFilter)): ?>
             <a href="<?= admin_url('stock.php') ?>" class="btn btn-sm btn-outline">Reset Filters</a>
         <?php endif; ?>
     </form>
 </div>
 
 <!-- Bulk Stock Update Form -->
-<form action="<?= admin_url('stock.php' . ($brandFilter > 0 ? '?brand=' . $brandFilter : '')) ?>" method="POST">
+<?php
+$currentQuery = http_build_query(array_filter([
+    'category' => $categoryFilter ?: null,
+    'brand' => $brandFilter ?: null,
+    'stock' => $stockFilter ?: null
+]));
+?>
+<form action="<?= admin_url('stock.php' . ($currentQuery ? '?' . $currentQuery : '')) ?>" method="POST">
     <?= csrf_field() ?>
 
     <div class="card" style="padding: 1.5rem;">
@@ -189,7 +219,7 @@ if ($pdo) {
                 <table style="width: 100%; border-collapse: collapse; text-align: left;">
                     <thead>
                         <tr style="border-bottom: 2px solid var(--border-color); font-size: 0.8125rem; color: var(--text-muted); text-transform: uppercase;">
-                            <th style="padding: 0.75rem 0.5rem;">Product &amp; Brand</th>
+                            <th style="padding: 0.75rem 0.5rem;">Product, Category &amp; Brand</th>
                             <th style="padding: 0.75rem 0.5rem;">Pack / Variant Size</th>
                             <th style="padding: 0.75rem 0.5rem; text-align: right;">Unit Rate</th>
                             <th style="padding: 0.75rem 0.5rem; width: 140px; text-align: center;">Stock Qty</th>
@@ -209,8 +239,12 @@ if ($pdo) {
                                 <!-- Product & Brand -->
                                 <td style="padding: 0.75rem 0.5rem;">
                                     <strong style="color: var(--color-primary);"><?= e($v['product_name']) ?></strong>
-                                    <div style="font-size: 0.75rem; color: var(--text-muted);">
-                                        <?= e($v['brand_name']) ?>
+                                    <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.4rem; margin-top: 0.15rem;">
+                                        <span><?= e($v['brand_name']) ?></span>
+                                        <?php if (!empty($v['category_name'])): ?>
+                                            <span>&bull;</span>
+                                            <span style="color: var(--color-primary); font-weight: 500;"><?= e($v['category_name']) ?></span>
+                                        <?php endif; ?>
                                     </div>
                                 </td>
 

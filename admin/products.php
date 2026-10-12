@@ -14,6 +14,7 @@ require_once __DIR__ . '/includes/header.php';
 $error = '';
 $searchQuery = trim($_GET['q'] ?? '');
 $brandFilter = (int)($_GET['brand'] ?? 0);
+$categoryFilter = (int)($_GET['category'] ?? 0);
 $filterGst = trim($_GET['filter'] ?? '');
 
 // Handle Actions: Toggle Active, Delete
@@ -70,10 +71,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Fetch all active brands for filter dropdown
+// Fetch all active brands and categories for filter dropdowns
 $brandsList = [];
+$categoriesList = [];
 if ($pdo) {
     $brandsList = $pdo->query("SELECT id, name FROM brands ORDER BY name ASC")->fetchAll();
+    $categoriesList = $pdo->query("SELECT id, name FROM categories ORDER BY sort_order ASC, name ASC")->fetchAll();
 }
 
 // Build query
@@ -89,6 +92,11 @@ if (!empty($searchQuery)) {
 if ($brandFilter > 0) {
     $whereClauses[] = "p.brand_id = ?";
     $params[] = $brandFilter;
+}
+
+if ($categoryFilter > 0) {
+    $whereClauses[] = "p.category_id = ?";
+    $params[] = $categoryFilter;
 }
 
 if ($filterGst === 'pending_gst') {
@@ -110,12 +118,14 @@ if ($pdo) {
                 p.created_at,
                 b.name AS brand_name,
                 b.is_active AS brand_active,
+                c.name AS category_name,
                 COUNT(v.id) AS variant_count,
                 COALESCE(SUM(v.stock_qty), 0) AS total_stock,
                 MIN(v.price) AS min_price,
                 MAX(v.price) AS max_price
             FROM products p
             INNER JOIN brands b ON b.id = p.brand_id
+            LEFT JOIN categories c ON c.id = p.category_id
             LEFT JOIN product_variants v ON v.product_id = p.id
             {$whereSql}
             GROUP BY p.id
@@ -159,11 +169,21 @@ if ($pdo) {
     <form action="<?= admin_url('products.php') ?>" method="GET" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; justify-content: space-between;">
         <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; flex: 1;">
             <!-- Brand Filter -->
-            <select name="brand" class="form-control" style="width: auto; min-width: 180px; font-size: 0.875rem;" onchange="this.form.submit()">
+            <select name="brand" class="form-control" style="width: auto; min-width: 170px; font-size: 0.875rem;" onchange="this.form.submit()">
                 <option value="0">All Brands</option>
                 <?php foreach ($brandsList as $b): ?>
                     <option value="<?= (int)$b['id'] ?>" <?= $brandFilter === (int)$b['id'] ? 'selected' : '' ?>>
                         <?= e($b['name']) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+
+            <!-- Category Filter -->
+            <select name="category" class="form-control" style="width: auto; min-width: 180px; font-size: 0.875rem;" onchange="this.form.submit()">
+                <option value="0">All Categories</option>
+                <?php foreach ($categoriesList as $cat): ?>
+                    <option value="<?= (int)$cat['id'] ?>" <?= $categoryFilter === (int)$cat['id'] ? 'selected' : '' ?>>
+                        <?= e($cat['name']) ?>
                     </option>
                 <?php endforeach; ?>
             </select>
@@ -174,7 +194,7 @@ if ($pdo) {
                 <option value="pending_gst" <?= $filterGst === 'pending_gst' ? 'selected' : '' ?>>Pending GST Only</option>
             </select>
 
-            <?php if (!empty($searchQuery) || $brandFilter > 0 || !empty($filterGst)): ?>
+            <?php if (!empty($searchQuery) || $brandFilter > 0 || $categoryFilter > 0 || !empty($filterGst)): ?>
                 <a href="<?= admin_url('products.php') ?>" class="btn btn-sm btn-outline" style="color: var(--color-danger); border-color: var(--border-color);">
                     &times; Reset Filters
                 </a>
@@ -237,8 +257,11 @@ if ($pdo) {
                                 <a href="<?= admin_url('product-edit.php?id=' . (int)$p['id']) ?>" style="font-weight: 700; color: var(--color-primary); text-decoration: none;">
                                     <?= e($p['name']) ?>
                                 </a>
-                                <div style="font-size: 0.8125rem; color: var(--text-muted); margin-top: 0.15rem;">
+                                <div style="font-size: 0.8125rem; color: var(--text-muted); margin-top: 0.15rem; display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap;">
                                     <span class="badge" style="background: #f1f5f9; padding: 0.1rem 0.35rem; font-size: 0.75rem;"><?= e($p['brand_name']) ?></span>
+                                    <?php if (!empty($p['category_name'])): ?>
+                                        <span class="badge" style="background: #e0e7ff; color: #3730a3; padding: 0.1rem 0.35rem; font-size: 0.75rem;"><?= e($p['category_name']) ?></span>
+                                    <?php endif; ?>
                                     <?php if ((int)$p['brand_active'] === 0): ?>
                                         <span class="badge badge-danger" style="font-size: 0.7rem;">Brand Inactive</span>
                                     <?php endif; ?>

@@ -24,6 +24,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $loginVal = trim($_POST['login'] ?? $_POST['email'] ?? $_POST['mobile'] ?? '');
         $password = $_POST['password'] ?? '';
+        $isEmail  = filter_var($loginVal, FILTER_VALIDATE_EMAIL) !== false;
+        $isMobile = (bool)preg_match('/^[6-9]\d{9}$/', $loginVal);
 
         if (empty($loginVal) || empty($password)) {
             $error = 'Please enter your registered email or mobile number, along with your password.';

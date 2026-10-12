@@ -45,6 +45,10 @@ function get_db_connection(bool $throwOnError = false): ?PDO
         PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES " . DB_CHARSET . " COLLATE utf8mb4_unicode_ci"
     ];
 
+    if (defined('PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT')) {
+        $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
+    }
+
     try {
         $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
         return $pdo;

@@ -17,7 +17,36 @@ if (session_status() === PHP_SESSION_NONE) {
  */
 function csrf_get_secret(): string
 {
-    return defined('APP_KEY') ? APP_KEY : 'kalika_csrf_secret_salt_2026_981273';
+    if (defined('APP_KEY') && !empty(APP_KEY)) {
+        return APP_KEY;
+    }
+    $envKey = getenv('APP_KEY');
+    if (!empty($envKey)) {
+        return (string)$envKey;
+    }
+    return 'kalika_csrf_secret_salt_2026_981273';
+}
+
+/**
+ * Validate cryptographic HMAC signature and timestamp of a 64-character token.
+ *
+ * @param string $token Token candidate
+ * @return bool True if authentic and not expired
+ */
+function csrf_is_valid_hmac(string $token): bool
+{
+    if (strlen($token) !== 64) {
+        return false;
+    }
+    $payload = substr($token, 0, 22);
+    $sig = substr($token, 22);
+    $timestamp = (int)substr($payload, 12, 10);
+    // Valid for up to 48 hours (172800s) + 24 hours future clock drift tolerance (86400s)
+    if ($timestamp <= (time() - 172800) || $timestamp > (time() + 86400)) {
+        return false;
+    }
+    $expectedSig = substr(hash_hmac('sha256', $payload, csrf_get_secret()), 0, 42);
+    return hash_equals($expectedSig, $sig);
 }
 
 /**
@@ -28,9 +57,9 @@ function csrf_get_secret(): string
  */
 function csrf_token(): string
 {
-    if (!empty($_SESSION['_csrf_token']) && strlen((string)$_SESSION['_csrf_token']) === 64) {
+    if (!empty($_SESSION['_csrf_token']) && csrf_is_valid_hmac((string)$_SESSION['_csrf_token'])) {
         $token = (string)$_SESSION['_csrf_token'];
-    } elseif (!empty($_COOKIE['_csrf_token']) && strlen((string)$_COOKIE['_csrf_token']) === 64) {
+    } elseif (!empty($_COOKIE['_csrf_token']) && csrf_is_valid_hmac((string)$_COOKIE['_csrf_token'])) {
         $token = (string)$_COOKIE['_csrf_token'];
         $_SESSION['_csrf_token'] = $token;
     } else {
@@ -86,7 +115,7 @@ function csrf_verify(?string $token = null): bool
         $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? null;
     }
 
-    if (empty($token) || !is_string($token) || strlen($token) !== 64) {
+    if (empty($token) || !is_string($token)) {
         return false;
     }
 
@@ -102,17 +131,9 @@ function csrf_verify(?string $token = null): bool
     }
 
     // 3. Cryptographic HMAC validation (100% resilient across stateless Vercel containers)
-    $payload = substr($token, 0, 22);
-    $sig = substr($token, 22);
-    $timestamp = (int)substr($payload, 12, 10);
-
-    // Valid if generated within last 24 hours (86400 seconds)
-    if ($timestamp > (time() - 86400) && $timestamp <= (time() + 300)) {
-        $expectedSig = substr(hash_hmac('sha256', $payload, csrf_get_secret()), 0, 42);
-        if (hash_equals($expectedSig, $sig)) {
-            $_SESSION['_csrf_token'] = $token;
-            return true;
-        }
+    if (csrf_is_valid_hmac($token)) {
+        $_SESSION['_csrf_token'] = $token;
+        return true;
     }
 
     return false;

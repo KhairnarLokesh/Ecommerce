@@ -36,7 +36,7 @@ $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
     ? 'https://' : 'http://';
 $host = $_SERVER['HTTP_X_FORWARDED_HOST'] ?? ($_SERVER['HTTP_HOST'] ?? 'localhost');
 $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
-$appBase = rtrim(preg_replace('#/(public|admin)(/.*)?$#', '', $scriptDir), '/');
+$appBase = rtrim(preg_replace('#/(public|admin|api)(/.*)?$#', '', $scriptDir), '/');
 
 defined('SITE_URL') or define('SITE_URL', $protocol . $host . $appBase);
 defined('PUBLIC_URL') or define('PUBLIC_URL', SITE_URL . '/public');

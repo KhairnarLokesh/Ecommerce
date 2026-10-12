@@ -23,6 +23,41 @@ if (!defined('SITE_URL')) {
     }
 }
 
+// Static asset handling with proper MIME types
+$staticExts = [
+    'css'   => 'text/css; charset=UTF-8',
+    'js'    => 'application/javascript; charset=UTF-8',
+    'svg'   => 'image/svg+xml',
+    'png'   => 'image/png',
+    'jpg'   => 'image/jpeg',
+    'jpeg'  => 'image/jpeg',
+    'gif'   => 'image/gif',
+    'webp'  => 'image/webp',
+    'ico'   => 'image/x-icon',
+    'woff'  => 'font/woff',
+    'woff2' => 'font/woff2',
+    'ttf'   => 'font/ttf',
+];
+
+$ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+if (isset($staticExts[$ext])) {
+    $candidates = [
+        $rootDir . '/' . $path,
+        $rootDir . '/public/' . $path,
+    ];
+    if (str_starts_with($path, 'public/')) {
+        $candidates[] = $rootDir . '/' . substr($path, 7);
+    }
+    foreach ($candidates as $candidate) {
+        if (is_file($candidate)) {
+            header('Content-Type: ' . $staticExts[$ext]);
+            header('Cache-Control: public, max-age=31536000, immutable');
+            readfile($candidate);
+            exit;
+        }
+    }
+}
+
 // Route resolution
 if ($path === '' || $path === 'index.php') {
     $targetFile = $rootDir . '/public/index.php';

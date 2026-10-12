@@ -23,6 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_verify()) {
         $error = 'Security token invalid or expired. Please refresh the page.';
     } else {
+        $clientIp = function_exists('get_client_ip') ? get_client_ip() : ($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1');
         $loginVal = trim($_POST['login'] ?? $_POST['email'] ?? $_POST['mobile'] ?? '');
         $password = $_POST['password'] ?? '';
         $isEmail  = filter_var($loginVal, FILTER_VALIDATE_EMAIL) !== false;

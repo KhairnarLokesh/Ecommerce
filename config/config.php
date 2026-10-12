@@ -23,8 +23,8 @@ if (file_exists(__DIR__ . '/../.env')) {
     }
 }
 
-// Application Environment: 'development' or 'production'
-defined('APP_ENV') or define('APP_ENV', 'development');
+// Application Environment: 'development' or 'production' (automatically 'production' on Vercel)
+defined('APP_ENV') or define('APP_ENV', getenv('APP_ENV') ?: (getenv('VERCEL') || !empty($_SERVER['VERCEL']) ? 'production' : 'development'));
 
 // Error Reporting
 if (APP_ENV === 'development') {

@@ -44,12 +44,26 @@ function format_currency(mixed $amount, bool $showDecimals = true): string
  */
 function redirect(string $url, int $statusCode = 302): void
 {
-    if (!headers_sent()) {
-        header("Location: " . $url, true, $statusCode);
-    } else {
-        echo "<script>window.location.href=" . json_encode($url) . ";</script>";
-        echo "<noscript><meta http-equiv='refresh' content='0;url=" . htmlspecialchars($url, ENT_QUOTES, 'UTF-8') . "'></noscript>";
+    // Ensure session is written and unlocked before redirecting
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        @session_write_close();
     }
+
+    if (!headers_sent()) {
+        http_response_code($statusCode);
+        header("Location: " . $url, true, $statusCode);
+    }
+
+    // Universal fallback: Meta refresh + JavaScript replace guarantees page moves in all serverless environments
+    echo "<!DOCTYPE html>\n";
+    echo "<html>\n<head>\n";
+    echo "<meta charset=\"UTF-8\">\n";
+    echo "<meta http-equiv=\"refresh\" content=\"0;url=" . htmlspecialchars($url, ENT_QUOTES, 'UTF-8') . "\">\n";
+    echo "<script>window.location.replace(" . json_encode($url) . ");</script>\n";
+    echo "</head>\n<body>\n";
+    echo "<p>Redirecting to <a href=\"" . htmlspecialchars($url, ENT_QUOTES, 'UTF-8') . "\">" . htmlspecialchars($url, ENT_QUOTES, 'UTF-8') . "</a>...</p>\n";
+    echo "<script>window.location.replace(" . json_encode($url) . ");</script>\n";
+    echo "</body>\n</html>";
     exit;
 }
 

@@ -62,6 +62,43 @@ if ($pdo) {
         error_log("Error fetching home data: " . $e->getMessage());
     }
 }
+
+if (empty($activeBrands) && function_exists('get_catalog_fallback')) {
+    $fallbackCatalog = get_catalog_fallback();
+    $activeBrands = $fallbackCatalog['brands'] ?? [];
+    foreach ($activeBrands as &$ab) {
+        foreach ($fallbackCatalog['products'] ?? [] as $fp) {
+            if ($fp['brand_id'] == $ab['id'] && !empty($fp['image'])) {
+                $ab['sample_image'] = $fp['image'];
+                break;
+            }
+        }
+    }
+    unset($ab);
+
+    foreach ($fallbackCatalog['products'] ?? [] as $fp) {
+        $minPrice = null;
+        $defVarId = null;
+        foreach ($fp['variants'] ?? [] as $fv) {
+            if ($minPrice === null || (float)$fv['price'] < $minPrice) {
+                $minPrice = (float)$fv['price'];
+                $defVarId = $fv['id'];
+            }
+        }
+        $brandProducts[$fp['brand_slug']][] = [
+            'id' => $fp['id'],
+            'name' => $fp['name'],
+            'slug' => $fp['slug'],
+            'image' => $fp['image'],
+            'gst_percent' => $fp['gst_percent'],
+            'brand_id' => $fp['brand_id'],
+            'brand_name' => $fp['brand_name'],
+            'brand_slug' => $fp['brand_slug'],
+            'min_price' => $minPrice,
+            'default_variant_id' => $defVarId,
+        ];
+    }
+}
 ?>
 
 <!-- 1. Hero Section: Editorial Authority & Dual CTAs (Digital Darts Style) -->

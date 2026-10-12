@@ -117,6 +117,46 @@ if ($pdo) {
     }
 }
 
+if (empty($products) && function_exists('get_catalog_fallback')) {
+    $fallbackCatalog = get_catalog_fallback();
+    if (empty($brandsList)) {
+        $brandsList = $fallbackCatalog['brands'] ?? [];
+    }
+    foreach ($brandsList as $b) {
+        if ($b['slug'] === $selectedBrandSlug) {
+            $currentBrandName = $b['name'];
+            break;
+        }
+    }
+
+    $rawFallbackProds = $fallbackCatalog['products'] ?? [];
+    foreach ($rawFallbackProds as $fp) {
+        if (!empty($selectedBrandSlug) && ($fp['brand_slug'] ?? '') !== $selectedBrandSlug) {
+            continue;
+        }
+        if ($inStockOnly) {
+            $hasInStock = false;
+            foreach ($fp['variants'] ?? [] as $fv) {
+                if (($fv['stock_status'] ?? '') === 'in_stock') {
+                    $hasInStock = true;
+                    break;
+                }
+            }
+            if (!$hasInStock) {
+                continue;
+            }
+        }
+        if (!empty($searchQuery)) {
+            $haystack = strtolower(($fp['name'] ?? '') . ' ' . ($fp['brand_name'] ?? '') . ' ' . ($fp['description'] ?? ''));
+            if (!str_contains($haystack, strtolower($searchQuery))) {
+                continue;
+            }
+        }
+        $products[] = $fp;
+    }
+    $totalProducts = count($products);
+}
+
 // Meta tags
 $pageTitle = !empty($currentBrandName) ? $currentBrandName . ' Range' : 'Wholesale Product Catalogue';
 $currentPage = 'products';
@@ -136,7 +176,7 @@ require_once __DIR__ . '/../includes/header.php';
         </p>
     </div>
 
-    <?php if (!$pdo && !empty($GLOBALS['db_connection_error'])): ?>
+    <?php if (!$pdo && !empty($GLOBALS['db_connection_error']) && empty($products)): ?>
         <div style="background:#fee2e2; border:1px solid #ef4444; color:#991b1b; padding:12px 16px; margin-bottom:20px; border-radius:6px; font-size:13px; font-family: monospace;">
             <strong>Database Connection Diagnostic:</strong> <?= htmlspecialchars($GLOBALS['db_connection_error']) ?>
         </div>

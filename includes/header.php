@@ -48,6 +48,11 @@ if ($pdo) {
         $headerBrands = [];
     }
 }
+
+if (empty($headerBrands) && function_exists('get_catalog_fallback')) {
+    $fallbackCatalog = get_catalog_fallback();
+    $headerBrands = $fallbackCatalog['brands'] ?? [];
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">

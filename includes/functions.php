@@ -215,3 +215,26 @@ function get_setting(string $key, string $default = ''): string
 
     return $defaults[$key] ?? $default;
 }
+
+/**
+ * Load static fallback catalog when database is not connected.
+ * Ensures the storefront, brand filters, and products display perfectly.
+ *
+ * @return array{brands: array, products: array}
+ */
+function get_catalog_fallback(): array
+{
+    static $fallback = null;
+    if ($fallback !== null) {
+        return $fallback;
+    }
+    $file = dirname(__DIR__) . '/data/catalog_fallback.json';
+    if (file_exists($file)) {
+        $data = json_decode((string)file_get_contents($file), true);
+        if (is_array($data) && !empty($data['products'])) {
+            $fallback = $data;
+            return $fallback;
+        }
+    }
+    return ['brands' => [], 'products' => []];
+}

@@ -1,0 +1,25 @@
+# Secure Uploads Directory - Prevent execution of scripts
+<FilesMatch "(?i)\.(php|phtml|php3|php4|php5|php7|php8|phps|pl|py|cgi|sh|bash|exe|js)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# Only permit images
+<FilesMatch "(?i)\.(jpg|jpeg|png|webp|gif|svg)$">
+    <IfModule mod_authz_core.c>
+        Require all granted
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Allow from all
+    </IfModule>
+</FilesMatch>
+
+# Disable script execution engines if supported
+RemoveHandler .php .phtml .php8
+RemoveType .php .phtml .php8
+php_flag engine off

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 52" width="280" height="52" fill="none">
+  <!-- 8-Bit / Pixel Mosaic Diamond Dart Icon Mark -->
+  <g transform="translate(6, 6)">
+    <!-- Mosaic Pixel Grid Pattern (Digital Darts style) -->
+    <!-- Center core pixels -->
+    <rect x="16" y="4" width="8" height="8" fill="#0B5D44" />
+    <rect x="8" y="12" width="8" height="8" fill="#16372D" />
+    <rect x="16" y="12" width="8" height="8" fill="#2ECC71" />
+    <rect x="24" y="12" width="8" height="8" fill="#16372D" />
+    <rect x="0" y="20" width="8" height="8" fill="#0B5D44" />
+    <rect x="8" y="20" width="8" height="8" fill="#2ECC71" />
+    <rect x="16" y="20" width="8" height="8" fill="#16372D" />
+    <rect x="24" y="20" width="8" height="8" fill="#2ECC71" />
+    <rect x="32" y="20" width="8" height="8" fill="#0B5D44" />
+    <rect x="8" y="28" width="8" height="8" fill="#16372D" />
+    <rect x="16" y="28" width="8" height="8" fill="#0B5D44" />
+    <rect x="24" y="28" width="8" height="8" fill="#16372D" />
+    <rect x="16" y="36" width="8" height="8" fill="#0B5D44" />
+  </g>
+
+  <!-- Brand Typography (Editorial + Sans) -->
+  <text x="60" y="27" font-family="'Merriweather', Georgia, serif" font-size="20" font-weight="700" fill="#1C242C" letter-spacing="-0.02em">KALIKA</text>
+  <text x="146" y="27" font-family="'Open Sans', sans-serif" font-size="16" font-weight="700" fill="#16372D" letter-spacing="0.04em">ENTERPRISES</text>
+  <text x="60" y="41" font-family="'Open Sans', sans-serif" font-size="8.5" font-weight="600" fill="#4A5568" letter-spacing="0.14em">FOOD &amp; BEVERAGE DISTRIBUTION</text>
+</svg>

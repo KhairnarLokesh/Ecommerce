@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" width="200" height="60">
+  <defs>
+    <linearGradient id="cokeRed" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#E51924" />
+      <stop offset="100%" stop-color="#BA0C16" />
+    </linearGradient>
+  </defs>
+  <!-- Background Pill -->
+  <rect x="2" y="2" width="196" height="56" rx="28" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5"/>
+  <!-- Disc Accent -->
+  <circle cx="34" cy="30" r="16" fill="url(#cokeRed)"/>
+  <path d="M 24 33 Q 34 22 44 28 Q 36 29 24 33 Z" fill="#FFFFFF"/>
+  <!-- Classic Coca-Cola Stylized Lettering -->
+  <text x="118" y="37" font-family="'Brush Script MT', 'Palatino', cursive, sans-serif" font-size="28" font-weight="700" fill="url(#cokeRed)" letter-spacing="0.5" text-anchor="middle">
+    Coca-Cola
+  </text>
+  <text x="118" y="48" font-family="'Montserrat', sans-serif" font-size="7" font-weight="800" fill="#64748b" letter-spacing="3" text-anchor="middle">
+    BEVERAGES
+  </text>
+</svg>

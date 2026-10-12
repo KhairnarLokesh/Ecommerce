@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" width="200" height="60">
+  <defs>
+    <linearGradient id="tuBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E3A8A" />
+      <stop offset="100%" stop-color="#172554" />
+    </linearGradient>
+    <linearGradient id="tuRed" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#DC2626" />
+      <stop offset="100%" stop-color="#991B1B" />
+    </linearGradient>
+  </defs>
+  <!-- Background Pill -->
+  <rect x="2" y="2" width="196" height="56" rx="28" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5"/>
+  <!-- Iconic Red Thumbs Up Emblem -->
+  <path d="M 28 36 L 28 26 L 36 18 Q 40 18 39 23 L 36 26 L 46 26 Q 48 26 48 29 L 46 38 Q 44 41 38 41 L 28 41 Z" fill="url(#tuRed)"/>
+  <!-- THUMS UP text -->
+  <text x="118" y="34" font-family="'Impact', 'Arial Black', sans-serif" font-size="20" font-weight="900" fill="url(#tuBlue)" letter-spacing="1" text-anchor="middle" font-style="italic">
+    THUMS UP
+  </text>
+  <!-- Subtitle -->
+  <text x="118" y="47" font-family="'Montserrat', sans-serif" font-size="7.5" font-weight="800" fill="url(#tuRed)" letter-spacing="3" text-anchor="middle">
+    TASTE THE THUNDER
+  </text>
+</svg>

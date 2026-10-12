@@ -18,6 +18,7 @@ require_guest();
 $error = '';
 $loginVal = trim($_POST['login'] ?? $_POST['email'] ?? $_POST['mobile'] ?? '');
 $clientIp = function_exists('get_client_ip') ? get_client_ip() : ($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1');
+$returnUrl = trim($_GET['return'] ?? $_POST['return'] ?? ($_SESSION['return_to'] ?? ''));
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_verify()) {

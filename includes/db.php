@@ -78,8 +78,8 @@ function get_db_connection(bool $throwOnError = false): ?PDO
         // Log error
         error_log("Database connection error: " . $e->getMessage());
 
-        // In development, we can store or display a non-fatal warning so pages still render during skeleton phase
-        $GLOBALS['db_connection_error'] = $e->getMessage();
+        $userPreview = substr(DB_USER, 0, 8) . '... (len: ' . strlen(DB_USER) . ')';
+        $GLOBALS['db_connection_error'] = $e->getMessage() . " [Host: " . DB_HOST . ", Port: " . DB_PORT . ", User: " . $userPreview . ", PassLen: " . strlen(DB_PASS) . ", DB: " . DB_NAME . "]";
         return null;
     }
 }

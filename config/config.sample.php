@@ -23,11 +23,11 @@ if (APP_ENV === 'development') {
 }
 
 // Database Credentials (supports local defaults and cloud environment variables)
-defined('DB_HOST') or define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
-defined('DB_PORT') or define('DB_PORT', getenv('DB_PORT') ?: '3306');
-defined('DB_NAME') or define('DB_NAME', getenv('DB_NAME') ?: 'kalika_enterprises');
-defined('DB_USER') or define('DB_USER', getenv('DB_USER') ?: 'root');
-defined('DB_PASS') or define('DB_PASS', getenv('DB_PASS') !== false ? getenv('DB_PASS') : '');
+defined('DB_HOST') or define('DB_HOST', trim(getenv('DB_HOST') ?: 'localhost', " \t\n\r\0\x0B'\""));
+defined('DB_PORT') or define('DB_PORT', trim(getenv('DB_PORT') ?: '3306', " \t\n\r\0\x0B'\""));
+defined('DB_NAME') or define('DB_NAME', trim(getenv('DB_NAME') ?: 'kalika_enterprises', " \t\n\r\0\x0B'\""));
+defined('DB_USER') or define('DB_USER', trim(getenv('DB_USER') ?: 'root', " \t\n\r\0\x0B'\""));
+defined('DB_PASS') or define('DB_PASS', getenv('DB_PASS') !== false ? trim(getenv('DB_PASS'), " \t\n\r\0\x0B'\"") : '');
 defined('DB_CHARSET') or define('DB_CHARSET', 'utf8mb4');
 
 // Site URL & Paths

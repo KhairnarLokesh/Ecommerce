@@ -14,6 +14,15 @@ $path = trim($path, '/');
 // Base directory is project root
 $rootDir = dirname(__DIR__);
 
+// Pre-load configuration
+if (!defined('SITE_URL')) {
+    if (file_exists($rootDir . '/config/config.php')) {
+        require_once $rootDir . '/config/config.php';
+    } elseif (file_exists($rootDir . '/config/config.sample.php')) {
+        require_once $rootDir . '/config/config.sample.php';
+    }
+}
+
 // Route resolution
 if ($path === '' || $path === 'index.php') {
     $targetFile = $rootDir . '/public/index.php';

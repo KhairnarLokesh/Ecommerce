@@ -6,7 +6,13 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/../config/config.php';
+if (!defined('SITE_URL')) {
+    if (file_exists(__DIR__ . '/../config/config.php')) {
+        require_once __DIR__ . '/../config/config.php';
+    } else {
+        require_once __DIR__ . '/../config/config.sample.php';
+    }
+}
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/csrf.php';
 require_once __DIR__ . '/functions.php';

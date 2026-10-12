@@ -1,14 +1,9 @@
 {
   "version": 2,
   "functions": {
-    "public/**/*.php": {
-      "runtime": "vercel-php@0.7.3"
-    },
-    "admin/**/*.php": {
-      "runtime": "vercel-php@0.7.3"
-    },
-    "index.php": {
-      "runtime": "vercel-php@0.7.3"
+    "api/index.php": {
+      "runtime": "vercel-php@0.7.3",
+      "includeFiles": "{config,includes,public,admin}/**"
     }
   },
   "routes": [
@@ -21,20 +16,8 @@
       "dest": "/public/uploads/$1"
     },
     {
-      "src": "/admin/(.*)",
-      "dest": "/admin/$1"
-    },
-    {
-      "src": "/public/(.*)",
-      "dest": "/public/$1"
-    },
-    {
-      "src": "/",
-      "dest": "/public/index.php"
-    },
-    {
       "src": "/(.*)",
-      "dest": "/public/$1"
+      "dest": "/api/index.php"
     }
   ]
 }

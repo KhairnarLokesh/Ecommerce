@@ -353,19 +353,16 @@ require_once __DIR__ . '/../includes/header.php';
                                     </div>
                                 </div>
 
-                                <!-- Full-Width Add to Cart Button (SpecularButton) -->
+                                <!-- Full-Width Add to Cart Button -->
                                 <button type="submit" 
-                                        class="specular-button specular-button--sm specular-button--cart add-cart-btn" 
-                                        data-radius="8" 
-                                        data-line-color="#00E599" 
-                                        data-base-color="#0F382A" 
-                                        data-intensity="1.1" 
-                                        data-idle-intensity="0.35" 
-                                        data-thickness="1.3" 
-                                        data-glow="1.1" 
-                                        <?= !$isInitialInStock ? 'disabled' : '' ?>
-                                        style="width: 100%; padding: 10px 14px;">
-                                    <span class="specular-button__label">
+                                        class="btn-add-cart add-cart-btn" 
+                                        <?= !$isInitialInStock ? 'disabled' : '' ?>>
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <circle cx="9" cy="21" r="1"></circle>
+                                        <circle cx="20" cy="21" r="1"></circle>
+                                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                                    </svg>
+                                    <span class="btn-label">
                                         <?= $isInitialInStock ? 'Add to Cart' : 'Out of Stock' ?>
                                     </span>
                                 </button>
@@ -467,7 +464,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     maximumFractionDigits: 2
                 });
 
-                const btnLabel = addBtn.querySelector('.specular-button__label') || addBtn;
+                const btnLabel = addBtn.querySelector('.btn-label') || addBtn.querySelector('.specular-button__label') || addBtn;
                 if (stock === 'in_stock') {
                     stockBadge.className = 'badge-stock badge-in-stock stock-badge';
                     stockBadge.textContent = 'In Stock';

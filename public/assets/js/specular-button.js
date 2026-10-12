@@ -172,6 +172,18 @@ void main() {
     if (button.dataset.specularInitialized) return;
     button.dataset.specularInitialized = 'true';
 
+    // On touch devices, skip WebGL rendering for 100% reliable pure CSS performance
+    const isTouch = (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) || ('ontouchstart' in window);
+    if (isTouch) {
+      return;
+    }
+
+    // Guard against browser WebGL context exhaustion (max 8 active canvases)
+    const activeCanvases = document.querySelectorAll('.specular-button__light').length;
+    if (activeCanvases >= 8) {
+      return;
+    }
+
     // Ensure wrapper structure
     let canvas = button.querySelector('.specular-button__light');
     if (!canvas) {
@@ -192,17 +204,33 @@ void main() {
       button.appendChild(label);
     }
 
-    const gl = canvas.getContext('webgl2', {
-      alpha: true,
-      premultipliedAlpha: true,
-      antialias: false,
-      depth: false,
-      stencil: false
-    });
-    if (!gl) return;
+    let gl = null;
+    try {
+      gl = canvas.getContext('webgl2', {
+        alpha: true,
+        premultipliedAlpha: true,
+        antialias: false,
+        depth: false,
+        stencil: false
+      });
+    } catch (e) {
+      gl = null;
+    }
+
+    if (!gl) {
+      if (canvas && canvas.parentNode) {
+        canvas.parentNode.removeChild(canvas);
+      }
+      return;
+    }
 
     const program = linkProgram(gl);
-    if (!program) return;
+    if (!program) {
+      if (canvas && canvas.parentNode) {
+        canvas.parentNode.removeChild(canvas);
+      }
+      return;
+    }
 
     const uniforms = {};
     for (const name of UNIFORMS) uniforms[name] = gl.getUniformLocation(program, name);

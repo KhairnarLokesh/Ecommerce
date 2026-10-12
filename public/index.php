@@ -401,25 +401,21 @@ $brandLogosList = [
                             </div>
                         </div>
 
-                        <!-- Action Button (SpecularButton) -->
-                        <form action="<?= public_url('cart.php') ?>" method="POST" style="margin-top: 8px;">
+                        <!-- Action Button -->
+                        <form action="<?= public_url('cart.php') ?>" method="POST" style="margin-top: 10px;">
                             <?= csrf_field() ?>
                             <input type="hidden" name="action" value="add">
                             <input type="hidden" name="variant_id" value="<?= (int)$item['default_variant_id'] ?>">
                             <input type="hidden" name="quantity" value="1">
                             <button type="submit" 
-                                    class="specular-button specular-button--sm specular-button--cart" 
-                                    data-radius="8" 
-                                    data-line-color="#00E599" 
-                                    data-base-color="#0F382A" 
-                                    data-intensity="1.1" 
-                                    data-idle-intensity="0.35" 
-                                    data-thickness="1.3" 
-                                    data-glow="1.1" 
-                                    style="width: 100%; padding: 10px 14px; text-transform: uppercase; letter-spacing: 0.05em;">
-                                <span class="specular-button__label">
-                                    Add to Cart
-                                </span>
+                                    class="btn-add-cart" 
+                                    aria-label="Add <?= e($item['name']) ?> to wholesale cart">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <circle cx="9" cy="21" r="1"></circle>
+                                    <circle cx="20" cy="21" r="1"></circle>
+                                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                                </svg>
+                                <span>Add to Cart</span>
                             </button>
                         </form>
                     </div>

@@ -121,6 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 redirect(public_url('profile.php'));
             }
         }
+    }
 }
 
 $pageTitle = 'Customer Login | Kalika Enterprises';
@@ -191,3 +192,4 @@ require_once __DIR__ . '/../includes/header.php';
 
 <?php
 require_once __DIR__ . '/../includes/footer.php';
+

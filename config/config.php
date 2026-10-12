@@ -6,6 +6,23 @@
 
 declare(strict_types=1);
 
+// Auto-load local .env file if present (git-ignored)
+if (file_exists(__DIR__ . '/../.env')) {
+    $envLines = @file(__DIR__ . '/../.env', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [];
+    foreach ($envLines as $envLine) {
+        $envLine = trim($envLine);
+        if ($envLine === '' || str_starts_with($envLine, '#') || !str_contains($envLine, '=')) continue;
+        [$k, $v] = explode('=', $envLine, 2);
+        $k = trim($k);
+        $v = trim($v, " \t\n\r\0\x0B'\"");
+        if (getenv($k) === false) {
+            putenv("{$k}={$v}");
+            $_ENV[$k] = $v;
+            $_SERVER[$k] = $v;
+        }
+    }
+}
+
 // Application Environment: 'development' or 'production'
 defined('APP_ENV') or define('APP_ENV', 'development');
 
@@ -75,12 +92,12 @@ defined('SESSION_LIFETIME') or define('SESSION_LIFETIME', 86400 * 7); // 7 days
 defined('DEMO_OTP_ENABLED') or define('DEMO_OTP_ENABLED', (getenv('DEMO_OTP_ENABLED') !== false ? filter_var(getenv('DEMO_OTP_ENABLED'), FILTER_VALIDATE_BOOLEAN) : (APP_ENV !== 'production')));
 
 // Transactional SMTP Email Delivery (for sending real OTPs and notifications)
-defined('SMTP_ENABLED') or define('SMTP_ENABLED', (getenv('SMTP_ENABLED') !== false ? filter_var(getenv('SMTP_ENABLED'), FILTER_VALIDATE_BOOLEAN) : false));
-defined('SMTP_HOST') or define('SMTP_HOST', getenv('SMTP_HOST') ?: ''); // e.g., 'smtp.gmail.com' or 'mail.kalikaenterprises.com'
-defined('SMTP_PORT') or define('SMTP_PORT', (int)(getenv('SMTP_PORT') ?: 587)); // 587 (TLS) or 465 (SSL)
-defined('SMTP_SECURE') or define('SMTP_SECURE', getenv('SMTP_SECURE') ?: 'tls'); // 'tls' or 'ssl'
-defined('SMTP_USER') or define('SMTP_USER', getenv('SMTP_USER') ?: ''); // e.g., 'your-email@gmail.com'
-defined('SMTP_PASS') or define('SMTP_PASS', getenv('SMTP_PASS') ?: ''); // e.g., Google App Password (16 characters)
-defined('SMTP_FROM_EMAIL') or define('SMTP_FROM_EMAIL', getenv('SMTP_FROM_EMAIL') ?: '');
+defined('SMTP_ENABLED') or define('SMTP_ENABLED', (getenv('SMTP_ENABLED') !== false ? filter_var(getenv('SMTP_ENABLED'), FILTER_VALIDATE_BOOLEAN) : true));
+defined('SMTP_HOST') or define('SMTP_HOST', getenv('SMTP_HOST') ?: 'smtp.gmail.com');
+defined('SMTP_PORT') or define('SMTP_PORT', (int)(getenv('SMTP_PORT') ?: 587));
+defined('SMTP_SECURE') or define('SMTP_SECURE', getenv('SMTP_SECURE') ?: 'tls');
+defined('SMTP_USER') or define('SMTP_USER', getenv('SMTP_USER') ?: 'lkhairnar580@gmail.com');
+defined('SMTP_PASS') or define('SMTP_PASS', getenv('SMTP_PASS') ?: 'yirh bcuy vmuq ltur');
+defined('SMTP_FROM_EMAIL') or define('SMTP_FROM_EMAIL', getenv('SMTP_FROM_EMAIL') ?: 'lkhairnar580@gmail.com');
 defined('SMTP_FROM_NAME') or define('SMTP_FROM_NAME', getenv('SMTP_FROM_NAME') ?: 'Kalika Enterprises');
 

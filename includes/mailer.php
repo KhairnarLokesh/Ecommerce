@@ -72,10 +72,10 @@ function send_smtp_mail(
     $host = defined('SMTP_HOST') ? (string)SMTP_HOST : '';
     $port = defined('SMTP_PORT') ? (int)SMTP_PORT : 587;
     $secure = defined('SMTP_SECURE') ? strtolower((string)SMTP_SECURE) : 'tls';
-    $user = defined('SMTP_USER') ? (string)SMTP_USER : '';
-    $pass = defined('SMTP_PASS') ? (string)SMTP_PASS : '';
-    $fromEmail = defined('SMTP_FROM_EMAIL') && !empty(SMTP_FROM_EMAIL) ? (string)SMTP_FROM_EMAIL : $user;
-    $fromName = defined('SMTP_FROM_NAME') && !empty(SMTP_FROM_NAME) ? (string)SMTP_FROM_NAME : (defined('BUSINESS_NAME') ? BUSINESS_NAME : 'Kalika Enterprises');
+    $user = defined('SMTP_USER') ? trim((string)SMTP_USER) : '';
+    $pass = defined('SMTP_PASS') ? trim(str_replace(' ', '', (string)SMTP_PASS)) : '';
+    $fromEmail = defined('SMTP_FROM_EMAIL') && !empty(SMTP_FROM_EMAIL) ? trim((string)SMTP_FROM_EMAIL) : $user;
+    $fromName = defined('SMTP_FROM_NAME') && !empty(SMTP_FROM_NAME) ? trim((string)SMTP_FROM_NAME) : (defined('BUSINESS_NAME') ? BUSINESS_NAME : 'Kalika Enterprises');
 
     $timeout = 10; // seconds
     $socketHost = ($secure === 'ssl' || $port === 465) ? "ssl://{$host}" : "tcp://{$host}";

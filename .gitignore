@@ -1,5 +1,4 @@
 # Environment & Configuration
-config/config.php
 .env
 
 # Binary executables

@@ -37,11 +37,11 @@ if (!$userRecord) {
     if (!$pdo) {
         $userRecord = [
             'id' => $userId,
-            'name' => $currentSessionUser['name'] ?? 'Retailer Store',
-            'mobile' => $currentSessionUser['mobile'] ?? '9876543210',
+            'name' => $currentSessionUser['name'] ?? 'Retailer',
+            'mobile' => $currentSessionUser['mobile'] ?? '',
             'email' => $currentSessionUser['email'] ?? '',
-            'address' => $currentSessionUser['address'] ?? 'Shop No. 4, Market Road, Pimpalgaon Baswant',
-            'password_hash' => password_hash('Password@123', PASSWORD_DEFAULT),
+            'address' => $currentSessionUser['address'] ?? '',
+            'password_hash' => '',
             'created_at' => date('Y-m-d H:i:s'),
         ];
     } else {

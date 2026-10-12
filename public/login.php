@@ -131,12 +131,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Check if user registered earlier and has signed auth cookie
             $prevUser = !empty($_COOKIE['kalika_auth']) ? auth_verify_user($_COOKIE['kalika_auth']) : null;
             $userName = ($prevUser && !empty($prevUser['name'])) ? $prevUser['name'] : ucwords(str_replace(['.', '_'], ' ', $displayName));
-            $userAddr = ($prevUser && !empty($prevUser['address'])) ? $prevUser['address'] : 'Shop No. 4, Market Road, Pimpalgaon Baswant';
+            $userAddr = ($prevUser && !empty($prevUser['address'])) ? $prevUser['address'] : '';
 
             login_user([
                 'id'      => ($prevUser && !empty($prevUser['id'])) ? (int)$prevUser['id'] : $demoUserId,
                 'name'    => $userName,
-                'mobile'  => $isMobile ? $loginVal : ($prevUser['mobile'] ?? '9876543210'),
+                'mobile'  => $isMobile ? $loginVal : ($prevUser['mobile'] ?? ''),
                 'email'   => $isEmail ? $loginVal : ($prevUser['email'] ?? ''),
                 'address' => $userAddr
             ]);

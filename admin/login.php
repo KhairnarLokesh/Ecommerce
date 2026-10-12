@@ -20,7 +20,7 @@ if (is_admin_logged_in()) {
 
 $error = '';
 $usernameVal = '';
-$clientIp = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+$clientIp = function_exists('get_client_ip') ? get_client_ip() : ($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_verify()) {

@@ -250,3 +250,31 @@ function get_catalog_fallback(): array
     }
     return ['brands' => [], 'products' => []];
 }
+
+/**
+ * Retrieve client IP address safely, respecting reverse proxies and cloud platforms (e.g. Vercel, Cloudflare).
+ *
+ * @return string Client IP address
+ */
+function get_client_ip(): string
+{
+    $headers = [
+        'HTTP_CF_CONNECTING_IP',
+        'HTTP_X_FORWARDED_FOR',
+        'HTTP_X_REAL_IP',
+        'REMOTE_ADDR'
+    ];
+
+    foreach ($headers as $header) {
+        if (!empty($_SERVER[$header])) {
+            $ipList = explode(',', (string)$_SERVER[$header]);
+            $ip = trim($ipList[0]);
+            if (filter_var($ip, FILTER_VALIDATE_IP)) {
+                return $ip;
+            }
+        }
+    }
+
+    return '127.0.0.1';
+}
+

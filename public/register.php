@@ -117,7 +117,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         if (!empty($returnUrl) && preg_match('/^[a-z0-9_-]+\.php(\?[a-z0-9_=&-]+)?$/i', $returnUrl)) {
                             redirect(public_url($returnUrl));
                         } else {
-                            redirect(public_url('profile.php'));
+                            redirect(public_url('index.php'));
                         }
                     }
                 } catch (PDOException $e) {
@@ -151,7 +151,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (!empty($returnUrl) && preg_match('/^[a-z0-9_-]+\.php(\?[a-z0-9_=&-]+)?$/i', $returnUrl)) {
                     redirect(public_url($returnUrl));
                 } else {
-                    redirect(public_url('profile.php'));
+                    redirect(public_url('index.php'));
                 }
             }
         }

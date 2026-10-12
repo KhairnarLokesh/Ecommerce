@@ -39,7 +39,13 @@ $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
 $appBase = rtrim(preg_replace('#/(public|admin|api)(/.*)?$#', '', $scriptDir), '/');
 
 defined('SITE_URL') or define('SITE_URL', $protocol . $host . $appBase);
-defined('PUBLIC_URL') or define('PUBLIC_URL', SITE_URL . '/public');
+
+if (getenv('VERCEL') || !empty($_SERVER['VERCEL']) || (isset($_SERVER['HTTP_HOST']) && str_contains($_SERVER['HTTP_HOST'], 'vercel.app'))) {
+    defined('PUBLIC_URL') or define('PUBLIC_URL', SITE_URL);
+} else {
+    defined('PUBLIC_URL') or define('PUBLIC_URL', SITE_URL . '/public');
+}
+
 defined('ADMIN_URL') or define('ADMIN_URL', SITE_URL . '/admin');
 
 // App Paths

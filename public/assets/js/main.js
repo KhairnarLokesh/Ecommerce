@@ -354,5 +354,49 @@ document.addEventListener('DOMContentLoaded', () => {
       form.submit();
     });
   });
+
+  // --------------------------------------------------------------------------
+  // 7. Password Visibility Toggle (Show / Hide Password)
+  // --------------------------------------------------------------------------
+  document.addEventListener('click', (e) => {
+    const toggleBtn = e.target.closest('.btn-toggle-password');
+    if (!toggleBtn) return;
+    e.preventDefault();
+    const targetId = toggleBtn.getAttribute('data-target');
+    const input = document.getElementById(targetId);
+    if (!input) return;
+
+    const isPassword = input.getAttribute('type') === 'password';
+    input.setAttribute('type', isPassword ? 'text' : 'password');
+
+    const eyeOpen = toggleBtn.querySelector('.eye-open');
+    const eyeClosed = toggleBtn.querySelector('.eye-closed');
+    if (eyeOpen && eyeClosed) {
+      if (isPassword) {
+        eyeOpen.style.display = 'none';
+        eyeClosed.style.display = 'inline';
+      } else {
+        eyeOpen.style.display = 'inline';
+        eyeClosed.style.display = 'none';
+      }
+    }
+  });
+
+  // --------------------------------------------------------------------------
+  // 8. Single Submission Guard (Prevent Double Clicks on Auth Forms)
+  // --------------------------------------------------------------------------
+  document.querySelectorAll('form').forEach((f) => {
+    f.addEventListener('submit', function() {
+      const submitBtn = f.querySelector('button[type="submit"]');
+      if (submitBtn && !f.hasAttribute('data-submitting') && f.checkValidity()) {
+        f.setAttribute('data-submitting', 'true');
+        setTimeout(() => {
+          submitBtn.disabled = true;
+          submitBtn.style.opacity = '0.7';
+          submitBtn.style.pointerEvents = 'none';
+        }, 50);
+      }
+    });
+  });
 });
 

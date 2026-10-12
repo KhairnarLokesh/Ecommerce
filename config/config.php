@@ -70,3 +70,6 @@ defined('DEFAULT_PRICES_INCLUDE_GST') or define('DEFAULT_PRICES_INCLUDE_GST', 1)
 defined('SESSION_NAME_USER') or define('SESSION_NAME_USER', 'kalika_user_sess');
 defined('SESSION_NAME_ADMIN') or define('SESSION_NAME_ADMIN', 'kalika_admin_sess');
 defined('SESSION_LIFETIME') or define('SESSION_LIFETIME', 86400 * 7); // 7 days
+
+// Demo OTP Configuration (Disabled by default in production; enabled in dev/test)
+defined('DEMO_OTP_ENABLED') or define('DEMO_OTP_ENABLED', (getenv('DEMO_OTP_ENABLED') !== false ? filter_var(getenv('DEMO_OTP_ENABLED'), FILTER_VALIDATE_BOOLEAN) : (APP_ENV !== 'production')));

@@ -271,4 +271,21 @@ This runbook documents verification procedures for Customer Accounts, Authentica
    - Database updates instantly.
    - Public header, cart minimum threshold logic, and invoice templates reflect new values immediately.
 
+---
+
+## 7. Automated Authentication Lifecycle Suite (`tests/auth_lifecycle_suite.php`)
+
+Run the comprehensive customer authentication suite directly via CLI:
+```bash
+php tests/auth_lifecycle_suite.php
+```
+
+### Coverage (30 Test Assertions):
+1. **Registration Flow**: Full name, RFC email validation, 10-digit mobile, password mismatch, duplicate email/mobile rejection, and password policy validation.
+2. **Login & Session Management**: Dual identifier login (email or mobile), inactive/suspended account rejection, invalid credentials rejection, session regeneration (`session_regenerate_id`), and secure server-side session initialization.
+3. **Password Recovery & 6-Digit Demo OTP**: Cryptographic 6-digit OTP generation, SHA-256 hashed storage, 5-minute expiration, spam request cooldown limiter, single-use concurrency locks, attempt throttling, password reset token issuance, password update, and immediate revocation of old credentials.
+4. **Customer Data Isolation (IDOR Defense)**: Customer A cannot view, modify, or download Customer B's profile, orders, or tax invoices.
+5. **Cart & Checkout Authentication Integration**: Guest cart persistence through login, auto-redirection to checkout after authentication, server-side ₹2,000 minimum threshold enforcement, stock validation, and accurate tax calculations.
+
+
 

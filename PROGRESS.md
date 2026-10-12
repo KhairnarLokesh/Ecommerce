@@ -71,14 +71,16 @@ This file tracks the implementation milestones across all 11 phases of the proje
 ---
 
 ### [x] Phase 5 – Customer Accounts & Demo OTP
-- **Status**: Completed
+- **Status**: Completed (Hardened & Lifecycle Verified)
 - **Deliverables**:
-  - [x] Registration with 10-digit Indian mobile validation and password hashing
-  - [x] Mobile + password authentication with brute-force rate limiting (`login_attempts`)
-  - [x] Customer profile management and password change
-  - [x] Password reset via on-screen Free Demo OTP (5-minute expiration, single-use SHA-256 hash validation)
-  - [x] Testing guidelines in `docs/TESTING.md`
-- **Done When**: 6-digit OTP expires in 5 mins, rejects reuse, wrong OTP fails, and password resets successfully.
+  - [x] Registration with dual validation (RFC-compliant email + 10-digit Indian mobile), database unique constraint (`uq_users_email`), terms acceptance, and Bcrypt hashing
+  - [x] Dual-identifier login (Email or Mobile) with inactive account rejection, session regeneration, and brute-force rate limiting (`login_attempts`)
+  - [x] Customer session handling and strict IDOR data isolation across profiles, orders, and invoices
+  - [x] Password reset via 6-digit Demo OTP (`random_int`), SHA-256 hash storage, 5-minute expiry, cooldown spam guard, on-screen countdown, and transaction-safe single-use concurrency locks
+  - [x] Production security gate (`DEMO_OTP_ENABLED` flag) preventing unauthorized OTP exposure in live environments
+  - [x] Seamless cart preservation across login/registration, returning customers directly to checkout
+  - [x] 30-assertion automated authentication lifecycle test suite `tests/auth_lifecycle_suite.php` (100% pass)
+  - [x] Testing guidelines updated in `docs/TESTING.md`
 
 ---
 

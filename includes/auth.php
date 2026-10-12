@@ -203,7 +203,7 @@ function current_user(): ?array
  */
 function login_user(array $user): void
 {
-    if (session_status() === PHP_SESSION_ACTIVE) {
+    if (session_status() === PHP_SESSION_ACTIVE && !headers_sent()) {
         session_regenerate_id(true);
     }
     $_SESSION['user_id']      = $user['id'];
@@ -241,7 +241,7 @@ function logout_user(): void
         $_SESSION['user_address'],
         $_SESSION['cart']
     );
-    if (session_status() === PHP_SESSION_ACTIVE) {
+    if (session_status() === PHP_SESSION_ACTIVE && !headers_sent()) {
         session_regenerate_id(true);
     }
 
@@ -268,11 +268,13 @@ function logout_user(): void
 function require_login(?string $returnUrl = null): void
 {
     if (!is_logged_in()) {
+        set_flash('error', 'Please log in to continue.');
         if ($returnUrl) {
             $_SESSION['return_to'] = $returnUrl;
+            redirect(public_url('login.php?return=' . urlencode($returnUrl)));
+        } else {
+            redirect(public_url('login.php'));
         }
-        set_flash('error', 'Please log in to continue.');
-        redirect(public_url('login.php'));
     }
 }
 

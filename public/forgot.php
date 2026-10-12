@@ -17,87 +17,95 @@ require_guest();
 $error = '';
 $step = $_GET['step'] ?? 'request';
 
-// Step 1: User submits mobile number to request OTP
+// Step 1: User submits email or mobile number to request OTP
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'request_otp') {
     if (!csrf_verify()) {
         $error = 'Security token invalid or expired. Please refresh the page.';
     } else {
-        $mobile = trim($_POST['mobile'] ?? '');
+        $identifier = trim($_POST['identifier'] ?? $_POST['email'] ?? $_POST['mobile'] ?? '');
+        $isEmail = filter_var($identifier, FILTER_VALIDATE_EMAIL);
+        $isMobile = preg_match('/^[6-9]\d{9}$/', $identifier);
 
-        if (empty($mobile) || !preg_match('/^[6-9]\d{9}$/', $mobile)) {
-            $error = 'Please enter a valid 10-digit Indian mobile number.';
+        if (empty($identifier) || (!$isEmail && !$isMobile)) {
+            $error = 'Please enter a valid registered business email address or 10-digit mobile number.';
         } elseif ($pdo) {
             try {
-                $stmt = $pdo->prepare("SELECT id, name, is_active FROM users WHERE mobile = ? LIMIT 1");
-                $stmt->execute([$mobile]);
+                $stmt = $pdo->prepare("
+                    SELECT id, name, email, mobile, is_active 
+                    FROM users 
+                    WHERE (email = ? OR mobile = ?) 
+                    LIMIT 1
+                ");
+                $stmt->execute([$identifier, $identifier]);
                 $user = $stmt->fetch();
 
                 if ($user && (int)$user['is_active'] === 1) {
                     $userId = (int)$user['id'];
 
-                    // Invalidate any older unused OTPs for this user
-                    $invalidateStmt = $pdo->prepare("
-                        UPDATE password_otps 
-                        SET used_at = NOW() 
-                        WHERE user_id = ? AND used_at IS NULL
+                    // Rate Limiting Cooldown: prevent spamming new OTPs within 60 seconds
+                    $cooldownStmt = $pdo->prepare("
+                        SELECT id, TIMESTAMPDIFF(SECOND, created_at, NOW()) AS elapsed
+                        FROM password_otps
+                        WHERE user_id = ? AND created_at > (NOW() - INTERVAL 60 SECOND)
+                        ORDER BY id DESC LIMIT 1
                     ");
-                    $invalidateStmt->execute([$userId]);
+                    $cooldownStmt->execute([$userId]);
+                    $recentOtp = $cooldownStmt->fetch();
 
-                    // Generate cryptographically secure 6-digit OTP
-                    $rawOtp = str_pad((string)random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
-                    $otpHash = hash('sha256', $rawOtp);
+                    if ($recentOtp) {
+                        $waitSec = 60 - max(0, (int)$recentOtp['elapsed']);
+                        $error = 'Please wait ' . max(1, $waitSec) . ' seconds before requesting another verification code.';
+                    } else {
+                        // Invalidate any older unused OTPs for this user
+                        $invalidateStmt = $pdo->prepare("
+                            UPDATE password_otps 
+                            SET used_at = NOW() 
+                            WHERE user_id = ? AND used_at IS NULL
+                        ");
+                        $invalidateStmt->execute([$userId]);
 
-                    // Insert hashed OTP valid for 5 minutes
-                    $insertStmt = $pdo->prepare("
-                        INSERT INTO password_otps (user_id, otp_hash, expires_at, attempts)
-                        VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 5 MINUTE), 0)
-                    ");
-                    $insertStmt->execute([$userId, $otpHash]);
+                        // Generate cryptographically secure 6-digit OTP
+                        $rawOtp = str_pad((string)random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
+                        $otpHash = hash('sha256', $rawOtp);
 
-                    // Store in session for Free Demo mode display
-                    $_SESSION['demo_otp_display'] = $rawOtp;
-                    $_SESSION['demo_otp_mobile']  = $mobile;
-                    $_SESSION['demo_otp_user_id'] = $userId;
-                    $_SESSION['demo_otp_expires'] = time() + 300; // 5 mins
+                        // Insert hashed OTP valid for 5 minutes
+                        $insertStmt = $pdo->prepare("
+                            INSERT INTO password_otps (user_id, otp_hash, expires_at, attempts)
+                            VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 5 MINUTE), 0)
+                        ");
+                        $insertStmt->execute([$userId, $otpHash]);
 
-                    redirect(public_url('forgot.php?step=verify'));
+                        // Demo Mode vs Production Rule:
+                        // Only store raw OTP in session for display if DEMO_OTP_ENABLED is active
+                        $isDemoEnabled = defined('DEMO_OTP_ENABLED') && DEMO_OTP_ENABLED;
+
+                        $_SESSION['demo_otp_display'] = $isDemoEnabled ? $rawOtp : null;
+                        $_SESSION['demo_otp_identifier'] = $identifier;
+                        $_SESSION['demo_otp_user_id'] = $userId;
+                        $_SESSION['demo_otp_expires'] = time() + 300; // 5 mins
+
+                        redirect(public_url('forgot.php?step=verify'));
+                    }
                 } else {
-                    // NOTE: Generic message prevents account enumeration. In demo mode we guide clearly.
-                    $error = 'No active retailer account found with mobile number +91 ' . htmlspecialchars($mobile) . '.';
+                    // Production security requirement: Generic response to prevent account enumeration
+                    $isDemoEnabled = defined('DEMO_OTP_ENABLED') && DEMO_OTP_ENABLED;
+                    if ($isDemoEnabled) {
+                        $error = 'No active retailer account found with: ' . htmlspecialchars($identifier) . '.';
+                    } else {
+                        // In production, pretend request was accepted to prevent account enumeration
+                        $_SESSION['demo_otp_display'] = null;
+                        $_SESSION['demo_otp_identifier'] = $identifier;
+                        $_SESSION['demo_otp_user_id'] = 0;
+                        $_SESSION['demo_otp_expires'] = time() + 300;
+                        redirect(public_url('forgot.php?step=verify'));
+                    }
                 }
             } catch (PDOException $e) {
                 error_log("OTP generation failed: " . $e->getMessage());
                 $error = 'A database error occurred. Please try again.';
             }
         } else {
-            // Serverless Free Demo OTP generation
-            $rawOtp = str_pad((string)random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
-            $userId = (int)(substr($mobile, -4)) ?: 1001;
-
-            $_SESSION['demo_otp_display'] = $rawOtp;
-            $_SESSION['demo_otp_mobile']  = $mobile;
-            $_SESSION['demo_otp_user_id'] = $userId;
-            $_SESSION['demo_otp_expires'] = time() + 300; // 5 mins
-
-            $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
-                || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
-
-            if (!headers_sent()) {
-                setcookie('demo_otp', json_encode([
-                    'code' => $rawOtp,
-                    'mobile' => $mobile,
-                    'user_id' => $userId,
-                    'expires' => time() + 300
-                ]), [
-                    'expires'  => time() + 300,
-                    'path'     => '/',
-                    'secure'   => $isHttps,
-                    'httponly' => true,
-                    'samesite' => 'Lax'
-                ]);
-            }
-
-            redirect(public_url('forgot.php?step=verify'));
+            $error = 'Database service unavailable. Please ensure database connectivity is established.';
         }
     }
 }
@@ -108,64 +116,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $error = 'Security token invalid or expired. Please refresh the page.';
     } else {
         $enteredOtp = trim($_POST['otp'] ?? '');
-        $userId = $_SESSION['demo_otp_user_id'] ?? null;
-        if (empty($userId) && !empty($_COOKIE['demo_otp'])) {
-            $c = json_decode($_COOKIE['demo_otp'], true);
-            if (is_array($c) && !empty($c['user_id'])) {
-                $userId = (int)$c['user_id'];
-                $_SESSION['demo_otp_user_id'] = $userId;
-                $_SESSION['demo_otp_display'] = $c['code'] ?? '';
-                $_SESSION['demo_otp_mobile'] = $c['mobile'] ?? '';
-                $_SESSION['demo_otp_expires'] = $c['expires'] ?? (time() + 300);
-            }
-        }
+        $userId = (int)($_SESSION['demo_otp_user_id'] ?? 0);
 
         if (empty($enteredOtp) || !preg_match('/^\d{6}$/', $enteredOtp)) {
             $error = 'Please enter a valid 6-digit verification code.';
-        } elseif (!$userId) {
-            $error = 'Your session has expired. Please enter your mobile number again.';
+        } elseif ($userId <= 0) {
+            $error = 'Your session has expired. Please enter your email or mobile number again.';
             $step = 'request';
         } elseif ($pdo) {
             try {
-                // Fetch the latest active OTP record for this user
+                // Fetch the latest active OTP record for this user inside transaction
+                $pdo->beginTransaction();
+
                 $otpStmt = $pdo->prepare("
                     SELECT id, otp_hash, expires_at, used_at, attempts,
                            (NOW() > expires_at) as is_expired
                     FROM password_otps
-                    WHERE user_id = ?
+                    WHERE user_id = ? AND used_at IS NULL
                     ORDER BY id DESC
                     LIMIT 1
+                    FOR UPDATE
                 ");
                 $otpStmt->execute([$userId]);
                 $otpRecord = $otpStmt->fetch();
 
                 if (!$otpRecord) {
-                    $error = 'No verification request found. Please request a new OTP.';
-                    $step = 'request';
-                } elseif (!empty($otpRecord['used_at'])) {
-                    $error = 'This OTP has already been used. Please generate a new code.';
+                    $pdo->rollBack();
+                    $error = 'No active verification request found. Please request a new OTP.';
                     $step = 'request';
                 } elseif ((int)$otpRecord['is_expired'] === 1) {
+                    $pdo->rollBack();
                     $error = 'This OTP has expired (5-minute limit exceeded). Please request a new code.';
                     $step = 'request';
                 } elseif ((int)$otpRecord['attempts'] >= 5) {
-                    // Invalidate due to excessive attempts
+                    // Invalidate due to excessive failed attempts
                     $pdo->prepare("UPDATE password_otps SET used_at = NOW() WHERE id = ?")->execute([$otpRecord['id']]);
+                    $pdo->commit();
                     $error = 'Too many failed attempts. This OTP has been invalidated for security. Please request a new code.';
                     $step = 'request';
                 } else {
-                    // Increment attempt count
-                    $pdo->prepare("UPDATE password_otps SET attempts = attempts + 1 WHERE id = ?")->execute([$otpRecord['id']]);
-
                     // Verify SHA-256 hash
                     $enteredHash = hash('sha256', $enteredOtp);
                     if (hash_equals($otpRecord['otp_hash'], $enteredHash)) {
-                        // SUCCESS! Mark OTP used immediately (Single-use enforcement)
+                        // SUCCESS! Invalidate OTP immediately (Single-use enforcement)
                         $pdo->prepare("UPDATE password_otps SET used_at = NOW() WHERE id = ?")->execute([$otpRecord['id']]);
+                        $pdo->commit();
 
-                        // Set reset authorization token in session
+                        // Establish secure reset authorization session (15 minutes)
+                        $resetToken = bin2hex(random_bytes(32));
                         $_SESSION['reset_authorized_user_id'] = $userId;
-                        $_SESSION['reset_token'] = bin2hex(random_bytes(16));
+                        $_SESSION['reset_authorized_token']   = $resetToken;
+                        $_SESSION['reset_authorized_expires'] = time() + 900;
 
                         // Set signed cookie for serverless lambda continuity
                         $resetCookie = auth_sign_reset($userId);
@@ -182,58 +183,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                         }
 
                         // Clear demo OTP display session
-                        unset($_SESSION['demo_otp_display'], $_SESSION['demo_otp_mobile'], $_SESSION['demo_otp_user_id'], $_SESSION['demo_otp_expires']);
+                        unset($_SESSION['demo_otp_display'], $_SESSION['demo_otp_identifier'], $_SESSION['demo_otp_user_id'], $_SESSION['demo_otp_expires']);
 
-                        set_flash('success', 'Mobile identity verified! Please create your new account password.');
+                        set_flash('success', 'Identity verified! Please create your new account password.');
                         redirect(public_url('reset.php'));
                     } else {
+                        // Increment attempt counter
+                        $pdo->prepare("UPDATE password_otps SET attempts = attempts + 1 WHERE id = ?")->execute([$otpRecord['id']]);
+                        $pdo->commit();
+
                         $remaining = 4 - (int)$otpRecord['attempts'];
-                        $error = 'Invalid verification code. Please check the 6-digit OTP. (' . max(0, $remaining) . ' attempts left)';
+                        $error = 'Invalid verification code. (' . max(0, $remaining) . ' attempts left)';
                     }
                 }
             } catch (PDOException $e) {
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
                 error_log("OTP verification failed: " . $e->getMessage());
                 $error = 'Database error during verification. Please try again.';
             }
         } else {
-            // Serverless fallback verification
-            $savedOtp = $_SESSION['demo_otp_display'] ?? '';
-            $expires = $_SESSION['demo_otp_expires'] ?? 0;
-            if (empty($savedOtp) && !empty($_COOKIE['demo_otp'])) {
-                $c = json_decode($_COOKIE['demo_otp'], true);
-                if (is_array($c)) {
-                    $savedOtp = $c['code'] ?? '';
-                    $expires = $c['expires'] ?? 0;
-                }
-            }
-
-            if (time() > $expires) {
-                $error = 'Verification code has expired. Please request a new code.';
-                $step = 'request';
-            } elseif (!empty($savedOtp) && $savedOtp === $enteredOtp) {
-                $_SESSION['reset_authorized_user_id'] = $userId;
-                $_SESSION['reset_token'] = bin2hex(random_bytes(16));
-
-                // Set signed cookie for serverless lambda continuity
-                $resetCookie = auth_sign_reset($userId);
-                $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
-                    || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
-                if (!headers_sent()) {
-                    setcookie('kalika_reset', $resetCookie, [
-                        'expires'  => time() + 900,
-                        'path'     => '/',
-                        'secure'   => $isHttps,
-                        'httponly' => true,
-                        'samesite' => 'Lax'
-                    ]);
-                    setcookie('demo_otp', '', ['expires' => time() - 3600, 'path' => '/']);
-                }
-                unset($_SESSION['demo_otp_display'], $_SESSION['demo_otp_mobile'], $_SESSION['demo_otp_user_id'], $_SESSION['demo_otp_expires']);
-                set_flash('success', 'Mobile identity verified! Please create your new account password.');
-                redirect(public_url('reset.php'));
-            } else {
-                $error = 'Invalid verification code. Please check the 6-digit OTP displayed above.';
-            }
+            $error = 'Database service unavailable. Please ensure database connectivity is established.';
         }
     }
 }
@@ -245,27 +216,40 @@ $pageDescription = 'Recover your Kalika Enterprises wholesale retail account usi
 require_once __DIR__ . '/../includes/header.php';
 
 $demoOtpCode = $_SESSION['demo_otp_display'] ?? null;
-$demoMobile  = $_SESSION['demo_otp_mobile'] ?? null;
+$demoTarget  = $_SESSION['demo_otp_identifier'] ?? '';
+$isDemoMode  = defined('DEMO_OTP_ENABLED') && DEMO_OTP_ENABLED;
 ?>
 
 <div class="auth-wrap">
     <!-- Form Side -->
     <div class="auth-form-side">
         <div class="auth-form-card">
-            <?php if ($step === 'verify' && !empty($demoOtpCode)): ?>
+            <?php if ($step === 'verify'): ?>
                 <!-- STEP 2: VERIFY OTP -->
                 <div class="auth-form-card__eyebrow">Security Verification &bull; Step 2 of 2</div>
-                <h1 class="auth-form-card__title">Verify Mobile Code</h1>
-                <p class="auth-form-card__sub">Verification requested for <strong>+91 <?= e($demoMobile) ?></strong></p>
+                <h1 class="auth-form-card__title">Verify 6-Digit Code</h1>
+                <p class="auth-form-card__sub">Verification requested for <strong><?= e($demoTarget ?: 'your account') ?></strong></p>
 
-                <!-- FREE DEMO OTP NOTIFICATION DISPLAY BOX -->
-                <div class="otp-demo-box">
-                    <div class="otp-demo-box__label">Demo Verification Code</div>
-                    <div class="otp-demo-box__code"><?= e($demoOtpCode) ?></div>
-                    <div class="otp-demo-box__note">
-                        Valid for 5 minutes &bull; Single-use verification.<br>
-                        <em>(No paid SMS gateway configured. Displayed on-screen for demonstration).</em>
+                <?php if ($isDemoMode && !empty($demoOtpCode)): ?>
+                    <!-- FREE DEMO OTP NOTIFICATION DISPLAY BOX -->
+                    <div class="otp-demo-box">
+                        <div class="otp-demo-box__label">Demo Verification Code</div>
+                        <div class="otp-demo-box__code"><?= e($demoOtpCode) ?></div>
+                        <div class="otp-demo-box__note">
+                            Valid for 5 minutes &bull; Single-use verification.<br>
+                            <em>(Development / Demo Mode: Displayed on-screen without requiring third-party SMS gateway).</em>
+                        </div>
                     </div>
+                <?php else: ?>
+                    <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 20px; font-size: 13px; color: var(--text-color); line-height: 1.4;">
+                        <strong>Code Dispatched:</strong> A 6-digit single-use OTP has been dispatched to your registered contact channel. Please enter it below.
+                    </div>
+                <?php endif; ?>
+
+                <!-- Expiration Countdown Indicator -->
+                <div style="display: flex; align-items: center; justify-content: space-between; background: #FFFBEB; border: 1px solid #FDE68A; padding: 8px 12px; border-radius: var(--radius-sm); margin-bottom: 16px; font-size: 13px; color: #92400E;">
+                    <span>Security Expiration:</span>
+                    <strong id="otpCountdown" style="font-family: monospace; font-size: 14px;">05:00</strong>
                 </div>
 
                 <?php if (!empty($error)): ?>
@@ -279,8 +263,8 @@ $demoMobile  = $_SESSION['demo_otp_mobile'] ?? null;
                     <input type="hidden" name="action" value="verify_otp">
 
                     <div class="form-group">
-                        <label class="form-label" for="verify_otp">Enter 6-Digit OTP *</label>
-                        <input type="text" id="verify_otp" name="otp" class="form-control otp-input" maxlength="6" pattern="[0-9]{6}" placeholder="123456" required autofocus>
+                        <label class="form-label" for="verify_otp">Enter 6-Digit Verification Code *</label>
+                        <input type="text" id="verify_otp" name="otp" class="form-control otp-input" maxlength="6" pattern="[0-9]{6}" placeholder="123456" required autofocus style="text-align: center; font-size: 20px; letter-spacing: 4px; font-weight: 700;">
                     </div>
 
                     <button type="submit" class="dd-btn dd-btn--mint" style="width: 100%; justify-content: center; margin-top: 8px;">
@@ -290,19 +274,41 @@ $demoMobile  = $_SESSION['demo_otp_mobile'] ?? null;
                 </form>
 
                 <div class="auth-form-card__footer" style="display: flex; justify-content: space-between; align-items: center;">
-                    <a href="<?= public_url('forgot.php?step=request') ?>">&larr; Change Mobile</a>
+                    <a href="<?= public_url('forgot.php?step=request') ?>">&larr; Request New Code</a>
                     <a href="<?= public_url('login.php') ?>">Back to Login</a>
                 </div>
+
+                <script>
+                (function() {
+                    let seconds = 300;
+                    const countdownEl = document.getElementById('otpCountdown');
+                    if (!countdownEl) return;
+                    const timer = setInterval(function() {
+                        seconds--;
+                        if (seconds <= 0) {
+                            clearInterval(timer);
+                            countdownEl.textContent = 'EXPIRED';
+                            countdownEl.style.color = '#DC2626';
+                        } else {
+                            const m = String(Math.floor(seconds / 60)).padStart(2, '0');
+                            const s = String(seconds % 60).padStart(2, '0');
+                            countdownEl.textContent = m + ':' + s;
+                        }
+                    }, 1000);
+                })();
+                </script>
 
             <?php else: ?>
                 <!-- STEP 1: REQUEST OTP -->
                 <div class="auth-form-card__eyebrow">Password Recovery &bull; Step 1 of 2</div>
                 <h1 class="auth-form-card__title">Reset Password</h1>
-                <p class="auth-form-card__sub">Enter your registered mobile number to receive a 6-digit verification code.</p>
+                <p class="auth-form-card__sub">Enter your registered email address or 10-digit mobile number to verify your identity.</p>
 
-                <div style="background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 20px; font-size: 13px; color: var(--color-evergreen); line-height: 1.4;">
-                    <strong>Free Demo Mode:</strong> The generated 6-digit OTP will be presented directly on your screen (no paid SMS gateway needed).
-                </div>
+                <?php if ($isDemoMode): ?>
+                    <div style="background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 20px; font-size: 13px; color: var(--color-evergreen); line-height: 1.4;">
+                        <strong>Free Demo Mode:</strong> The generated 6-digit OTP will be presented directly on your screen (no paid SMS gateway needed).
+                    </div>
+                <?php endif; ?>
 
                 <?php if (!empty($error)): ?>
                     <div class="alert alert-error" role="alert" style="margin-bottom: 20px;">
@@ -315,15 +321,13 @@ $demoMobile  = $_SESSION['demo_otp_mobile'] ?? null;
                     <input type="hidden" name="action" value="request_otp">
 
                     <div class="form-group">
-                        <label class="form-label" for="req_mobile">Registered 10-Digit Mobile Number *</label>
-                        <div class="input-prefix">
-                            <span class="input-prefix-addon">+91</span>
-                            <input type="tel" id="req_mobile" name="mobile" class="form-control" pattern="[6-9][0-9]{9}" placeholder="9876543210" required autofocus>
-                        </div>
+                        <label class="form-label" for="req_identifier">Registered Email Address or 10-Digit Mobile *</label>
+                        <input type="text" id="req_identifier" name="identifier" class="form-control" placeholder="name@store.com or 9876543210" required autofocus>
+                        <div class="field-hint">We will generate a 5-minute single-use 6-digit verification code.</div>
                     </div>
 
                     <button type="submit" class="dd-btn dd-btn--mint" style="width: 100%; justify-content: center; margin-top: 8px;">
-                        Generate Demo OTP
+                        Generate Verification Code
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
                     </button>
                 </form>

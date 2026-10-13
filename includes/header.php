@@ -165,7 +165,7 @@ if (function_exists('get_catalog_fallback')) {
                                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                                     <circle cx="12" cy="7" r="4"></circle>
                                 </svg>
-                                <span><?= $user ? e(explode(' ', $user['name'])[0]) : 'Account' ?></span>
+                                <span><?= $user ? e(explode(' ', $user['name'])[0]) : 'Login' ?></span>
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2">
                                     <polyline points="6 9 12 15 18 9"></polyline>
@@ -415,7 +415,7 @@ if (function_exists('get_catalog_fallback')) {
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                 <circle cx="12" cy="7" r="4"></circle>
             </svg>
-            <span>Account</span>
+            <span><?= $user ? 'Account' : 'Login' ?></span>
         </a>
     </nav>
 

@@ -12,4 +12,4 @@ require_once __DIR__ . '/../includes/auth.php';
 
 logout_user();
 set_flash('info', 'You have been successfully signed out.');
-redirect(public_url('login.php'));
+redirect(public_url('index.php'));

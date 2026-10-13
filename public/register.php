@@ -195,16 +195,16 @@ require_once __DIR__ . '/../includes/header.php';
 
 <div class="auth-wrap">
     <div class="auth-form-side">
-        <div class="auth-form-card" style="max-width: 480px;">
+        <div class="auth-form-card">
             <div class="auth-form-card__eyebrow">Retailer Registration</div>
             <h1 class="auth-form-card__title">Create Account</h1>
             <p class="auth-form-card__sub">Access wholesale distributor rates and digital ordering.</p>
 
             <?php if (!empty($errors)): ?>
-                <div id="registrationErrorAlert" class="alert alert-error" role="alert" style="margin-bottom: 20px;">
+                <div id="registrationErrorAlert" class="alert alert-error" role="alert">
                     <div>
                         <strong>Please resolve the following:</strong>
-                        <ul style="margin: 6px 0 0 16px;">
+                        <ul>
                             <?php foreach ($errors as $err): ?>
                                 <li><?= e($err) ?></li>
                             <?php endforeach; ?>
@@ -221,9 +221,9 @@ require_once __DIR__ . '/../includes/header.php';
 
                 <div class="form-group">
                     <label class="form-label" for="reg_name">Store Name / Contact Person *</label>
-                    <input type="text" id="reg_name" name="name" class="form-control <?= isset($fieldErrors['name']) ? 'is-invalid' : '' ?>" placeholder="e.g. Mahalakshmi Provision Stores / Nilesh Patil" value="<?= e($nameVal) ?>" required autofocus style="<?= isset($fieldErrors['name']) ? 'border-color: #ef4444; background-color: #fef2f2;' : '' ?>">
+                    <input type="text" id="reg_name" name="name" class="form-control <?= isset($fieldErrors['name']) ? 'is-invalid' : '' ?>" placeholder="e.g. Mahalakshmi Provision Stores / Nilesh Patil" value="<?= e($nameVal) ?>" required autofocus>
                     <?php if (isset($fieldErrors['name'])): ?>
-                        <div class="field-error-text" style="color: #dc2626; font-size: 12px; margin-top: 4px; font-weight: 500;"><?= e($fieldErrors['name']) ?></div>
+                        <div class="field-error-text"><?= e($fieldErrors['name']) ?></div>
                     <?php endif; ?>
                 </div>
 
@@ -231,10 +231,10 @@ require_once __DIR__ . '/../includes/header.php';
                     <label class="form-label" for="reg_mobile">10-Digit Mobile Number *</label>
                     <div class="input-prefix">
                         <span class="input-prefix-addon">+91</span>
-                        <input type="tel" id="reg_mobile" name="mobile" class="form-control <?= isset($fieldErrors['mobile']) ? 'is-invalid' : '' ?>" pattern="[6-9][0-9]{9}" maxlength="15" placeholder="9876543210" value="<?= e($mobileVal) ?>" required style="<?= isset($fieldErrors['mobile']) ? 'border-color: #ef4444; background-color: #fef2f2;' : '' ?>">
+                        <input type="tel" id="reg_mobile" name="mobile" class="form-control <?= isset($fieldErrors['mobile']) ? 'is-invalid' : '' ?>" pattern="[6-9][0-9]{9}" maxlength="15" placeholder="9876543210" value="<?= e($mobileVal) ?>" required>
                     </div>
                     <?php if (isset($fieldErrors['mobile'])): ?>
-                        <div class="field-error-text" style="color: #dc2626; font-size: 12px; margin-top: 4px; font-weight: 500;"><?= e($fieldErrors['mobile']) ?></div>
+                        <div class="field-error-text"><?= e($fieldErrors['mobile']) ?></div>
                     <?php else: ?>
                         <div class="field-hint">Your mobile number is your primary login identifier. Enter 10 digits starting 6, 7, 8, or 9.</div>
                     <?php endif; ?>
@@ -242,9 +242,9 @@ require_once __DIR__ . '/../includes/header.php';
 
                 <div class="form-group">
                     <label class="form-label" for="reg_email">Email Address *</label>
-                    <input type="email" id="reg_email" name="email" class="form-control <?= isset($fieldErrors['email']) ? 'is-invalid' : '' ?>" placeholder="store@example.com" value="<?= e($emailVal) ?>" required style="<?= isset($fieldErrors['email']) ? 'border-color: #ef4444; background-color: #fef2f2;' : '' ?>">
+                    <input type="email" id="reg_email" name="email" class="form-control <?= isset($fieldErrors['email']) ? 'is-invalid' : '' ?>" placeholder="store@example.com" value="<?= e($emailVal) ?>" required>
                     <?php if (isset($fieldErrors['email'])): ?>
-                        <div class="field-error-text" style="color: #dc2626; font-size: 12px; margin-top: 4px; font-weight: 500;"><?= e($fieldErrors['email']) ?></div>
+                        <div class="field-error-text"><?= e($fieldErrors['email']) ?></div>
                     <?php else: ?>
                         <div class="field-hint">Used for official wholesale order confirmations and invoice records.</div>
                     <?php endif; ?>
@@ -252,20 +252,20 @@ require_once __DIR__ . '/../includes/header.php';
 
                 <div class="form-group">
                     <label class="form-label" for="reg_address">Shop Delivery Address *</label>
-                    <textarea id="reg_address" name="address" class="form-control <?= isset($fieldErrors['address']) ? 'is-invalid' : '' ?>" rows="3" placeholder="Shop No., Market Yard, Village/City, PIN code" required minlength="10" style="<?= isset($fieldErrors['address']) ? 'border-color: #ef4444; background-color: #fef2f2;' : '' ?>"><?= e($addressVal) ?></textarea>
+                    <textarea id="reg_address" name="address" class="form-control <?= isset($fieldErrors['address']) ? 'is-invalid' : '' ?>" rows="3" placeholder="Shop No., Market Yard, Village/City, PIN code" required minlength="10"><?= e($addressVal) ?></textarea>
                     <?php if (isset($fieldErrors['address'])): ?>
-                        <div class="field-error-text" style="color: #dc2626; font-size: 12px; margin-top: 4px; font-weight: 500;"><?= e($fieldErrors['address']) ?></div>
+                        <div class="field-error-text"><?= e($fieldErrors['address']) ?></div>
                     <?php else: ?>
                         <div class="field-hint" id="addressHint">Must be located in Niphad, Dindori, Chandwad, Sinnar, or Yeola (minimum 10 characters).</div>
                     <?php endif; ?>
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="auth-password-row">
                     <div class="form-group">
                         <label class="form-label" for="reg_password">Password *</label>
-                        <div style="position: relative;">
-                            <input type="password" id="reg_password" name="password" class="form-control <?= isset($fieldErrors['password']) ? 'is-invalid' : '' ?>" minlength="8" placeholder="Min 8 chars" required style="padding-right: 36px; <?= isset($fieldErrors['password']) ? 'border-color: #ef4444; background-color: #fef2f2;' : '' ?>">
-                            <button type="button" class="btn-toggle-password" data-target="reg_password" aria-label="Toggle password visibility" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-muted); padding: 4px; display: inline-flex; align-items: center;">
+                        <div class="password-field-wrap">
+                            <input type="password" id="reg_password" name="password" class="form-control <?= isset($fieldErrors['password']) ? 'is-invalid' : '' ?>" minlength="8" placeholder="Min 8 chars" required>
+                            <button type="button" class="btn-toggle-password" data-target="reg_password" aria-label="Toggle password visibility">
                                 <svg class="eye-open" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                                 <svg class="eye-closed" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
                             </button>
@@ -274,9 +274,9 @@ require_once __DIR__ . '/../includes/header.php';
 
                     <div class="form-group">
                         <label class="form-label" for="reg_confirm_password">Confirm *</label>
-                        <div style="position: relative;">
-                            <input type="password" id="reg_confirm_password" name="confirm_password" class="form-control <?= isset($fieldErrors['confirm_password']) ? 'is-invalid' : '' ?>" minlength="8" placeholder="Repeat" required style="padding-right: 36px; <?= isset($fieldErrors['confirm_password']) ? 'border-color: #ef4444; background-color: #fef2f2;' : '' ?>">
-                            <button type="button" class="btn-toggle-password" data-target="reg_confirm_password" aria-label="Toggle password visibility" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-muted); padding: 4px; display: inline-flex; align-items: center;">
+                        <div class="password-field-wrap">
+                            <input type="password" id="reg_confirm_password" name="confirm_password" class="form-control <?= isset($fieldErrors['confirm_password']) ? 'is-invalid' : '' ?>" minlength="8" placeholder="Repeat" required>
+                            <button type="button" class="btn-toggle-password" data-target="reg_confirm_password" aria-label="Toggle password visibility">
                                 <svg class="eye-open" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                                 <svg class="eye-closed" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
                             </button>
@@ -285,24 +285,24 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
 
                 <?php if (isset($fieldErrors['password'])): ?>
-                    <div class="field-error-text" style="color: #dc2626; font-size: 12px; margin-top: -4px; margin-bottom: 8px; font-weight: 500;"><?= e($fieldErrors['password']) ?></div>
+                    <div class="auth-password-hint is-error"><?= e($fieldErrors['password']) ?></div>
                 <?php elseif (isset($fieldErrors['confirm_password'])): ?>
-                    <div class="field-error-text" style="color: #dc2626; font-size: 12px; margin-top: -4px; margin-bottom: 8px; font-weight: 500;"><?= e($fieldErrors['confirm_password']) ?></div>
+                    <div class="auth-password-hint is-error"><?= e($fieldErrors['confirm_password']) ?></div>
                 <?php else: ?>
-                    <div id="passwordHint" class="field-hint" style="margin-top: -6px; margin-bottom: 12px;">Password policy: Minimum 8 characters with at least one letter and one number.</div>
+                    <div id="passwordHint" class="auth-password-hint">Password policy: Minimum 8 characters with at least one letter and one number.</div>
                 <?php endif; ?>
 
-                <div class="form-group" style="margin-top: 14px; margin-bottom: 16px;">
-                    <label class="form-check" style="display: flex; align-items: flex-start; gap: 8px; font-size: 13px; line-height: 1.4; color: var(--text-color); cursor: pointer; <?= isset($fieldErrors['terms']) ? 'padding: 8px; border: 1px solid #ef4444; border-radius: 6px; background-color: #fef2f2;' : '' ?>">
-                        <input type="checkbox" id="reg_terms" name="terms" value="1" <?= !empty($_POST['terms']) ? 'checked' : '' ?> required style="margin-top: 3px;">
-                        <span>I accept the <a href="<?= public_url('policies.php') ?>" target="_blank" style="color: var(--color-mint); text-decoration: underline;">Terms of Service &amp; Wholesale Delivery Policies</a> *</span>
+                <div class="form-group">
+                    <label class="auth-terms-check <?= isset($fieldErrors['terms']) ? 'is-invalid' : '' ?>">
+                        <input type="checkbox" id="reg_terms" name="terms" value="1" <?= !empty($_POST['terms']) ? 'checked' : '' ?> required>
+                        <span>I accept the <a href="<?= public_url('policies.php') ?>" target="_blank">Terms of Service &amp; Wholesale Delivery Policies</a> *</span>
                     </label>
                     <?php if (isset($fieldErrors['terms'])): ?>
-                        <div class="field-error-text" style="color: #dc2626; font-size: 12px; margin-top: 4px; font-weight: 500;"><?= e($fieldErrors['terms']) ?></div>
+                        <div class="field-error-text"><?= e($fieldErrors['terms']) ?></div>
                     <?php endif; ?>
                 </div>
 
-                <button type="submit" id="btnRegisterSubmit" class="dd-btn dd-btn--mint" style="width: 100%; justify-content: center; margin-top: 8px;">
+                <button type="submit" id="btnRegisterSubmit" class="auth-submit-btn">
                     <span id="btnRegisterText">Create Retailer Account</span>
                     <svg id="btnRegisterIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
                 </button>

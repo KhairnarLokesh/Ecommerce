@@ -96,8 +96,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
                         $_SESSION['otp_delivery_channel'] = $emailSent ? 'email' : 'demo';
                         $_SESSION['otp_masked_destination'] = !empty($userEmail) ? mask_email($userEmail) : '';
-                        // Display demo OTP on-screen only in demo mode OR if SMTP is not configured
-                        $_SESSION['demo_otp_display'] = ($isDemoEnabled || !$emailSent) ? $rawOtp : null;
+                        // Display demo OTP on-screen ONLY in demo mode when email delivery is not available or failed
+                        $_SESSION['demo_otp_display'] = (!$emailSent && $isDemoEnabled) ? $rawOtp : null;
                         $_SESSION['demo_otp_identifier'] = $identifier;
                         $_SESSION['demo_otp_user_id'] = $userId;
                         $_SESSION['demo_otp_expires'] = time() + 300; // 5 mins
@@ -238,6 +238,12 @@ $demoTarget  = $_SESSION['demo_otp_identifier'] ?? '';
 $deliveryChannel = $_SESSION['otp_delivery_channel'] ?? 'demo';
 $maskedDest = $_SESSION['otp_masked_destination'] ?? '';
 $isDemoMode  = defined('DEMO_OTP_ENABLED') && DEMO_OTP_ENABLED;
+
+// Real email delivery: ensure demo code is kept private and not displayed on screen
+if ($deliveryChannel === 'email') {
+    $demoOtpCode = null;
+    unset($_SESSION['demo_otp_display']);
+}
 ?>
 
 <div class="auth-wrap">
@@ -246,40 +252,50 @@ $isDemoMode  = defined('DEMO_OTP_ENABLED') && DEMO_OTP_ENABLED;
         <div class="auth-form-card">
             <?php if ($step === 'verify'): ?>
                 <!-- STEP 2: VERIFY OTP -->
-                <div class="auth-form-card__eyebrow">Security Verification &bull; Step 2 of 2</div>
+                <div class="auth-security-badge">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                    <span>Security Verification &bull; Step 2 of 2</span>
+                </div>
                 <h1 class="auth-form-card__title">Verify 6-Digit Code</h1>
-                <p class="auth-form-card__sub">Verification requested for <strong><?= e($demoTarget ?: 'your account') ?></strong></p>
+                <p class="auth-form-card__sub" style="margin-bottom: 20px;">
+                    Verification requested for 
+                    <span class="auth-target-highlight"><?= e($maskedDest ?: ($demoTarget ?: 'your account')) ?></span>
+                </p>
 
                 <?php if ($deliveryChannel === 'email' && !empty($maskedDest)): ?>
-                    <div style="background: #ECFDF5; border: 1px solid #A7F3D0; border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 20px; font-size: 13.5px; color: #065F46; line-height: 1.5; display: flex; align-items: flex-start; gap: 12px;">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0; margin-top: 2px;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                        <div>
-                            <strong>OTP Sent via Email!</strong><br>
-                            A 6-digit verification code has been dispatched to your registered email <strong><?= e($maskedDest) ?></strong>. Please check your inbox and spam folder.
+                    <div class="auth-email-dispatched-card">
+                        <div class="auth-email-icon-circle">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                        </div>
+                        <div class="auth-email-dispatched-text">
+                            <strong>OTP Sent via Email!</strong>
+                            <p>A 6-digit verification code has been dispatched to <strong><?= e($maskedDest) ?></strong>. Please check your inbox and spam folder.</p>
                         </div>
                     </div>
                 <?php endif; ?>
 
-                <?php if ($isDemoMode && !empty($demoOtpCode)): ?>
-                    <!-- FREE DEMO OTP NOTIFICATION DISPLAY BOX -->
+                <?php if ($deliveryChannel !== 'email' && $isDemoMode && !empty($demoOtpCode)): ?>
+                    <!-- FALLBACK DEMO OTP NOTIFICATION DISPLAY BOX (ONLY WHEN EMAIL NOT AVAILABLE) -->
                     <div class="otp-demo-box">
                         <div class="otp-demo-box__label">Demo Verification Code</div>
                         <div class="otp-demo-box__code"><?= e($demoOtpCode) ?></div>
                         <div class="otp-demo-box__note">
                             Valid for 5 minutes &bull; Single-use verification.<br>
-                            <em>(<?= $deliveryChannel === 'email' ? 'Email sent via SMTP &bull; Also displayed on-screen for development convenience' : 'Development / Demo Mode: Displayed on-screen without requiring third-party SMS/email gateway' ?>).</em>
+                            <em>(Development / Demo Mode: Displayed on-screen because email delivery is offline or not configured).</em>
                         </div>
                     </div>
                 <?php elseif ($deliveryChannel !== 'email'): ?>
-                    <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 20px; font-size: 13px; color: var(--text-color); line-height: 1.4;">
+                    <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 12px 14px; margin-bottom: 20px; font-size: 13px; color: var(--color-text-main); line-height: 1.4;">
                         <strong>Code Dispatched:</strong> A 6-digit single-use OTP has been dispatched to your registered contact channel. Please enter it below.
                     </div>
                 <?php endif; ?>
 
-                <!-- Expiration Countdown Indicator -->
-                <div style="display: flex; align-items: center; justify-content: space-between; background: #FFFBEB; border: 1px solid #FDE68A; padding: 8px 12px; border-radius: var(--radius-sm); margin-bottom: 16px; font-size: 13px; color: #92400E;">
-                    <span>Security Expiration:</span>
-                    <strong id="otpCountdown" style="font-family: monospace; font-size: 14px;">05:00</strong>
+                <!-- Expiration Countdown Strip -->
+                <div class="otp-expiration-strip">
+                    <div class="otp-timer-info">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        <span>Security Expiration: <strong id="otpCountdown">05:00</strong></span>
+                    </div>
                 </div>
 
                 <?php if (!empty($error)): ?>
@@ -288,54 +304,154 @@ $isDemoMode  = defined('DEMO_OTP_ENABLED') && DEMO_OTP_ENABLED;
                     </div>
                 <?php endif; ?>
 
-                <form action="<?= public_url('forgot.php?step=verify') ?>" method="POST" novalidate>
+                <form id="otpVerifyForm" action="<?= public_url('forgot.php?step=verify') ?>" method="POST" novalidate>
                     <?= csrf_field() ?>
                     <input type="hidden" name="action" value="verify_otp">
+                    <!-- Hidden Master Input for submitting full 6 digits -->
+                    <input type="hidden" id="verify_otp" name="otp" value="" required>
 
-                    <div class="form-group">
-                        <label class="form-label" for="verify_otp">Enter 6-Digit Verification Code *</label>
-                        <input type="text" id="verify_otp" name="otp" class="form-control otp-input" maxlength="6" pattern="[0-9]{6}" placeholder="123456" required autofocus style="text-align: center; font-size: 20px; letter-spacing: 4px; font-weight: 700;">
+                    <div class="otp-digits-container">
+                        <label class="form-label otp-digits-label">Enter 6-Digit Verification Code *</label>
+                        <div class="otp-boxes-grid" id="otpBoxesGrid">
+                            <input type="text" class="otp-digit-box" inputmode="numeric" pattern="[0-9]" maxlength="1" data-index="0" autofocus autocomplete="one-time-code">
+                            <input type="text" class="otp-digit-box" inputmode="numeric" pattern="[0-9]" maxlength="1" data-index="1">
+                            <input type="text" class="otp-digit-box" inputmode="numeric" pattern="[0-9]" maxlength="1" data-index="2">
+                            <span class="otp-digit-divider">&ndash;</span>
+                            <input type="text" class="otp-digit-box" inputmode="numeric" pattern="[0-9]" maxlength="1" data-index="3">
+                            <input type="text" class="otp-digit-box" inputmode="numeric" pattern="[0-9]" maxlength="1" data-index="4">
+                            <input type="text" class="otp-digit-box" inputmode="numeric" pattern="[0-9]" maxlength="1" data-index="5">
+                        </div>
                     </div>
 
-                    <button type="submit" class="dd-btn dd-btn--mint" style="width: 100%; justify-content: center; margin-top: 8px;">
-                        Verify Code &amp; Continue
+                    <button type="submit" id="btnVerifySubmit" class="auth-submit-btn">
+                        <span>Verify Code &amp; Continue</span>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
                     </button>
                 </form>
 
-                <div class="auth-form-card__footer" style="display: flex; justify-content: space-between; align-items: center;">
-                    <a href="<?= public_url('forgot.php?step=request') ?>">&larr; Request New Code</a>
-                    <a href="<?= public_url('login.php') ?>">Back to Login</a>
+                <div class="auth-form-card__footer auth-verify-footer">
+                    <div>Didn't receive the code? <a href="<?= public_url('forgot.php?step=request') ?>">Request New Code</a></div>
+                    <a href="<?= public_url('login.php') ?>" class="auth-back-link">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                        Back to Login
+                    </a>
                 </div>
 
                 <script>
                 (function() {
+                    // 1. Countdown Timer
                     let seconds = 300;
                     const countdownEl = document.getElementById('otpCountdown');
-                    if (!countdownEl) return;
-                    const timer = setInterval(function() {
-                        seconds--;
-                        if (seconds <= 0) {
-                            clearInterval(timer);
-                            countdownEl.textContent = 'EXPIRED';
-                            countdownEl.style.color = '#DC2626';
-                        } else {
-                            const m = String(Math.floor(seconds / 60)).padStart(2, '0');
-                            const s = String(seconds % 60).padStart(2, '0');
-                            countdownEl.textContent = m + ':' + s;
-                        }
-                    }, 1000);
+                    if (countdownEl) {
+                        const timer = setInterval(function() {
+                            seconds--;
+                            if (seconds <= 0) {
+                                clearInterval(timer);
+                                countdownEl.textContent = 'EXPIRED';
+                                countdownEl.style.color = '#DC2626';
+                            } else {
+                                const m = String(Math.floor(seconds / 60)).padStart(2, '0');
+                                const s = String(seconds % 60).padStart(2, '0');
+                                countdownEl.textContent = m + ':' + s;
+                                if (seconds < 60) {
+                                    countdownEl.style.color = '#DC2626';
+                                }
+                            }
+                        }, 1000);
+                    }
+
+                    // 2. 6-Digit Segmented Box Navigation & Paste Support
+                    const form = document.getElementById('otpVerifyForm');
+                    const hiddenOtp = document.getElementById('verify_otp');
+                    const boxes = Array.from(document.querySelectorAll('.otp-digit-box'));
+                    if (!boxes.length) return;
+
+                    function syncMasterInput() {
+                        const code = boxes.map(b => b.value.trim()).join('');
+                        hiddenOtp.value = code;
+                        return code;
+                    }
+
+                    boxes.forEach((box, idx) => {
+                        box.addEventListener('input', (e) => {
+                            const val = e.target.value.replace(/\D/g, '');
+                            e.target.value = val ? val[0] : '';
+                            e.target.classList.toggle('is-filled', !!e.target.value);
+                            syncMasterInput();
+
+                            if (e.target.value && idx < boxes.length - 1) {
+                                boxes[idx + 1].focus();
+                                boxes[idx + 1].select();
+                            }
+                        });
+
+                        box.addEventListener('keydown', (e) => {
+                            if (e.key === 'Backspace') {
+                                if (!box.value && idx > 0) {
+                                    boxes[idx - 1].focus();
+                                    boxes[idx - 1].value = '';
+                                    boxes[idx - 1].classList.remove('is-filled');
+                                    syncMasterInput();
+                                } else {
+                                    box.value = '';
+                                    box.classList.remove('is-filled');
+                                    syncMasterInput();
+                                }
+                            } else if (e.key === 'ArrowLeft' && idx > 0) {
+                                boxes[idx - 1].focus();
+                                boxes[idx - 1].select();
+                            } else if (e.key === 'ArrowRight' && idx < boxes.length - 1) {
+                                boxes[idx + 1].focus();
+                                boxes[idx + 1].select();
+                            }
+                        });
+
+                        box.addEventListener('paste', (e) => {
+                            e.preventDefault();
+                            const pasteData = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
+                            if (!pasteData) return;
+                            pasteData.split('').forEach((char, i) => {
+                                if (boxes[i]) {
+                                    boxes[i].value = char;
+                                    boxes[i].classList.add('is-filled');
+                                }
+                            });
+                            syncMasterInput();
+                            const targetIdx = Math.min(pasteData.length, boxes.length - 1);
+                            boxes[targetIdx].focus();
+                            boxes[targetIdx].select();
+                        });
+
+                        box.addEventListener('focus', () => {
+                            box.select();
+                        });
+                    });
+
+                    if (form) {
+                        form.addEventListener('submit', function(e) {
+                            const code = syncMasterInput();
+                            if (code.length !== 6) {
+                                e.preventDefault();
+                                const emptyBox = boxes.find(b => !b.value.trim()) || boxes[0];
+                                emptyBox.focus();
+                                emptyBox.select();
+                            }
+                        });
+                    }
                 })();
                 </script>
 
             <?php else: ?>
                 <!-- STEP 1: REQUEST OTP -->
-                <div class="auth-form-card__eyebrow">Password Recovery &bull; Step 1 of 2</div>
+                <div class="auth-security-badge">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                    <span>Password Recovery &bull; Step 1 of 2</span>
+                </div>
                 <h1 class="auth-form-card__title">Reset Password</h1>
                 <p class="auth-form-card__sub">Enter your registered email address or 10-digit mobile number to verify your identity.</p>
 
                 <?php if ($isDemoMode): ?>
-                    <div style="background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 20px; font-size: 13px; color: var(--color-evergreen); line-height: 1.4;">
+                    <div style="background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 8px; padding: 12px 14px; margin-bottom: 20px; font-size: 13px; color: var(--color-evergreen); line-height: 1.4;">
                         <strong>Free Demo Mode:</strong> The generated 6-digit OTP will be presented directly on your screen (no paid SMS gateway needed).
                     </div>
                 <?php endif; ?>
@@ -356,8 +472,8 @@ $isDemoMode  = defined('DEMO_OTP_ENABLED') && DEMO_OTP_ENABLED;
                         <div class="field-hint">We will generate a 5-minute single-use 6-digit verification code.</div>
                     </div>
 
-                    <button type="submit" class="dd-btn dd-btn--mint" style="width: 100%; justify-content: center; margin-top: 8px;">
-                        Generate Verification Code
+                    <button type="submit" id="btnRequestSubmit" class="auth-submit-btn">
+                        <span>Generate Verification Code</span>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
                     </button>
                 </form>

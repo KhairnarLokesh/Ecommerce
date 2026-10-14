@@ -208,7 +208,7 @@ require_once __DIR__ . '/../includes/header.php';
                                         <div style="display: flex; gap: 14px; align-items: center;">
                                             <div class="cart-item__thumb">
                                                 <?php if (!empty($item['product_image'])): ?>
-                                                    <img src="<?= public_url('uploads/products/' . e($item['product_image'])) ?>" alt="<?= e($item['product_name']) ?>" style="width: 100%; height: 100%; object-fit: contain;">
+                                                    <img src="<?= e(product_image_url($item['product_image'])) ?>" alt="<?= e($item['product_name']) ?>" style="width: 100%; height: 100%; object-fit: contain;">
                                                 <?php else: ?>
                                                     <span style="font-size: 9px; font-weight: 800; color: var(--color-text-muted); letter-spacing: 0.05em;">KE</span>
                                                 <?php endif; ?>

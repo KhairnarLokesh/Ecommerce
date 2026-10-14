@@ -211,6 +211,23 @@ function public_url(string $path = ''): string
 }
 
 /**
+ * Resolve product image URL (supports external CDN/HTTP URLs or local uploads).
+ *
+ * @param string|null $image Image filename or external URL
+ * @return string Complete URL to image or empty string
+ */
+function product_image_url(?string $image): string
+{
+    if (empty($image)) {
+        return '';
+    }
+    if (preg_match('#^https?://#i', $image)) {
+        return $image;
+    }
+    return public_url('uploads/products/' . rawurlencode($image));
+}
+
+/**
  * Resolve administrative login URL (configurable path).
  *
  * @return string Complete admin login URL

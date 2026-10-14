@@ -248,7 +248,7 @@ if ($pdo) {
                             <td style="padding: 0.75rem 0.5rem;">
                                 <div style="width: 48px; height: 48px; border-radius: var(--radius-sm); background: #f8fafc; border: 1px solid var(--border-light); display: flex; align-items: center; justify-content: center; overflow: hidden;">
                                     <?php if (!empty($p['image'])): ?>
-                                        <img src="<?= public_url('uploads/products/' . e($p['image'])) ?>" alt="<?= e($p['name']) ?>" style="width: 100%; height: 100%; object-fit: contain;">
+                                        <img src="<?= e(product_image_url($p['image'])) ?>" alt="<?= e($p['name']) ?>" style="width: 100%; height: 100%; object-fit: contain;">
                                     <?php else: ?>
                                         <span style="font-size: 0.65rem; color: var(--text-muted); text-align: center; font-weight: 700;">No Pic</span>
                                     <?php endif; ?>

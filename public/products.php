@@ -399,9 +399,12 @@ require_once __DIR__ . '/../includes/header.php';
                             <div>
                                 <!-- Image System: 1:1 container, contain, 8px padding, white background or grey fallback -->
                                 <div class="product-img-box">
-                                    <?php if (!empty($product['image']) && file_exists(__DIR__ . '/uploads/products/' . $product['image'])): ?>
+                                    <?php 
+                                    $hasImg = !empty($product['image']) && (preg_match('#^https?://#i', $product['image']) || file_exists(__DIR__ . '/uploads/products/' . $product['image']));
+                                    if ($hasImg): 
+                                    ?>
                                         <img 
-                                            src="<?= public_url('uploads/products/' . rawurlencode($product['image'])) ?>" 
+                                            src="<?= e(product_image_url($product['image'])) ?>" 
                                             alt="<?= e($product['name']) ?>" 
                                             class="product-img-tag"
                                             loading="lazy"

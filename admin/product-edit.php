@@ -74,8 +74,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $errors[] = 'A product cannot be activated if the GST rate is empty or unconfirmed. Please enter a valid GST percentage (e.g. 5, 12, 18, 28) or deactivate the product.';
             }
 
-            // Image Upload Handling
+            // Image Upload or URL Handling
             $imageFilename = $product['image'] ?? null;
+
+            // 1. External Image URL or existing filename input
+            $imageUrlInput = trim($_POST['image_url'] ?? '');
+            if (!empty($imageUrlInput)) {
+                $imageFilename = $imageUrlInput;
+            }
+
+            // 2. File Upload handling (if a file was selected)
             if (!empty($_FILES['image']['name'])) {
                 $file = $_FILES['image'];
                 $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
@@ -97,23 +105,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if ($imageInfo === false || !in_array($imageInfo['mime'], $allowedMimes, true)) {
                         $errors[] = 'Uploaded file is not a valid image.';
                     } else {
-                        // Generate random, collision-safe filename
-                        $newFilename = 'prod_' . bin2hex(random_bytes(8)) . '.' . ($ext === 'jpeg' ? 'jpg' : $ext);
                         $uploadDir = __DIR__ . '/../public/uploads/products';
+                        $isServerless = getenv('VERCEL') || isset($_SERVER['LAMBDA_TASK_ROOT']) || str_contains(__DIR__, '/var/task');
 
-                        if (!is_dir($uploadDir)) {
-                            @mkdir($uploadDir, 0755, true);
-                        }
-
-                        $targetPath = $uploadDir . '/' . $newFilename;
-                        if (move_uploaded_file($tmpPath, $targetPath)) {
-                            // If replacing an old custom image, clean it up
-                            if (!empty($product['image']) && file_exists($uploadDir . '/' . $product['image'])) {
-                                @unlink($uploadDir . '/' . $product['image']);
-                            }
-                            $imageFilename = $newFilename;
+                        // Check if upload directory is writable (Vercel serverless has a read-only filesystem)
+                        if ($isServerless || (!is_writable($uploadDir) && (!is_dir($uploadDir) || !@is_writable($uploadDir)))) {
+                            $errors[] = 'Cannot save image to disk: Running in a read-only serverless environment (Vercel). Please use the "Image URL" field below (paste any image link, e.g. from Cloudinary, Imgur, or web) or host on standard hosting (cPanel/VPS).';
                         } else {
-                            $errors[] = 'Failed to save image to uploads directory.';
+                            // Generate random, collision-safe filename
+                            $newFilename = 'prod_' . bin2hex(random_bytes(8)) . '.' . ($ext === 'jpeg' ? 'jpg' : $ext);
+
+                            if (!is_dir($uploadDir)) {
+                                @mkdir($uploadDir, 0755, true);
+                            }
+
+                            $targetPath = $uploadDir . '/' . $newFilename;
+                            if (@move_uploaded_file($tmpPath, $targetPath)) {
+                                // If replacing an old custom local image, clean it up
+                                if (!empty($product['image']) && !preg_match('#^https?://#i', $product['image']) && file_exists($uploadDir . '/' . $product['image'])) {
+                                    @unlink($uploadDir . '/' . $product['image']);
+                                }
+                                $imageFilename = $newFilename;
+                            } else {
+                                $errors[] = 'Failed to save image to uploads directory. Please verify directory permissions or use an Image URL.';
+                            }
                         }
                     }
                 }
@@ -397,15 +412,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <!-- Image Upload & Preview -->
             <div class="form-group">
-                <label class="form-label" for="prod_image">Product Image (JPG, PNG, WebP, max 2MB)</label>
+                <label class="form-label" for="prod_image">Upload Image File (JPG, PNG, WebP &le; 2MB)</label>
                 <input type="file" id="prod_image" name="image" class="form-control" accept=".jpg,.jpeg,.png,.webp">
-                <?php if (!empty($product['image'])): ?>
-                    <div style="display: flex; align-items: center; gap: 0.75rem; margin-top: 0.5rem;">
-                        <img src="<?= public_url('uploads/products/' . e($product['image'])) ?>" alt="Current Product Image" style="width: 44px; height: 44px; object-fit: contain; border-radius: var(--radius-sm); border: 1px solid var(--border-light); background: #ffffff;">
-                        <span style="font-size: 0.75rem; color: var(--text-muted);">Current: <code><?= e($product['image']) ?></code></span>
-                    </div>
-                <?php endif; ?>
+                <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 0.25rem;">
+                    For traditional hosting (cPanel/VPS).
+                </span>
             </div>
+        </div>
+
+        <!-- External Image URL or Existing Image Name (Serverless / Vercel Friendly) -->
+        <div class="form-group" style="background: #f8fafc; padding: 1rem 1.25rem; border-radius: var(--radius-sm); border: 1px solid var(--border-light); margin-bottom: 1.5rem;">
+            <label class="form-label" for="prod_image_url" style="margin-bottom: 0.35rem; font-weight: 600;">
+                Image URL or Pre-existing Filename 
+                <span style="font-size: 0.75rem; color: var(--color-evergreen); font-weight: 600;">(Recommended for Vercel / Cloud Deployments)</span>
+            </label>
+            <input type="text" id="prod_image_url" name="image_url" class="form-control" 
+                   value="<?= e($product['image'] ?? $_POST['image_url'] ?? '') ?>" 
+                   placeholder="e.g. https://images.unsplash.com/... or campa-cola.jpg">
+            <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 0.35rem;">
+                Since Vercel serverless has a read-only filesystem, paste any public image link (from Cloudinary, Imgur, S3, or any website) or use an existing catalog filename (e.g. <code>campa-cola.jpg</code>).
+            </span>
+
+            <?php if (!empty($product['image'])): ?>
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-top: 0.75rem; padding-top: 0.5rem; border-top: 1px dashed var(--border-light);">
+                    <img src="<?= e(product_image_url($product['image'])) ?>" alt="Current Product Image" style="width: 44px; height: 44px; object-fit: contain; border-radius: var(--radius-sm); border: 1px solid var(--border-light); background: #ffffff;">
+                    <span style="font-size: 0.75rem; color: var(--text-muted);">Current Active Image: <code><?= e($product['image']) ?></code></span>
+                </div>
+            <?php endif; ?>
         </div>
 
         <!-- Description -->

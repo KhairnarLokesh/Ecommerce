@@ -449,9 +449,12 @@ $brandLogosList = [
                     <div class="product-card">
                         <!-- Image Container: 1:1, object-fit: contain, 8px padding -->
                         <div class="product-img-box">
-                            <?php if (!empty($item['image']) && file_exists(__DIR__ . '/uploads/products/' . $item['image'])): ?>
+                            <?php 
+                            $hasImg = !empty($item['image']) && (preg_match('#^https?://#i', $item['image']) || file_exists(__DIR__ . '/uploads/products/' . $item['image']));
+                            if ($hasImg): 
+                            ?>
                                 <img 
-                                    src="<?= public_url('uploads/products/' . rawurlencode($item['image'])) ?>" 
+                                    src="<?= e(product_image_url($item['image'])) ?>" 
                                     alt="<?= e($item['name']) ?>" 
                                     class="product-img-tag"
                                     loading="lazy"

@@ -13,9 +13,15 @@ require_once __DIR__ . '/../includes/csrf.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/cart.php';
+require_once __DIR__ . '/../includes/razorpay.php';
 
 // Checkout strictly requires a logged-in customer
 require_login('checkout.php');
+
+// Lazy cleanup of any expired pending reservations before checking cart
+if ($pdo) {
+    cleanup_expired_pending_orders($pdo);
+}
 
 $user = current_user();
 $cart = cart_get_details($pdo);
@@ -44,6 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $nameVal = trim($_POST['name'] ?? '');
         $mobileVal = trim($_POST['mobile'] ?? '');
         $addressVal = trim($_POST['address'] ?? '');
+        $paymentMethod = ($_POST['payment_method'] ?? 'online') === 'cod' ? 'cod' : 'online';
 
         if (strlen($nameVal) < 2) {
             $errors[] = 'Please enter a valid shop or contact name (at least 2 characters).';
@@ -91,7 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
 
-                // 2. Decrement stock for each variant and flag out_of_stock if stock reaches 0
+                // 2. Reserve stock: decrement stock for each variant and flag out_of_stock if stock reaches 0
                 foreach ($recheckCart['items'] as $item) {
                     $decStmt = $pdo->prepare("
                         UPDATE product_variants 
@@ -122,16 +129,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $orderNo = "KE-{$datePrefix}-" . mt_rand(1000, 9999);
                 }
 
-                // 4. Insert orders record snapshot
+                // 4. Setup statuses and expiration based on payment method
+                $isOnline = ($paymentMethod === 'online');
+                $orderStatus = $isOnline ? 'Awaiting Payment' : 'Placed';
+                $paymentStatus = 'pending';
+                $expiresAt = $isOnline ? date('Y-m-d H:i:s', time() + 1800) : null; // 30-minute reservation
+                $amountPaise = (int)round((float)$recheckCart['grand_total'] * 100);
+
+                // Create Razorpay Order if paying online
+                $razorpayOrderId = null;
+                if ($isOnline) {
+                    $rzpOrder = razorpay_create_order($amountPaise, $orderNo, [
+                        'order_no' => $orderNo,
+                        'user_id'  => (string)$user['id']
+                    ]);
+                    $razorpayOrderId = $rzpOrder['id'] ?? null;
+                }
+
+                // 5. Insert orders record snapshot
                 $orderInsert = $pdo->prepare("
                     INSERT INTO orders (
                         order_no, user_id, customer_name, mobile, delivery_address,
                         subtotal, gst_total, delivery_charge, grand_total,
-                        prices_include_gst, status
+                        prices_include_gst, payment_status, payment_method,
+                        razorpay_order_id, expires_at, status
                     ) VALUES (
                         ?, ?, ?, ?, ?,
                         ?, ?, ?, ?,
-                        ?, 'Placed'
+                        ?, ?, ?,
+                        ?, ?, ?
                     )
                 ");
 
@@ -145,12 +171,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $recheckCart['gst_total'],
                     0.00, // Strictly free delivery
                     $recheckCart['grand_total'],
-                    $recheckCart['prices_include_gst'] ? 1 : 0
+                    $recheckCart['prices_include_gst'] ? 1 : 0,
+                    $paymentStatus,
+                    $paymentMethod,
+                    $razorpayOrderId,
+                    $expiresAt,
+                    $orderStatus
                 ]);
 
                 $orderId = (int)$pdo->lastInsertId();
 
-                // 5. Insert immutable snapshot into order_items
+                // 6. Insert immutable snapshot into order_items
                 $itemInsert = $pdo->prepare("
                     INSERT INTO order_items (
                         order_id, product_name, brand_name, variant_label,
@@ -171,15 +202,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ]);
                 }
 
-                // 6. Clear customer shopping cart
+                // 7. Clear customer shopping cart
                 cart_clear($pdo);
+
+                // 8. Audit log initial order creation
+                payment_log_audit(
+                    $orderId,
+                    null,
+                    $isOnline ? 'online_order_initiated' : 'cod_order_placed',
+                    'customer',
+                    (string)$user['id'],
+                    null,
+                    $orderStatus . '|' . $paymentStatus,
+                    [
+                        'order_no'          => $orderNo,
+                        'payment_method'    => $paymentMethod,
+                        'grand_total'       => $recheckCart['grand_total'],
+                        'razorpay_order_id' => $razorpayOrderId
+                    ]
+                );
 
                 // Commit transaction
                 $pdo->commit();
 
-                // Set confirmation flash and redirect to order details
-                set_flash('success', "Order placed successfully! Order #{$orderNo} is confirmed.");
-                redirect(public_url("order.php?id={$orderId}&confirmed=1"));
+                // 9. Redirect appropriately
+                if ($isOnline) {
+                    redirect(public_url("payment.php?order_id={$orderId}&auto=1"));
+                } else {
+                    set_flash('success', "Order placed successfully! Order #{$orderNo} is confirmed for cash on delivery settlement.");
+                    redirect(public_url("order.php?id={$orderId}&confirmed=1"));
+                }
 
             } catch (Exception $e) {
                 if ($pdo->inTransaction()) {
@@ -194,7 +246,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $pageTitle = 'Order Checkout & Delivery | Kalika Enterprises';
 $currentPage = 'checkout';
-$pageDescription = 'Confirm wholesale FMCG delivery destination across Niphad, Dindori, Chandwad, Sinnar, and Yeola. Offline settlement on delivery.';
+$pageDescription = 'Confirm wholesale FMCG delivery destination across Niphad, Dindori, Chandwad, Sinnar, and Yeola. Secure online payment or settlement on delivery.';
 
 require_once __DIR__ . '/../includes/header.php';
 ?>
@@ -206,7 +258,7 @@ require_once __DIR__ . '/../includes/header.php';
             Checkout &amp; Delivery
         </div>
         <h1 class="txn-hero__title">Confirm &amp; Place Order</h1>
-        <p class="txn-hero__sub">Confirm delivery destination &bull; Payment settled offline on delivery &bull; 24-hr dispatch confirmation</p>
+        <p class="txn-hero__sub">Confirm delivery destination &bull; Secure online payment via Razorpay or COD &bull; 24-hr dispatch confirmation</p>
     </div>
 </section>
 
@@ -254,22 +306,40 @@ require_once __DIR__ . '/../includes/header.php';
                     <div class="field-hint">Service areas: Niphad, Dindori, Chandwad, Sinnar, Yeola.</div>
                 </div>
 
-                <!-- Payment Notice -->
-                <div class="payment-notice">
-                    <span class="payment-notice__icon">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <rect x="2" y="4" width="20" height="16" rx="2"></rect>
-                            <line x1="2" y1="10" x2="22" y2="10"></line>
-                        </svg>
-                    </span>
-                    <div>
-                        <span class="payment-notice__title">Payment: Offline Settlement on Delivery</span>
-                        <span class="payment-notice__body">No advance online payment is required or processed on this website. Payment is collected offline via cash or commercial transfer upon doorstep delivery of goods.</span>
+                <!-- Payment Method Selection -->
+                <div class="form-group" style="margin-top: 20px;">
+                    <label class="form-label" style="margin-bottom: 10px;">Select Payment Method *</label>
+
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <!-- Option 1: Online via Razorpay -->
+                        <label style="display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border: 2px solid var(--color-mint); border-radius: var(--radius-sm); background: #f0fdf4; cursor: pointer; transition: all 0.15s ease;">
+                            <input type="radio" name="payment_method" value="online" checked style="margin-top: 4px; accent-color: var(--color-mint);" onchange="document.getElementById('checkout-submit-text').textContent = 'Proceed to Online Payment';">
+                            <div style="flex: 1;">
+                                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px;">
+                                    <strong style="color: var(--color-pine); font-size: 15px;">Pay Online via Razorpay</strong>
+                                    <span style="font-size: 11px; font-weight: 700; color: #047857; background: #d1fae5; padding: 2px 8px; border-radius: 999px;">RECOMMENDED</span>
+                                </div>
+                                <div style="font-size: 12.5px; color: var(--color-text-muted); margin-top: 2px;">
+                                    Instant confirmation via UPI (Google Pay, PhonePe, Paytm), NetBanking &amp; Cards. Zero convenience surcharge.
+                                </div>
+                            </div>
+                        </label>
+
+                        <!-- Option 2: Cash on Delivery -->
+                        <label style="display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border: 1px solid var(--color-border-light); border-radius: var(--radius-sm); background: #ffffff; cursor: pointer; transition: all 0.15s ease;">
+                            <input type="radio" name="payment_method" value="cod" style="margin-top: 4px; accent-color: var(--color-mint);" onchange="document.getElementById('checkout-submit-text').textContent = 'Confirm Wholesale Order (Cash on Delivery)';">
+                            <div style="flex: 1;">
+                                <strong style="color: var(--color-pine); font-size: 15px;">Cash on Delivery / Offline Settlement</strong>
+                                <div style="font-size: 12.5px; color: var(--color-text-muted); margin-top: 2px;">
+                                    Settle offline in cash or van transfer when our distribution van arrives at your storefront.
+                                </div>
+                            </div>
+                        </label>
                     </div>
                 </div>
 
-                <button type="submit" class="btn-dd-primary" style="width: 100%; padding: 15px; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                    <span>Confirm &amp; Place Wholesale Order</span>
+                <button type="submit" class="btn-dd-primary" style="width: 100%; padding: 15px; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 20px;">
+                    <span id="checkout-submit-text">Proceed to Online Payment</span>
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>
                 </button>
             </form>

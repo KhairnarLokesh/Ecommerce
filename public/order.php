@@ -111,8 +111,33 @@ require_once __DIR__ . '/../includes/header.php';
                 </p>
                 <p class="order-confirm-banner__notice" style="display: flex; align-items: center; gap: 6px;">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
-                    Payment is handled offline at delivery as agreed with the distributor.
+                    <?php if (($order['payment_status'] ?? '') === 'paid'): ?>
+                        Payment confirmed: Received via Razorpay. Thank you!
+                    <?php elseif (($order['payment_method'] ?? 'online') === 'cod'): ?>
+                        Payment: Cash on Delivery / Offline settlement upon physical van delivery.
+                    <?php else: ?>
+                        Payment pending online settlement.
+                    <?php endif; ?>
                 </p>
+            </div>
+        </div>
+    <?php endif; ?>
+
+    <?php if ($order['status'] === 'Awaiting Payment' && ($order['payment_status'] ?? '') === 'pending'): ?>
+        <div class="order-confirm-banner" style="background: #1e3a8a; border-left-color: #3b82f6; margin-bottom: 24px;">
+            <div class="order-confirm-banner__icon" style="background: #3b82f6;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+            </div>
+            <div style="flex: 1; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                <div>
+                    <h2 class="order-confirm-banner__title">Payment Awaiting Completion</h2>
+                    <p class="order-confirm-banner__body" style="margin-bottom: 0;">
+                        Inventory for this order is reserved. Please complete payment via Razorpay to confirm fulfillment.
+                    </p>
+                </div>
+                <a href="<?= public_url('payment.php?order_id=' . (int)$order['id'] . '&auto=1') ?>" class="dd-btn dd-btn--mint" style="padding: 10px 20px; font-weight: 700;">
+                    Complete Payment &rarr;
+                </a>
             </div>
         </div>
     <?php endif; ?>
@@ -260,8 +285,16 @@ require_once __DIR__ . '/../includes/header.php';
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
                         </div>
                         <div>
-                            <span class="commitment-title">Payment on Delivery</span>
-                            <span class="commitment-sub">Cash or offline bank transfer upon van delivery.</span>
+                            <span class="commitment-title"><?= ($order['payment_status'] ?? '') === 'paid' ? 'Payment Verified' : 'Payment Settlement' ?></span>
+                            <span class="commitment-sub">
+                                <?php if (($order['payment_status'] ?? '') === 'paid'): ?>
+                                    Paid online via Razorpay.
+                                <?php elseif (($order['payment_method'] ?? 'online') === 'cod'): ?>
+                                    Cash or van UPI settlement upon arrival.
+                                <?php else: ?>
+                                    Online payment pending.
+                                <?php endif; ?>
+                            </span>
                         </div>
                     </li>
                     <li>

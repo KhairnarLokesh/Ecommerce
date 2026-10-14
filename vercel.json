@@ -3,7 +3,7 @@
   "functions": {
     "api/index.php": {
       "runtime": "vercel-php@0.7.3",
-      "includeFiles": "{config,includes,public,admin,data}/**"
+      "includeFiles": "{config,includes,public,admin,data,cron}/**"
     }
   },
   "routes": [

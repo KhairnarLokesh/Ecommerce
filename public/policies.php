@@ -108,17 +108,15 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
         </article>
 
-        <!-- 4. Offline Payment Settlement -->
+        <!-- 4. Payment Terms -->
         <article class="info-card" id="payment">
             <div class="info-card__num">04</div>
-            <h2 class="info-card__title">Payment Terms (Offline / Cash on Delivery Only)</h2>
+            <h2 class="info-card__title">Payment Terms &amp; Accepted Methods</h2>
             <p>
-                To avoid transaction surcharge deductions and banking delays, <strong><?= e($businessName) ?> does not
-                    accept online payment</strong> through cards, payment gateways, or digital wallet links.
+                <strong><?= e($businessName) ?> accepts secure online payments</strong> via Razorpay. Supported methods include UPI (Google Pay, PhonePe, Paytm, BHIM), NetBanking across all major Indian banks, and Credit/Debit Cards (RuPay, Visa, MasterCard) with zero convenience fee surcharge.
             </p>
             <p style="margin-bottom: 0;">
-                All order balances are settled offline upon physical delivery of goods, either via Cash on Delivery or
-                agreed wholesale retailer trade terms.
+                For authorized regional retail stockists, Cash on Delivery / Offline Delivery Settlement upon scheduled van arrival is also available.
             </p>
         </article>
 
@@ -127,14 +125,13 @@ require_once __DIR__ . '/../includes/header.php';
             <div class="info-card__num">05</div>
             <h2 class="info-card__title">Refund &amp; Return Policy (<?= e($refundDays) ?>-Day Window)</h2>
             <p>
-                <?= e($refundText) ?>
+                Refund is initiated within 2 days of approval, subject to applicable conditions; the time to reach your account depends on your bank/payment method.
             </p>
             <ul style="margin: 14px 0 0 20px; color: var(--color-text-muted); line-height: 1.7; font-size: 14px;">
                 <li>Retailers must visually inspect cartons and bottle cases upon arrival with our delivery driver.</li>
                 <li>Claims for transit damage, leaking bottles, or expired stock must be reported within
                     <strong><?= e($refundDays) ?> days</strong> of delivery.</li>
-                <li>Approved returns will be credited against your invoice or replaced on the subsequent scheduled route
-                    dispatch.</li>
+                <li>For orders paid online via Razorpay, refunds are issued back to the original source account (UPI/Bank/Card).</li>
                 <li>Opened, broken, or tampered consumer packaging will not be accepted.</li>
             </ul>
         </article>

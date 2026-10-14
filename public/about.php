@@ -95,15 +95,15 @@ require_once __DIR__ . '/../includes/header.php';
                     </div>
                 </div>
                 <div class="guarantee-item">
-                    <div class="guarantee-item__title">Offline Settlement</div>
+                    <div class="guarantee-item__title">Flexible Settlement</div>
                     <div class="guarantee-item__body">
-                        Simple Cash on Delivery or agreed trade credit upon arrival. No payment gateway surcharges or processing fees.
+                        Convenient online payment via Razorpay (UPI, NetBanking, Cards) or Cash on Delivery upon arrival. Transparent trade invoicing with zero hidden charges.
                     </div>
                 </div>
                 <div class="guarantee-item">
                     <div class="guarantee-item__title">2-Day Inspection &amp; Returns</div>
                     <div class="guarantee-item__body">
-                        Damaged or defective stock reported within 2 days of delivery is replaced or credited offline as per distributor policy.
+                        Damaged or defective stock reported within 2 days of delivery is replaced, credited, or refunded as per distributor policy.
                     </div>
                 </div>
             </div>

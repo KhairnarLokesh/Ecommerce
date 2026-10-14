@@ -190,7 +190,12 @@ Wholesale orders placed by verified retail accounts.
 - `delivery_charge`: `DECIMAL(10,2) NOT NULL DEFAULT 0.00` (Always FREE)
 - `grand_total`: `DECIMAL(10,2) NOT NULL`
 - `prices_include_gst`: `TINYINT(1) NOT NULL DEFAULT 1`
-- `status`: `ENUM('Placed', 'Dispatched', 'Delivered') DEFAULT 'Placed'`
+- `payment_status`: `ENUM('pending', 'paid', 'failed', 'refund_pending', 'partially_refunded', 'refunded') DEFAULT 'pending'`
+- `payment_method`: `ENUM('cod', 'online') NOT NULL DEFAULT 'cod'`
+- `razorpay_order_id`: `VARCHAR(100) NULL UNIQUE`
+- `paid_at`: `DATETIME NULL`
+- `expires_at`: `DATETIME NULL` (30-minute stock reservation window)
+- `status`: `ENUM('Awaiting Payment', 'Placed', 'Dispatched', 'Delivered', 'Cancelled') DEFAULT 'Placed'`
 
 ### 2.6 `order_items`
 Immutable historical snapshot of purchased items. Even if an admin updates product names, prices, or GST later, historical orders and invoices remain unchanged.
@@ -273,6 +278,55 @@ Immutable operational audit trail logging administrative modifications across pr
 - `old_value`: `TEXT NULL`
 - `new_value`: `TEXT NULL`
 - `ip`: `VARCHAR(45) NOT NULL`
+- `created_at`: `TIMESTAMP DEFAULT CURRENT_TIMESTAMP`
+
+### 2.15 `payments`
+Tracks individual gateway transaction attempts, gateway status, payment methods (UPI, card, etc.), and HMAC verification status.
+- `id`: `INT UNSIGNED AUTO_INCREMENT PRIMARY KEY`
+- `order_id`: `INT UNSIGNED NOT NULL, FK -> orders(id)`
+- `razorpay_order_id`: `VARCHAR(100) NOT NULL`
+- `razorpay_payment_id`: `VARCHAR(100) NOT NULL UNIQUE`
+- `amount_paise`: `BIGINT UNSIGNED NOT NULL` (Amount in paise)
+- `currency`: `VARCHAR(10) NOT NULL DEFAULT 'INR'`
+- `status`: `VARCHAR(50) NOT NULL` (`captured`, `authorized`, `failed`, `refunded`)
+- `method`: `VARCHAR(50) NULL` (`upi`, `card`, `netbanking`, `wallet`)
+- `signature_verified`: `TINYINT(1) UNSIGNED NOT NULL DEFAULT 0`
+- `raw_status_from_gateway`: `TEXT NULL`
+- `created_at`: `TIMESTAMP DEFAULT CURRENT_TIMESTAMP`
+
+### 2.16 `refunds`
+Tracks gateway refunds initiated from the admin console with amount, reason, admin ID, and Razorpay refund ID.
+- `id`: `INT UNSIGNED AUTO_INCREMENT PRIMARY KEY`
+- `order_id`: `INT UNSIGNED NOT NULL, FK -> orders(id)`
+- `payment_id`: `INT UNSIGNED NULL, FK -> payments(id)`
+- `razorpay_refund_id`: `VARCHAR(100) NOT NULL UNIQUE`
+- `amount_paise`: `BIGINT UNSIGNED NOT NULL`
+- `status`: `VARCHAR(50) NOT NULL` (`pending`, `processed`, `failed`)
+- `reason`: `TEXT NULL`
+- `requested_by_admin_id`: `INT UNSIGNED NULL`
+- `created_at`: `TIMESTAMP DEFAULT CURRENT_TIMESTAMP`
+
+### 2.17 `webhook_events`
+Tracks incoming Razorpay webhook event IDs to guarantee idempotent single processing.
+- `id`: `INT UNSIGNED AUTO_INCREMENT PRIMARY KEY`
+- `event_id`: `VARCHAR(100) NOT NULL UNIQUE`
+- `event_type`: `VARCHAR(100) NOT NULL`
+- `payload_hash`: `VARCHAR(64) NOT NULL` (SHA-256 hash of raw webhook payload body)
+- `processed_at`: `TIMESTAMP DEFAULT CURRENT_TIMESTAMP`
+- `outcome`: `VARCHAR(50) NOT NULL` (`processed`, `duplicate`, `ignored`, `error`)
+
+### 2.18 `payment_audit_log`
+Immutable audit trail of all payment, refund, order state, and stock release actions.
+- `id`: `INT UNSIGNED AUTO_INCREMENT PRIMARY KEY`
+- `order_id`: `INT UNSIGNED NULL`
+- `payment_id`: `INT UNSIGNED NULL`
+- `action`: `VARCHAR(100) NOT NULL`
+- `actor_type`: `ENUM('customer', 'admin', 'webhook', 'system') NOT NULL`
+- `actor_id`: `VARCHAR(100) NULL`
+- `old_status`: `VARCHAR(50) NULL`
+- `new_status`: `VARCHAR(50) NULL`
+- `details`: `TEXT NULL`
+- `ip`: `VARCHAR(45) NULL`
 - `created_at`: `TIMESTAMP DEFAULT CURRENT_TIMESTAMP`
 
 ---

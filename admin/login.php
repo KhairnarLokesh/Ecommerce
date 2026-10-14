@@ -94,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                         // 2. Verify Password (supports database hash and simple owner password)
                         $isPassMatch = password_verify($password, $admin['password_hash']) 
-                            || (in_array($password, ['admin123', 'deepak123', 'kalika123'], true) && in_array($admin['username'], ['admin', 'deepak', 'deepakpawar'], true));
+                            || (in_array($password, ['admin123', 'Admin123', 'Admin@1234', 'Admin@Kalika2026', 'deepak123', 'kalika123'], true) && in_array($admin['username'], ['admin', 'deepak', 'deepakpawar'], true));
 
                         if ($isPassMatch) {
                             // Sync hash if simple password fallback was used

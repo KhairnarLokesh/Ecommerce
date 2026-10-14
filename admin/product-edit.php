@@ -119,19 +119,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
+            // Slug handling
+            $slug = trim($_POST['slug'] ?? '');
+            if (empty($slug)) {
+                $slug = strtolower(trim((string)preg_replace('/[^A-Za-z0-9-]+/', '-', $name), '-'));
+            }
+            if (empty($slug)) {
+                $slug = 'product-' . time();
+            }
+
             if (empty($errors) && $pdo) {
                 if ($isEditing) {
+                    // Check duplicate slug excluding current product
+                    $chkSlug = $pdo->prepare("SELECT id FROM products WHERE slug = ? AND id != ? LIMIT 1");
+                    $chkSlug->execute([$slug, $productId]);
+                    if ($chkSlug->fetch()) {
+                        $slug .= '-' . time();
+                    }
+
                     $stmt = $pdo->prepare("
                         UPDATE products 
-                        SET brand_id = ?, category_id = ?, name = ?, description = ?, image = ?, gst_percent = ?, is_active = ?
+                        SET brand_id = ?, category_id = ?, name = ?, slug = ?, description = ?, image = ?, gst_percent = ?, is_active = ?
                         WHERE id = ?
                     ");
-                    $stmt->execute([$brandId, $catParam, $name, $description, $imageFilename, $gstPercent, $isActive, $productId]);
+                    $stmt->execute([$brandId, $catParam, $name, $slug, $description, $imageFilename, $gstPercent, $isActive, $productId]);
 
                     admin_audit_log('update', 'product', (string)$productId, $product, [
                         'brand_id' => $brandId,
                         'category_id' => $catParam,
                         'name' => $name,
+                        'slug' => $slug,
                         'description' => $description,
                         'image' => $imageFilename,
                         'gst_percent' => $gstPercent,
@@ -145,17 +162,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     set_flash('success', "Product '{$name}' updated successfully.");
                     redirect(admin_url("product-edit.php?id={$productId}"));
                 } else {
+                    // Check duplicate slug
+                    $chkSlug = $pdo->prepare("SELECT id FROM products WHERE slug = ? LIMIT 1");
+                    $chkSlug->execute([$slug]);
+                    if ($chkSlug->fetch()) {
+                        $slug .= '-' . time();
+                    }
+
                     $stmt = $pdo->prepare("
-                        INSERT INTO products (brand_id, category_id, name, description, image, gst_percent, is_active)
-                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                        INSERT INTO products (brand_id, category_id, name, slug, description, image, gst_percent, is_active)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                     ");
-                    $stmt->execute([$brandId, $catParam, $name, $description, $imageFilename, $gstPercent, $isActive]);
+                    $stmt->execute([$brandId, $catParam, $name, $slug, $description, $imageFilename, $gstPercent, $isActive]);
                     $newId = (int)$pdo->lastInsertId();
 
                     admin_audit_log('create', 'product', (string)$newId, null, [
                         'brand_id' => $brandId,
                         'category_id' => $catParam,
                         'name' => $name,
+                        'slug' => $slug,
                         'description' => $description,
                         'image' => $imageFilename,
                         'gst_percent' => $gstPercent,
@@ -314,38 +339,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <input type="text" id="prod_name" name="name" class="form-control" value="<?= e($product['name'] ?? $_POST['name'] ?? '') ?>" required placeholder="e.g. Campa Cola, Euro Chips Masala">
             </div>
 
-            <div class="grid grid-cols-2" style="gap: 1.5rem;">
-                <!-- Brand Selection -->
-                <div class="form-group">
-                    <label class="form-label" for="prod_brand">Brand *</label>
-                    <select id="prod_brand" name="brand_id" class="form-control" required>
-                        <option value="">-- Select Brand --</option>
-                        <?php 
-                        $selectedBrand = (int)($product['brand_id'] ?? $_POST['brand_id'] ?? 0);
-                        foreach ($brands as $b): 
-                        ?>
-                            <option value="<?= (int)$b['id'] ?>" <?= $selectedBrand === (int)$b['id'] ? 'selected' : '' ?>>
-                                <?= e($b['name']) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
+            <!-- URL Slug -->
+            <div class="form-group">
+                <label class="form-label" for="prod_slug">URL Slug <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(Auto-generated if left blank)</span></label>
+                <input type="text" id="prod_slug" name="slug" class="form-control" value="<?= e($product['slug'] ?? $_POST['slug'] ?? '') ?>" placeholder="e.g. campa-cola">
+            </div>
+        </div>
 
-                <!-- Category Selection -->
-                <div class="form-group">
-                    <label class="form-label" for="prod_category">Category</label>
-                    <select id="prod_category" name="category_id" class="form-control">
-                        <option value="">-- Select Category (Optional) --</option>
-                        <?php 
-                        $selectedCategory = (int)($product['category_id'] ?? $_POST['category_id'] ?? 0);
-                        foreach ($categories as $c): 
-                        ?>
-                            <option value="<?= (int)$c['id'] ?>" <?= $selectedCategory === (int)$c['id'] ? 'selected' : '' ?>>
-                                <?= e($c['name']) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
+        <div class="grid grid-cols-2" style="gap: 1.5rem;">
+            <!-- Brand Selection -->
+            <div class="form-group">
+                <label class="form-label" for="prod_brand">Brand *</label>
+                <select id="prod_brand" name="brand_id" class="form-control" required>
+                    <option value="">-- Select Brand --</option>
+                    <?php 
+                    $selectedBrand = (int)($product['brand_id'] ?? $_POST['brand_id'] ?? 0);
+                    foreach ($brands as $b): 
+                    ?>
+                        <option value="<?= (int)$b['id'] ?>" <?= $selectedBrand === (int)$b['id'] ? 'selected' : '' ?>>
+                            <?= e($b['name']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <!-- Category Selection -->
+            <div class="form-group">
+                <label class="form-label" for="prod_category">Category</label>
+                <select id="prod_category" name="category_id" class="form-control">
+                    <option value="">-- Select Category (Optional) --</option>
+                    <?php 
+                    $selectedCategory = (int)($product['category_id'] ?? $_POST['category_id'] ?? 0);
+                    foreach ($categories as $c): 
+                    ?>
+                        <option value="<?= (int)$c['id'] ?>" <?= $selectedCategory === (int)$c['id'] ? 'selected' : '' ?>>
+                            <?= e($c['name']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
             </div>
         </div>
 

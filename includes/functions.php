@@ -134,17 +134,67 @@ function render_flash_messages(): string
         return '';
     }
 
-    $html = '<div class="flash-messages-container" id="flash-container">';
+    $html = '<div class="flash-messages-container" id="flash-container" style="margin-bottom: 1.25rem;">';
     foreach ($messages as $msg) {
         $type = e($msg['type']);
         $text = e($msg['message']);
+
+        $icon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+        if ($type === 'danger' || $type === 'error') {
+            $icon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>';
+        } elseif ($type === 'warning') {
+            $icon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>';
+        }
+
         $html .= sprintf(
-            '<div class="alert alert-%s" role="alert"><span>%s</span><button type="button" class="alert-close" onclick="this.parentElement.remove()" aria-label="Close">&times;</button></div>',
+            '<div class="alert alert-%s flash-popup" role="alert" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 16px; border-radius: 8px; font-weight: 500; font-size: 13.5px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); animation: flashPopupIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards; transition: opacity 0.35s ease, transform 0.35s ease, max-height 0.35s ease, margin 0.35s ease, padding 0.35s ease;">' .
+            '  <div style="display: flex; align-items: center; gap: 9px;">' .
+            '    <span style="display: inline-flex; align-items: center; flex-shrink: 0;">%s</span>' .
+            '    <span>%s</span>' .
+            '  </div>' .
+            '  <button type="button" class="alert-close" onclick="var p=this.closest(\'.alert\'); if(p){ p.style.opacity=\'0\'; p.style.transform=\'translateY(-6px)\'; setTimeout(function(){ p.remove(); }, 350); }" aria-label="Close" style="background: none; border: none; padding: 4px; cursor: pointer; color: inherit; opacity: 0.6; display: flex; align-items: center; transition: opacity 0.15s ease;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.6">' .
+            '    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>' .
+            '  </button>' .
+            '</div>',
             $type,
+            $icon,
             $text
         );
     }
     $html .= '</div>';
+
+    // Auto-disappear after exactly 1 second (1000ms) with smooth fade-out
+    $html .= '<style>
+@keyframes flashPopupIn {
+    0% { opacity: 0; transform: translateY(-8px) scale(0.99); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+</style>
+<script>
+(function() {
+    setTimeout(function() {
+        var container = document.getElementById("flash-container");
+        if (!container) return;
+        var alerts = container.querySelectorAll(".flash-popup");
+        alerts.forEach(function(el) {
+            el.style.opacity = "0";
+            el.style.transform = "translateY(-8px)";
+            el.style.maxHeight = "0";
+            el.style.margin = "0";
+            el.style.paddingTop = "0";
+            el.style.paddingBottom = "0";
+            el.style.overflow = "hidden";
+            setTimeout(function() {
+                if (el.parentNode) el.parentNode.removeChild(el);
+                if (container && container.children.length === 0) {
+                    if (container.parentNode) container.parentNode.removeChild(container);
+                }
+            }, 350);
+        });
+    }, 1000);
+})();
+</script>';
+
     return $html;
 }
 

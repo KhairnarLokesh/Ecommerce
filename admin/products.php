@@ -122,22 +122,31 @@ if ($pdo) {
                 b.name AS brand_name,
                 b.is_active AS brand_active,
                 c.name AS category_name,
-                COUNT(v.id) AS variant_count,
-                COALESCE(SUM(v.stock_qty), 0) AS total_stock,
-                MIN(v.price) AS min_price,
-                MAX(v.price) AS max_price
+                COALESCE(v.variant_count, 0) AS variant_count,
+                COALESCE(v.total_stock, 0) AS total_stock,
+                v.min_price,
+                v.max_price
             FROM products p
             INNER JOIN brands b ON b.id = p.brand_id
             LEFT JOIN categories c ON c.id = p.category_id
-            LEFT JOIN product_variants v ON v.product_id = p.id
+            LEFT JOIN (
+                SELECT 
+                    product_id,
+                    COUNT(id) AS variant_count,
+                    COALESCE(SUM(stock_qty), 0) AS total_stock,
+                    MIN(price) AS min_price,
+                    MAX(price) AS max_price
+                FROM product_variants
+                GROUP BY product_id
+            ) v ON v.product_id = p.id
             {$whereSql}
-            GROUP BY p.id
             ORDER BY b.name ASC, p.name ASC
         ");
         $stmt->execute($params);
         $products = $stmt->fetchAll();
     } catch (PDOException $e) {
         error_log("Failed to query products: " . $e->getMessage());
+        $error = "Database error loading products: " . $e->getMessage();
     }
 }
 ?>

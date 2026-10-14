@@ -214,10 +214,13 @@ if ($pdo) {
         </div>
 
         <!-- Search Input -->
-        <div style="width: 100%; max-width: 300px;">
+        <div style="width: 100%; max-width: 320px;">
             <div class="input-group">
                 <input type="text" name="q" class="form-control" placeholder="Search product name..." value="<?= e($searchQuery) ?>" style="font-size: 0.875rem;">
-                <button type="submit" class="btn btn-sm btn-primary">Search</button>
+                <button type="submit" class="btn btn-primary" title="Search catalogue">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <span>Search</span>
+                </button>
             </div>
         </div>
     </form>

@@ -144,70 +144,75 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             if (empty($errors) && $pdo) {
-                if ($isEditing) {
-                    // Check duplicate slug excluding current product
-                    $chkSlug = $pdo->prepare("SELECT id FROM products WHERE slug = ? AND id != ? LIMIT 1");
-                    $chkSlug->execute([$slug, $productId]);
-                    if ($chkSlug->fetch()) {
-                        $slug .= '-' . time();
+                try {
+                    if ($isEditing) {
+                        // Check duplicate slug excluding current product
+                        $chkSlug = $pdo->prepare("SELECT id FROM products WHERE slug = ? AND id != ? LIMIT 1");
+                        $chkSlug->execute([$slug, $productId]);
+                        if ($chkSlug->fetch()) {
+                            $slug .= '-' . time();
+                        }
+
+                        $stmt = $pdo->prepare("
+                            UPDATE products 
+                            SET brand_id = ?, category_id = ?, name = ?, slug = ?, description = ?, image = ?, gst_percent = ?, is_active = ?
+                            WHERE id = ?
+                        ");
+                        $stmt->execute([$brandId, $catParam, $name, $slug, $description, $imageFilename, $gstPercent, $isActive, $productId]);
+
+                        admin_audit_log('update', 'product', (string)$productId, $product, [
+                            'brand_id' => $brandId,
+                            'category_id' => $catParam,
+                            'name' => $name,
+                            'slug' => $slug,
+                            'description' => $description,
+                            'image' => $imageFilename,
+                            'gst_percent' => $gstPercent,
+                            'is_active' => $isActive
+                        ]);
+
+                        if ($product && (float)($product['gst_percent'] ?? 0) !== (float)($gstPercent ?? 0)) {
+                            admin_audit_log('update', 'gst', (string)$productId, $product['gst_percent'] ?? null, $gstPercent);
+                        }
+
+                        set_flash('success', "Product '{$name}' updated successfully.");
+                        redirect(admin_url("product-edit.php?id={$productId}"));
+                    } else {
+                        // Check duplicate slug
+                        $chkSlug = $pdo->prepare("SELECT id FROM products WHERE slug = ? LIMIT 1");
+                        $chkSlug->execute([$slug]);
+                        if ($chkSlug->fetch()) {
+                            $slug .= '-' . time();
+                        }
+
+                        $stmt = $pdo->prepare("
+                            INSERT INTO products (brand_id, category_id, name, slug, description, image, gst_percent, is_active)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        ");
+                        $stmt->execute([$brandId, $catParam, $name, $slug, $description, $imageFilename, $gstPercent, $isActive]);
+                        $newId = (int)$pdo->lastInsertId();
+
+                        admin_audit_log('create', 'product', (string)$newId, null, [
+                            'brand_id' => $brandId,
+                            'category_id' => $catParam,
+                            'name' => $name,
+                            'slug' => $slug,
+                            'description' => $description,
+                            'image' => $imageFilename,
+                            'gst_percent' => $gstPercent,
+                            'is_active' => $isActive
+                        ]);
+
+                        if ($gstPercent !== null) {
+                            admin_audit_log('create', 'gst', (string)$newId, null, $gstPercent);
+                        }
+
+                        set_flash('success', "Product '{$name}' created! Now add at least one size variant below.");
+                        redirect(admin_url("product-edit.php?id={$newId}"));
                     }
-
-                    $stmt = $pdo->prepare("
-                        UPDATE products 
-                        SET brand_id = ?, category_id = ?, name = ?, slug = ?, description = ?, image = ?, gst_percent = ?, is_active = ?
-                        WHERE id = ?
-                    ");
-                    $stmt->execute([$brandId, $catParam, $name, $slug, $description, $imageFilename, $gstPercent, $isActive, $productId]);
-
-                    admin_audit_log('update', 'product', (string)$productId, $product, [
-                        'brand_id' => $brandId,
-                        'category_id' => $catParam,
-                        'name' => $name,
-                        'slug' => $slug,
-                        'description' => $description,
-                        'image' => $imageFilename,
-                        'gst_percent' => $gstPercent,
-                        'is_active' => $isActive
-                    ]);
-
-                    if ($product && (float)($product['gst_percent'] ?? 0) !== (float)($gstPercent ?? 0)) {
-                        admin_audit_log('update', 'gst', (string)$productId, $product['gst_percent'] ?? null, $gstPercent);
-                    }
-
-                    set_flash('success', "Product '{$name}' updated successfully.");
-                    redirect(admin_url("product-edit.php?id={$productId}"));
-                } else {
-                    // Check duplicate slug
-                    $chkSlug = $pdo->prepare("SELECT id FROM products WHERE slug = ? LIMIT 1");
-                    $chkSlug->execute([$slug]);
-                    if ($chkSlug->fetch()) {
-                        $slug .= '-' . time();
-                    }
-
-                    $stmt = $pdo->prepare("
-                        INSERT INTO products (brand_id, category_id, name, slug, description, image, gst_percent, is_active)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                    ");
-                    $stmt->execute([$brandId, $catParam, $name, $slug, $description, $imageFilename, $gstPercent, $isActive]);
-                    $newId = (int)$pdo->lastInsertId();
-
-                    admin_audit_log('create', 'product', (string)$newId, null, [
-                        'brand_id' => $brandId,
-                        'category_id' => $catParam,
-                        'name' => $name,
-                        'slug' => $slug,
-                        'description' => $description,
-                        'image' => $imageFilename,
-                        'gst_percent' => $gstPercent,
-                        'is_active' => $isActive
-                    ]);
-
-                    if ($gstPercent !== null) {
-                        admin_audit_log('create', 'gst', (string)$newId, null, $gstPercent);
-                    }
-
-                    set_flash('success', "Product '{$name}' created! Now add at least one size variant below.");
-                    redirect(admin_url("product-edit.php?id={$newId}"));
+                } catch (PDOException $e) {
+                    error_log('Database error in product-edit: ' . $e->getMessage());
+                    $errors[] = 'Database error: ' . $e->getMessage();
                 }
             }
         }
@@ -228,26 +233,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             if (empty($errors) && $pdo) {
-                $stmt = $pdo->prepare("
-                    INSERT INTO product_variants (product_id, size_label, price, stock_qty, stock_status, is_active)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                ");
-                $stmt->execute([$productId, $sizeLabel, $price, $stockQty, $stockStatus, $isVarActive]);
-                $newVarId = (int)$pdo->lastInsertId();
+                try {
+                    $stmt = $pdo->prepare("
+                        INSERT INTO product_variants (product_id, size_label, price, stock_qty, stock_status, is_active)
+                        VALUES (?, ?, ?, ?, ?, ?)
+                    ");
+                    $stmt->execute([$productId, $sizeLabel, $price, $stockQty, $stockStatus, $isVarActive]);
+                    $newVarId = (int)$pdo->lastInsertId();
 
-                admin_audit_log('create', 'variant', (string)$newVarId, null, [
-                    'product_id' => $productId,
-                    'size_label' => $sizeLabel,
-                    'price' => $price,
-                    'stock_qty' => $stockQty,
-                    'stock_status' => $stockStatus,
-                    'is_active' => $isVarActive
-                ]);
-                admin_audit_log('create', 'price', (string)$newVarId, null, $price);
-                admin_audit_log('create', 'stock', (string)$newVarId, null, ['qty' => $stockQty, 'status' => $stockStatus]);
+                    admin_audit_log('create', 'variant', (string)$newVarId, null, [
+                        'product_id' => $productId,
+                        'size_label' => $sizeLabel,
+                        'price' => $price,
+                        'stock_qty' => $stockQty,
+                        'stock_status' => $stockStatus,
+                        'is_active' => $isVarActive
+                    ]);
+                    admin_audit_log('create', 'price', (string)$newVarId, null, $price);
+                    admin_audit_log('create', 'stock', (string)$newVarId, null, ['qty' => $stockQty, 'status' => $stockStatus]);
 
-                set_flash('success', "Variant '{$sizeLabel}' added.");
-                redirect(admin_url("product-edit.php?id={$productId}#variantsSection"));
+                    set_flash('success', "Variant '{$sizeLabel}' added.");
+                    redirect(admin_url("product-edit.php?id={$productId}#variantsSection"));
+                } catch (PDOException $e) {
+                    error_log('Database error adding variant: ' . $e->getMessage());
+                    $errors[] = 'Database error adding variant: ' . $e->getMessage();
+                }
             }
         } elseif ($formType === 'variant_update' && $isEditing) {
             $variantId = (int)($_POST['variant_id'] ?? 0);
@@ -265,48 +275,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             if (empty($errors) && $pdo) {
-                $oldVarStmt = $pdo->prepare("SELECT * FROM product_variants WHERE id = ? LIMIT 1");
-                $oldVarStmt->execute([$variantId]);
-                $oldVar = $oldVarStmt->fetch();
+                try {
+                    $oldVarStmt = $pdo->prepare("SELECT * FROM product_variants WHERE id = ? LIMIT 1");
+                    $oldVarStmt->execute([$variantId]);
+                    $oldVar = $oldVarStmt->fetch();
 
-                $stmt = $pdo->prepare("
-                    UPDATE product_variants
-                    SET size_label = ?, price = ?, stock_qty = ?, stock_status = ?, is_active = ?
-                    WHERE id = ? AND product_id = ?
-                ");
-                $stmt->execute([$sizeLabel, $price, $stockQty, $stockStatus, $isVarActive, $variantId, $productId]);
+                    $stmt = $pdo->prepare("
+                        UPDATE product_variants
+                        SET size_label = ?, price = ?, stock_qty = ?, stock_status = ?, is_active = ?
+                        WHERE id = ? AND product_id = ?
+                    ");
+                    $stmt->execute([$sizeLabel, $price, $stockQty, $stockStatus, $isVarActive, $variantId, $productId]);
 
-                admin_audit_log('update', 'variant', (string)$variantId, $oldVar, [
-                    'size_label' => $sizeLabel,
-                    'price' => $price,
-                    'stock_qty' => $stockQty,
-                    'stock_status' => $stockStatus,
-                    'is_active' => $isVarActive
-                ]);
-                if ($oldVar && (float)$oldVar['price'] !== (float)$price) {
-                    admin_audit_log('update', 'price', (string)$variantId, $oldVar['price'], $price);
+                    admin_audit_log('update', 'variant', (string)$variantId, $oldVar, [
+                        'size_label' => $sizeLabel,
+                        'price' => $price,
+                        'stock_qty' => $stockQty,
+                        'stock_status' => $stockStatus,
+                        'is_active' => $isVarActive
+                    ]);
+                    if ($oldVar && (float)$oldVar['price'] !== (float)$price) {
+                        admin_audit_log('update', 'price', (string)$variantId, $oldVar['price'], $price);
+                    }
+                    if ($oldVar && ((int)$oldVar['stock_qty'] !== (int)$stockQty || $oldVar['stock_status'] !== $stockStatus)) {
+                        admin_audit_log('update', 'stock', (string)$variantId, ['qty' => $oldVar['stock_qty'], 'status' => $oldVar['stock_status']], ['qty' => $stockQty, 'status' => $stockStatus]);
+                    }
+
+                    set_flash('success', "Variant '{$sizeLabel}' updated.");
+                    redirect(admin_url("product-edit.php?id={$productId}#variantsSection"));
+                } catch (PDOException $e) {
+                    error_log('Database error updating variant: ' . $e->getMessage());
+                    $errors[] = 'Database error updating variant: ' . $e->getMessage();
                 }
-                if ($oldVar && ((int)$oldVar['stock_qty'] !== (int)$stockQty || $oldVar['stock_status'] !== $stockStatus)) {
-                    admin_audit_log('update', 'stock', (string)$variantId, ['qty' => $oldVar['stock_qty'], 'status' => $oldVar['stock_status']], ['qty' => $stockQty, 'status' => $stockStatus]);
-                }
-
-                set_flash('success', "Variant '{$sizeLabel}' updated.");
-                redirect(admin_url("product-edit.php?id={$productId}#variantsSection"));
             }
         } elseif ($formType === 'variant_delete' && $isEditing) {
             $variantId = (int)($_POST['variant_id'] ?? 0);
             if ($variantId > 0 && $pdo) {
-                $oldVarStmt = $pdo->prepare("SELECT * FROM product_variants WHERE id = ? LIMIT 1");
-                $oldVarStmt->execute([$variantId]);
-                $oldVar = $oldVarStmt->fetch();
+                try {
+                    $oldVarStmt = $pdo->prepare("SELECT * FROM product_variants WHERE id = ? LIMIT 1");
+                    $oldVarStmt->execute([$variantId]);
+                    $oldVar = $oldVarStmt->fetch();
 
-                $del = $pdo->prepare("DELETE FROM product_variants WHERE id = ? AND product_id = ?");
-                $del->execute([$variantId, $productId]);
+                    $del = $pdo->prepare("DELETE FROM product_variants WHERE id = ? AND product_id = ?");
+                    $del->execute([$variantId, $productId]);
 
-                admin_audit_log('delete', 'variant', (string)$variantId, $oldVar, null);
+                    admin_audit_log('delete', 'variant', (string)$variantId, $oldVar, null);
 
-                set_flash('success', "Variant deleted.");
-                redirect(admin_url("product-edit.php?id={$productId}#variantsSection"));
+                    set_flash('success', "Variant deleted.");
+                    redirect(admin_url("product-edit.php?id={$productId}#variantsSection"));
+                } catch (PDOException $e) {
+                    error_log('Database error deleting variant: ' . $e->getMessage());
+                    $errors[] = 'Database error deleting variant: ' . $e->getMessage();
+                }
             }
         }
     }

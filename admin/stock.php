@@ -50,6 +50,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     $stmt->execute([$qty, $status, $isActive, $variantId]);
                     $updatedCount++;
+                    admin_audit_log('update', 'stock', (string)$variantId, null, [
+                        'stock_qty' => $qty,
+                        'stock_status' => $status,
+                        'is_active' => $isActive
+                    ]);
                 }
 
                 $pdo->commit();

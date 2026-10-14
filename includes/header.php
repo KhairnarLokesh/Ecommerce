@@ -104,11 +104,15 @@ if (function_exists('get_catalog_fallback')) {
     <header class="site-header-block">
         <!-- Row 1: Slim Announcement Bar in Evergreen -->
         <div class="announcement-bar">
-            <div class="container">
-                <div class="announcement-bar-text">
+            <div class="container" style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                <div class="announcement-bar-text" style="flex: 1; text-align: left;">
                     Free delivery on orders of Rs 2,000+ &bull; Scheduled van routes across Niphad, Dindori, Chandwad,
                     Sinnar &amp; Yeola &bull; Delivery in 2-3 working days
                 </div>
+                <a href="<?= admin_url('login.php') ?>" class="announcement-admin-link" style="color: #FFFFFF; font-size: 11.5px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; opacity: 0.95; padding: 2px 9px; border-radius: 4px; background: rgba(255,255,255,0.15); white-space: nowrap; transition: all 0.2s ease;" title="Store Owner &amp; Administrator Portal">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    <span>Login as Admin</span>
+                </a>
             </div>
         </div>
 
@@ -176,12 +180,21 @@ if (function_exists('get_catalog_fallback')) {
                                     <a href="<?= public_url('profile.php') ?>">Profile</a>
                                     <a href="<?= public_url('orders.php') ?>">Orders</a>
                                     <div class="account-divider"></div>
-                                    <a href="<?= public_url('logout.php') ?>" style="color: var(--color-stock-out);">Sign
-                                        Out</a>
+                                    <a href="<?= admin_url('login.php') ?>" style="display: flex; align-items: center; gap: 7px; font-weight: 600; color: var(--color-pine);">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                                        <span>Login as Admin</span>
+                                    </a>
+                                    <div class="account-divider"></div>
+                                    <a href="<?= public_url('logout.php') ?>" style="color: var(--color-stock-out);">Sign Out</a>
                                 <?php else: ?>
                                     <a href="<?= public_url('login.php') ?>"
-                                        style="font-weight: 600; color: var(--color-pine);">Sign In</a>
+                                        style="font-weight: 600; color: var(--color-pine);">Sign In (Customer)</a>
                                     <a href="<?= public_url('register.php') ?>">Create Account</a>
+                                    <div class="account-divider"></div>
+                                    <a href="<?= admin_url('login.php') ?>" style="display: flex; align-items: center; gap: 7px; font-weight: 600; color: var(--color-evergreen);">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                                        <span>Login as Admin</span>
+                                    </a>
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -361,11 +374,13 @@ if (function_exists('get_catalog_fallback')) {
                 <?php if ($user): ?>
                     <a href="<?= public_url('profile.php') ?>" class="drawer-link-item">My Profile</a>
                     <a href="<?= public_url('orders.php') ?>" class="drawer-link-item">My Orders</a>
+                    <a href="<?= admin_url('login.php') ?>" class="drawer-link-item" style="color: var(--color-evergreen); font-weight: 600;">🔒 Login as Admin</a>
                     <a href="<?= public_url('logout.php') ?>" class="drawer-link-item"
                         style="color: var(--color-stock-out);">Sign Out</a>
                 <?php else: ?>
-                    <a href="<?= public_url('login.php') ?>" class="drawer-link-item">Login</a>
+                    <a href="<?= public_url('login.php') ?>" class="drawer-link-item">Customer Login</a>
                     <a href="<?= public_url('register.php') ?>" class="drawer-link-item">Register</a>
+                    <a href="<?= admin_url('login.php') ?>" class="drawer-link-item" style="color: var(--color-evergreen); font-weight: 600;">🔒 Login as Admin</a>
                 <?php endif; ?>
             </div>
         </div>

@@ -22,13 +22,16 @@ CREATE TABLE `users` (
     INDEX `idx_users_is_active` (`is_active`),
     UNIQUE KEY `uq_users_email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- 2. Admins (Store Management Staff)
+    
+-- 2. Admins (Store Management / Single-Owner Authentication)
 DROP TABLE IF EXISTS `admins`;
 CREATE TABLE `admins` (
     `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     `username` VARCHAR(50) NOT NULL UNIQUE,
     `password_hash` VARCHAR(255) NOT NULL,
+    `must_change_password` TINYINT(1) UNSIGNED NOT NULL DEFAULT 1,
+    `failed_attempts` INT UNSIGNED NOT NULL DEFAULT 0,
+    `locked_until` DATETIME NULL DEFAULT NULL,
     `last_login` TIMESTAMP NULL DEFAULT NULL,
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     INDEX `idx_admins_username` (`username`)
@@ -317,6 +320,40 @@ INSERT INTO `product_variants` (`id`, `product_id`, `size_label`, `price`, `stoc
 (69, 18, '70g', 20.00, 120, 'in_stock', 1),
 (70, 18, '160g', 50.00, 100, 'in_stock', 1);
 
+-- 13. Admin Login Log (Authentication Audit & Lockout Tracking)
+DROP TABLE IF EXISTS `admin_login_log`;
+CREATE TABLE `admin_login_log` (
+    `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `admin_id` INT UNSIGNED NULL,
+    `username_attempted` VARCHAR(100) NOT NULL,
+    `ip` VARCHAR(45) NOT NULL,
+    `status` VARCHAR(20) NOT NULL DEFAULT 'failed' COMMENT 'success, failed, locked',
+    `user_agent` VARCHAR(255) NULL,
+    `attempted_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX `idx_admin_login_ip` (`ip`),
+    INDEX `idx_admin_login_username` (`username_attempted`),
+    INDEX `idx_admin_login_status` (`status`),
+    INDEX `idx_admin_login_time` (`attempted_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 14. Admin Audit Log (Activity Trail & Compliance)
+DROP TABLE IF EXISTS `admin_audit_log`;
+CREATE TABLE `admin_audit_log` (
+    `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `admin_id` INT UNSIGNED NOT NULL,
+    `action` VARCHAR(50) NOT NULL COMMENT 'create, update, delete, password_change',
+    `entity` VARCHAR(50) NOT NULL COMMENT 'product, variant, price, gst, stock, order_status, settings, admin',
+    `entity_id` VARCHAR(100) NULL,
+    `old_value` TEXT NULL,
+    `new_value` TEXT NULL,
+    `ip` VARCHAR(45) NOT NULL,
+    `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX `idx_audit_admin` (`admin_id`),
+    INDEX `idx_audit_entity` (`entity`, `entity_id`),
+    INDEX `idx_audit_action` (`action`),
+    INDEX `idx_audit_created` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- 5. SEED SETTINGS
 INSERT INTO `settings` (`setting_key`, `setting_value`) VALUES
 ('business_name', 'Kalika Enterprises'),
@@ -336,9 +373,9 @@ INSERT INTO `settings` (`setting_key`, `setting_value`) VALUES
 ('refund_policy_text', 'Returns and refunds are accepted within 2 days of delivery for damaged or expired items subject to inspection. Settlement handled offline.')
 ON DUPLICATE KEY UPDATE `setting_value` = VALUES(`setting_value`);
 
--- 6. SEED DEFAULT ADMIN USER (Username: admin | Password: Admin@Kalika2026)
-INSERT INTO `admins` (`id`, `username`, `password_hash`, `created_at`) VALUES 
-(1, 'admin', '$2y$10$DC4jmY.5QX.2KKT07WDGDuARQ7jRdWPhdk8R3FFS8SD6g8Bdlb7QS', NOW())
+-- 6. SEED DEFAULT ADMIN USER (Username: admin | Password: Admin@Kalika2026 | must_change_password: 1)
+INSERT INTO `admins` (`id`, `username`, `password_hash`, `must_change_password`, `failed_attempts`, `created_at`) VALUES 
+(1, 'admin', '$2y$10$DC4jmY.5QX.2KKT07WDGDuARQ7jRdWPhdk8R3FFS8SD6g8Bdlb7QS', 1, 0, NOW())
 ON DUPLICATE KEY UPDATE `username` = 'admin';
 
 SET FOREIGN_KEY_CHECKS = 1;

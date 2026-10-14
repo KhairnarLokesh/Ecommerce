@@ -72,144 +72,166 @@ if ($pdo) {
 }
 ?>
 
-<div style="margin-bottom: 2rem;">
-    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-        <div>
-            <h1 style="font-size: 1.75rem; margin-bottom: 0.25rem;">Wholesale Operations Dashboard</h1>
-            <p style="font-size: 0.9375rem; color: var(--text-muted); margin-bottom: 0;">
-                Live distribution metrics across Niphad, Dindori, Chandwad, Sinnar, and Yeola.
-            </p>
+<!-- Page Header -->
+<div class="admin-header-row">
+    <div class="admin-header-title-wrap">
+        <div class="eyebrow">
+            <span class="admin-status-dot"></span>
+            Operational Metrics &bull; Regional Distribution
         </div>
-        <div style="display: flex; gap: 0.75rem;">
-            <a href="<?= admin_url('stock.php') ?>" class="btn btn-outline btn-sm">
-                &#9881; Bulk Stock Manager
-            </a>
-            <a href="<?= admin_url('product-edit.php') ?>" class="btn btn-primary btn-sm">
-                + Add New Product
-            </a>
-        </div>
+        <h1>Wholesale Operations Dashboard</h1>
+        <p>Live order fulfillment, crate stock alerts, and retailer activity across Niphad, Dindori, Chandwad, Sinnar, and Yeola.</p>
+    </div>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <a href="<?= admin_url('stock.php') ?>" class="btn btn-outline btn-sm">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+            <span>Bulk Stock Manager</span>
+        </a>
+        <a href="<?= admin_url('product-edit.php') ?>" class="btn btn-primary btn-sm">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            <span>Add New Product</span>
+        </a>
     </div>
 </div>
 
-<!-- Attention Warnings / Alerts if any -->
+<!-- Catalogue Compliance Alert -->
 <?php if ($pendingGstCount > 0): ?>
-    <div class="alert alert-warning" role="alert" style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
-        <div>
-            <strong>&#9888; Catalogue Compliance Alert:</strong>
-            <?= $pendingGstCount ?> product(s) pending official GST rate confirmation (e.g. 
-            <?= implode(', ', array_map(fn($p) => e($p['name']), array_slice($pendingGstProducts, 0, 3))) ?>).
-            These items are safely hidden from the public storefront until GST is defined.
+    <div class="alert alert-warning" role="alert" style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; border-radius: 8px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            <div>
+                <strong>Catalogue Compliance:</strong>
+                <?= $pendingGstCount ?> product(s) pending official GST rate confirmation (hidden from storefront until defined).
+            </div>
         </div>
         <a href="<?= admin_url('products.php?filter=pending_gst') ?>" class="btn btn-sm btn-primary">Review GST Rates &rarr;</a>
     </div>
 <?php endif; ?>
 
-<!-- Metric Cards Grid (6 KPIs) -->
-<div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.25rem; margin-bottom: 2rem;">
-    <!-- Placed Orders -->
-    <div class="card" style="padding: 1.25rem; border-left: 4px solid var(--color-warning);">
-        <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">
-            New Placed Orders
+<!-- 6 KPI Metric Cards Grid -->
+<div class="admin-kpi-grid">
+    <!-- 1. Placed Orders -->
+    <div class="admin-kpi-card" style="border-top: 3px solid #F59E0B;">
+        <div class="admin-kpi-card__top">
+            <span class="admin-kpi-card__label">New Orders</span>
+            <div class="admin-kpi-card__icon-wrap is-amber">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+            </div>
         </div>
-        <div style="font-size: 2rem; font-weight: 800; color: var(--color-primary); margin: 0.25rem 0;">
-            <?= $placedCount ?>
-        </div>
-        <a href="<?= admin_url('orders.php?status=Placed') ?>" style="font-size: 0.75rem; color: #b45309; font-weight: 600; text-decoration: none;">
-            View Needs Confirmation &rarr;
+        <div class="admin-kpi-card__value"><?= $placedCount ?></div>
+        <a href="<?= admin_url('orders.php?status=Placed') ?>" class="admin-kpi-card__link">
+            <span>Needs Confirmation</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
         </a>
     </div>
 
-    <!-- Dispatched Orders -->
-    <div class="card" style="padding: 1.25rem; border-left: 4px solid var(--color-info);">
-        <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">
-            Dispatched En Route
+    <!-- 2. Dispatched Orders -->
+    <div class="admin-kpi-card" style="border-top: 3px solid #0284C7;">
+        <div class="admin-kpi-card__top">
+            <span class="admin-kpi-card__label">Dispatched</span>
+            <div class="admin-kpi-card__icon-wrap is-blue">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+            </div>
         </div>
-        <div style="font-size: 2rem; font-weight: 800; color: #0284c7; margin: 0.25rem 0;">
-            <?= $dispatchedCount ?>
-        </div>
-        <a href="<?= admin_url('orders.php?status=Dispatched') ?>" style="font-size: 0.75rem; color: #0369a1; font-weight: 600; text-decoration: none;">
-            On Distribution Vans &rarr;
+        <div class="admin-kpi-card__value"><?= $dispatchedCount ?></div>
+        <a href="<?= admin_url('orders.php?status=Dispatched') ?>" class="admin-kpi-card__link">
+            <span>En Route on Vans</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
         </a>
     </div>
 
-    <!-- Delivered Orders -->
-    <div class="card" style="padding: 1.25rem; border-left: 4px solid var(--color-success);">
-        <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">
-            Delivered Orders
+    <!-- 3. Delivered Orders -->
+    <div class="admin-kpi-card" style="border-top: 3px solid #0B5D44;">
+        <div class="admin-kpi-card__top">
+            <span class="admin-kpi-card__label">Delivered</span>
+            <div class="admin-kpi-card__icon-wrap is-green">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            </div>
         </div>
-        <div style="font-size: 2rem; font-weight: 800; color: #059669; margin: 0.25rem 0;">
-            <?= $deliveredCount ?>
-        </div>
-        <a href="<?= admin_url('orders.php?status=Delivered') ?>" style="font-size: 0.75rem; color: #047857; font-weight: 600; text-decoration: none;">
-            Fulfilled Successfully &rarr;
+        <div class="admin-kpi-card__value"><?= $deliveredCount ?></div>
+        <a href="<?= admin_url('orders.php?status=Delivered') ?>" class="admin-kpi-card__link">
+            <span>Fulfilled Orders</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
         </a>
     </div>
 
-    <!-- Registered Customers -->
-    <div class="card" style="padding: 1.25rem; border-left: 4px solid #6366f1;">
-        <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">
-            Retail Customers
+    <!-- 4. Registered Customers -->
+    <div class="admin-kpi-card" style="border-top: 3px solid #6366F1;">
+        <div class="admin-kpi-card__top">
+            <span class="admin-kpi-card__label">Retail Stores</span>
+            <div class="admin-kpi-card__icon-wrap is-indigo">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            </div>
         </div>
-        <div style="font-size: 2rem; font-weight: 800; color: #4338ca; margin: 0.25rem 0;">
-            <?= $totalCustomers ?>
-        </div>
-        <a href="<?= admin_url('customers.php') ?>" style="font-size: 0.75rem; color: #4f46e5; font-weight: 600; text-decoration: none;">
-            Retailer Directory &rarr;
+        <div class="admin-kpi-card__value"><?= $totalCustomers ?></div>
+        <a href="<?= admin_url('customers.php') ?>" class="admin-kpi-card__link">
+            <span>Store Directory</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
         </a>
     </div>
 
-    <!-- Low Stock Alert -->
-    <div class="card" style="padding: 1.25rem; border-left: 4px solid <?= $lowStockCount > 0 ? '#dc2626' : '#cbd5e1' ?>;">
-        <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">
-            Low Stock (&le;10)
+    <!-- 5. Low Stock Alert -->
+    <div class="admin-kpi-card" style="border-top: 3px solid <?= $lowStockCount > 0 ? '#DC2626' : '#10B981' ?>;">
+        <div class="admin-kpi-card__top">
+            <span class="admin-kpi-card__label">Low Stock</span>
+            <div class="admin-kpi-card__icon-wrap <?= $lowStockCount > 0 ? 'is-rose' : 'is-green' ?>">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+            </div>
         </div>
-        <div style="font-size: 2rem; font-weight: 800; color: <?= $lowStockCount > 0 ? '#dc2626' : 'var(--color-primary)' ?>; margin: 0.25rem 0;">
-            <?= $lowStockCount ?>
-        </div>
-        <a href="<?= admin_url('stock.php') ?>" style="font-size: 0.75rem; color: #b91c1c; font-weight: 600; text-decoration: none;">
-            Restock Inventory &rarr;
+        <div class="admin-kpi-card__value" style="<?= $lowStockCount > 0 ? 'color: #DC2626;' : '' ?>"><?= $lowStockCount ?></div>
+        <a href="<?= admin_url('stock.php') ?>" class="admin-kpi-card__link">
+            <span>Restock Variants</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
         </a>
     </div>
 
-    <!-- Pending GST Confirmation -->
-    <div class="card" style="padding: 1.25rem; border-left: 4px solid #f59e0b;">
-        <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">
-            Pending GST
+    <!-- 6. Pending GST -->
+    <div class="admin-kpi-card" style="border-top: 3px solid var(--color-pine, #16372D);">
+        <div class="admin-kpi-card__top">
+            <span class="admin-kpi-card__label">Pending GST</span>
+            <div class="admin-kpi-card__icon-wrap is-pine">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            </div>
         </div>
-        <div style="font-size: 2rem; font-weight: 800; color: #b45309; margin: 0.25rem 0;">
-            <?= $pendingGstCount ?>
-        </div>
-        <a href="<?= admin_url('products.php') ?>" style="font-size: 0.75rem; color: #b45309; font-weight: 600; text-decoration: none;">
-            Catalogue Settings &rarr;
+        <div class="admin-kpi-card__value"><?= $pendingGstCount ?></div>
+        <a href="<?= admin_url('products.php') ?>" class="admin-kpi-card__link">
+            <span>Catalogue Rates</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
         </a>
     </div>
 </div>
 
-<div class="grid" style="grid-template-columns: 2.2fr 1fr; align-items: flex-start; gap: 2rem;">
-    <!-- Left: 10 Latest Wholesale Orders -->
-    <div class="card" style="padding: 1.5rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-light);">
-            <h2 style="font-size: 1.25rem; margin-bottom: 0;">Latest Customer Orders</h2>
+<!-- Main Operations Grid: Orders Table + Sidebar -->
+<div class="admin-dashboard-layout">
+    <!-- Left: Latest Customer Orders -->
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <h2>Recent Wholesale Orders</h2>
+                <span style="font-size: 13px; color: var(--color-text-muted);">Real-time B2B orders placed by regional retailers</span>
+            </div>
             <a href="<?= admin_url('orders.php') ?>" class="btn btn-outline btn-sm">
-                View All Orders &rarr;
+                <span>All Orders</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
             </a>
         </div>
 
         <?php if (empty($recentOrders)): ?>
-            <p style="text-align: center; color: var(--text-muted); padding: 2.5rem 1rem; margin: 0;">
-                No wholesale orders recorded yet. Orders placed by retailers will appear here automatically.
-            </p>
+            <div style="text-align: center; color: var(--color-text-muted); padding: 48px 16px;">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="1.5" style="margin-bottom: 12px;"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+                <p style="margin: 0; font-size: 14.5px;">No wholesale orders recorded yet. Incoming retailer orders will appear here automatically.</p>
+            </div>
         <?php else: ?>
-            <div style="overflow-x: auto;">
-                <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <div class="admin-table-wrap">
+                <table class="admin-table">
                     <thead>
-                        <tr style="border-bottom: 2px solid var(--border-color); font-size: 0.8125rem; color: var(--text-muted); text-transform: uppercase;">
-                            <th style="padding: 0.75rem 0.5rem;">Order No</th>
-                            <th style="padding: 0.75rem 0.5rem;">Customer</th>
-                            <th style="padding: 0.75rem 0.5rem;">Date</th>
-                            <th style="padding: 0.75rem 0.5rem; text-align: right;">Amount</th>
-                            <th style="padding: 0.75rem 0.5rem; text-align: center;">Status</th>
-                            <th style="padding: 0.75rem 0.5rem; text-align: right;">Actions</th>
+                        <tr>
+                            <th>Order No</th>
+                            <th>Retail Customer</th>
+                            <th>Date</th>
+                            <th style="text-align: right;">Amount</th>
+                            <th style="text-align: center;">Status</th>
+                            <th style="text-align: right;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -222,31 +244,31 @@ if ($pdo) {
                                 default      => 'badge-warning',
                             };
                             ?>
-                            <tr style="border-bottom: 1px solid var(--border-light); font-size: 0.9375rem;">
-                                <td style="padding: 0.875rem 0.5rem; font-weight: 700;">
-                                    <a href="<?= admin_url('order-detail.php?id=' . (int)$ord['id']) ?>" style="color: inherit; text-decoration: underline;">
+                            <tr>
+                                <td style="font-weight: 700;">
+                                    <a href="<?= admin_url('order-detail.php?id=' . (int)$ord['id']) ?>" style="color: var(--color-pine); text-decoration: none; font-weight: 700;">
                                         <?= e($ord['order_no']) ?>
                                     </a>
                                 </td>
-                                <td style="padding: 0.875rem 0.5rem;">
-                                    <div style="font-weight: 600;"><?= e($ord['customer_name']) ?></div>
-                                    <div style="font-size: 0.75rem; color: var(--text-muted);">+91 <?= e($ord['mobile']) ?></div>
+                                <td>
+                                    <div style="font-weight: 600; color: var(--color-text-main);"><?= e($ord['customer_name']) ?></div>
+                                    <div style="font-size: 12px; color: var(--color-text-muted);">+91 <?= e($ord['mobile']) ?></div>
                                 </td>
-                                <td style="padding: 0.875rem 0.5rem; font-size: 0.8125rem; color: var(--text-muted);">
+                                <td style="font-size: 12.5px; color: var(--color-text-muted);">
                                     <?= date('d M, h:i A', strtotime($ord['created_at'])) ?>
                                 </td>
-                                <td style="padding: 0.875rem 0.5rem; text-align: right; font-weight: 800; color: var(--color-primary);">
+                                <td style="text-align: right; font-weight: 700; color: var(--color-pine);">
                                     <?= format_currency($ord['grand_total']) ?>
                                 </td>
-                                <td style="padding: 0.875rem 0.5rem; text-align: center;">
+                                <td style="text-align: center;">
                                     <span class="badge <?= $badge ?>"><?= e($st) ?></span>
                                 </td>
-                                <td style="padding: 0.875rem 0.5rem; text-align: right; white-space: nowrap;">
-                                    <a href="<?= admin_url('order-detail.php?id=' . (int)$ord['id']) ?>" class="btn btn-sm btn-outline">
+                                <td style="text-align: right; white-space: nowrap;">
+                                    <a href="<?= admin_url('order-detail.php?id=' . (int)$ord['id']) ?>" class="btn btn-sm btn-outline" style="padding: 4px 10px; font-size: 12px;">
                                         Manage
                                     </a>
-                                    <a href="<?= public_url('invoice.php?order=' . (int)$ord['id']) ?>" target="_blank" class="btn btn-sm btn-primary">
-                                        Invoice
+                                    <a href="<?= public_url('invoice.php?order=' . (int)$ord['id']) ?>" target="_blank" class="btn btn-sm btn-primary" style="padding: 4px 10px; font-size: 12px;">
+                                        Invoice &nearr;
                                     </a>
                                 </td>
                             </tr>
@@ -257,30 +279,34 @@ if ($pdo) {
         <?php endif; ?>
     </div>
 
-    <!-- Right: Operational Sidebar (Low Stock & Quick Links) -->
-    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+    <!-- Right: Operational Sidebar (Low Stock & Shortcuts) -->
+    <div style="display: flex; flex-direction: column; gap: 20px;">
         <!-- Low Stock Items Card -->
-        <div class="card" style="padding: 1.5rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-light);">
-                <h3 style="font-size: 1.1rem; margin-bottom: 0;">Low Stock Items</h3>
-                <a href="<?= admin_url('stock.php') ?>" style="font-size: 0.75rem; color: var(--color-accent); font-weight: 600;">Edit All</a>
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h3 style="font-size: 16px;">Low Stock Items</h3>
+                    <span style="font-size: 12px; color: var(--color-text-muted);">&le; 10 units in stock</span>
+                </div>
+                <a href="<?= admin_url('stock.php') ?>" style="font-size: 12.5px; color: var(--color-pine); font-weight: 600; text-decoration: none;">Restock All</a>
             </div>
 
             <?php if (empty($lowStockItems)): ?>
-                <p style="font-size: 0.8125rem; color: var(--color-success); margin-bottom: 0;">
-                    &#10003; All active product variants have healthy inventory levels (&gt;10 units).
-                </p>
+                <div style="display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: #0B5D44; padding: 10px 0;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span>All active inventory items have healthy stock levels.</span>
+                </div>
             <?php else: ?>
                 <ul style="list-style: none; margin: 0; padding: 0;">
                     <?php foreach ($lowStockItems as $lsi): ?>
-                        <li style="display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0; border-bottom: 1px solid var(--border-light); font-size: 0.875rem;">
+                        <li style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--color-border-light); font-size: 13.5px;">
                             <div>
-                                <strong style="color: var(--color-primary);"><?= e($lsi['product_name']) ?></strong>
-                                <div style="font-size: 0.75rem; color: var(--text-muted);">
+                                <strong style="color: var(--color-text-main); display: block; line-height: 1.3;"><?= e($lsi['product_name']) ?></strong>
+                                <span style="font-size: 12px; color: var(--color-text-muted);">
                                     <?= e($lsi['brand_name']) ?> &bull; <?= e($lsi['size_label']) ?>
-                                </div>
+                                </span>
                             </div>
-                            <span class="badge badge-danger" style="font-size: 0.75rem;">
+                            <span class="badge badge-danger" style="font-size: 11.5px;">
                                 <?= (int)$lsi['stock_qty'] ?> left
                             </span>
                         </li>
@@ -289,49 +315,33 @@ if ($pdo) {
             <?php endif; ?>
         </div>
 
-        <!-- Quick Administration Links -->
-        <div class="card" style="padding: 1.5rem; background: #ffffff;">
-            <h3 style="font-size: 1.1rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-light);">
-                Management Shortcuts
-            </h3>
-            <ul style="list-style: none; margin: 0; padding: 0; font-size: 0.875rem; display: flex; flex-direction: column; gap: 0.75rem;">
-                <li>
-                    <a href="<?= admin_url('product-edit.php') ?>" style="color: var(--color-primary); font-weight: 600; text-decoration: none; display: flex; align-items: center; gap: 0.6rem;">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                        <span>Add New Catalogue Product</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="<?= admin_url('categories.php') ?>" style="color: var(--color-primary); font-weight: 600; text-decoration: none; display: flex; align-items: center; gap: 0.6rem;">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-                        <span>Manage Product Categories</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="<?= admin_url('brands.php') ?>" style="color: var(--color-primary); font-weight: 600; text-decoration: none; display: flex; align-items: center; gap: 0.6rem;">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
-                        <span>Manage Brands &amp; Brand Status</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="<?= admin_url('stock.php') ?>" style="color: var(--color-primary); font-weight: 600; text-decoration: none; display: flex; align-items: center; gap: 0.6rem;">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
-                        <span>Bulk Stock &amp; Availability Update</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="<?= admin_url('settings.php') ?>" style="color: var(--color-primary); font-weight: 600; text-decoration: none; display: flex; align-items: center; gap: 0.6rem;">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                        <span>Edit Minimum Order (₹2,000) &amp; Policies</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="<?= admin_url('messages.php') ?>" style="color: var(--color-primary); font-weight: 600; text-decoration: none; display: flex; align-items: center; gap: 0.6rem;">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                        <span>Review Store Inquiries &amp; Messages</span>
-                    </a>
-                </li>
-            </ul>
+        <!-- Management Shortcuts -->
+        <div class="card">
+            <div class="card-header">
+                <h3 style="font-size: 16px;">Quick Operations</h3>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <a href="<?= admin_url('product-edit.php') ?>" class="admin-tool-link" style="color: var(--color-pine); font-weight: 600; padding: 10px 12px; border-radius: 8px; background: #F8FAFC; border: 1px solid var(--color-border-light);">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    <span>Add New Catalogue Product</span>
+                </a>
+                <a href="<?= admin_url('categories.php') ?>" class="admin-tool-link" style="color: var(--color-pine); font-weight: 600; padding: 10px 12px; border-radius: 8px; background: #F8FAFC; border: 1px solid var(--color-border-light);">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                    <span>Manage Categories</span>
+                </a>
+                <a href="<?= admin_url('brands.php') ?>" class="admin-tool-link" style="color: var(--color-pine); font-weight: 600; padding: 10px 12px; border-radius: 8px; background: #F8FAFC; border: 1px solid var(--color-border-light);">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+                    <span>Manage Brands</span>
+                </a>
+                <a href="<?= admin_url('stock.php') ?>" class="admin-tool-link" style="color: var(--color-pine); font-weight: 600; padding: 10px 12px; border-radius: 8px; background: #F8FAFC; border: 1px solid var(--color-border-light);">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                    <span>Bulk Stock &amp; Availability</span>
+                </a>
+                <a href="<?= admin_url('settings.php') ?>" class="admin-tool-link" style="color: var(--color-pine); font-weight: 600; padding: 10px 12px; border-radius: 8px; background: #F8FAFC; border: 1px solid var(--color-border-light);">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    <span>Store Policies &amp; Min. Order (₹2,000)</span>
+                </a>
+            </div>
         </div>
     </div>
 </div>

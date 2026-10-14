@@ -26,9 +26,13 @@ function send_security_headers(): void
  *
  * @param string $sessionName Custom session name (distinguishes user vs admin sessions)
  */
-function start_secure_session(string $sessionName = 'kalika_sess'): void
+function start_secure_session(?string $sessionName = null): void
 {
     send_security_headers();
+
+    if ($sessionName === null) {
+        $sessionName = defined('SESSION_NAME_USER') ? SESSION_NAME_USER : 'kalika_user_sess';
+    }
 
     if (session_status() === PHP_SESSION_ACTIVE) {
         return;
@@ -274,23 +278,25 @@ function logout_user(): void
         $_SESSION['user_address'],
         $_SESSION['cart']
     );
-    if (session_status() === PHP_SESSION_ACTIVE && !headers_sent()) {
-        session_regenerate_id(true);
-    }
 
     $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
         || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
 
     if (!headers_sent()) {
         setcookie('kalika_auth', '', [
-            'expires'  => time() - 3600,
+            'expires'  => time() - 86400,
             'path'     => '/',
             'secure'   => $isHttps,
             'httponly' => true,
             'samesite' => 'Lax'
         ]);
+        setcookie('kalika_auth', '', time() - 86400, '/');
     }
     unset($_COOKIE['kalika_auth']);
+
+    if (session_status() === PHP_SESSION_ACTIVE && !headers_sent()) {
+        session_regenerate_id(true);
+    }
 }
 
 /**
@@ -323,12 +329,30 @@ function require_guest(): void
 
 /**
  * Check if admin is currently authenticated.
+ * Enforces 30-minute idle timeout.
  *
  * @return bool
  */
 function is_admin_logged_in(): bool
 {
-    return !empty($_SESSION['admin_id']);
+    if (empty($_SESSION['admin_id'])) {
+        return false;
+    }
+
+    $timeout = defined('ADMIN_SESSION_IDLE_TIMEOUT') ? ADMIN_SESSION_IDLE_TIMEOUT : 1800; // 30 minutes
+    if (!empty($_SESSION['admin_last_activity']) && (time() - (int)$_SESSION['admin_last_activity'] > $timeout)) {
+        logout_admin();
+        set_flash('error', 'Your administrator session has expired due to 30 minutes of inactivity. Please log in again.');
+        return false;
+    }
+
+    // Refresh last activity on active admin interaction
+    $_SESSION['admin_last_activity'] = time();
+    if (isset($_SESSION['admin']) && is_array($_SESSION['admin'])) {
+        $_SESSION['admin']['last_activity'] = time();
+    }
+
+    return true;
 }
 
 /**
@@ -350,39 +374,216 @@ function current_admin(): ?array
         return null;
     }
     return [
-        'id'       => $_SESSION['admin_id'] ?? null,
-        'username' => $_SESSION['admin_username'] ?? 'Admin',
+        'id'                   => (int)($_SESSION['admin_id'] ?? 0),
+        'username'             => (string)($_SESSION['admin_username'] ?? 'Admin'),
+        'must_change_password' => (int)($_SESSION['admin_must_change_password'] ?? 0),
     ];
 }
 
 /**
- * Authenticate admin into session.
+ * Authenticate admin into isolated session namespace.
  *
  * @param array<string, mixed> $admin Admin record from database
  */
 function login_admin(array $admin): void
 {
-    session_regenerate_id(true);
-    $_SESSION['admin_id']       = $admin['id'];
-    $_SESSION['admin_username'] = $admin['username'];
+    if (session_status() === PHP_SESSION_ACTIVE && !headers_sent()) {
+        session_regenerate_id(true);
+    }
+
+    $adminId = (int)$admin['id'];
+    $adminUser = (string)$admin['username'];
+    $mustChange = (int)($admin['must_change_password'] ?? 0);
+    $now = time();
+
+    $_SESSION['admin_id']                   = $adminId;
+    $_SESSION['admin_username']             = $adminUser;
+    $_SESSION['admin_must_change_password'] = $mustChange;
+    $_SESSION['admin_last_activity']        = $now;
+
+    // Distinct admin namespace
+    $_SESSION['admin'] = [
+        'id'                   => $adminId,
+        'username'             => $adminUser,
+        'must_change_password' => $mustChange,
+        'last_activity'        => $now,
+    ];
 }
 
 /**
- * Log out admin.
+ * Log out admin and terminate admin session namespace.
  */
 function logout_admin(): void
 {
-    unset($_SESSION['admin_id'], $_SESSION['admin_username']);
-    session_regenerate_id(true);
+    unset(
+        $_SESSION['admin_id'],
+        $_SESSION['admin_username'],
+        $_SESSION['admin_must_change_password'],
+        $_SESSION['admin_last_activity'],
+        $_SESSION['admin']
+    );
+    if (session_status() === PHP_SESSION_ACTIVE && !headers_sent()) {
+        session_regenerate_id(true);
+    }
+}
+
+/**
+ * Validate administrator password strength.
+ * Policy: Min 12 chars, uppercase, lowercase, number, and special character.
+ *
+ * @param string $password
+ * @return array<int, string> Error messages, or empty array if valid.
+ */
+function validate_admin_password_strength(string $password): array
+{
+    $errors = [];
+    if (strlen($password) < 12) {
+        $errors[] = 'Password must be at least 12 characters long.';
+    }
+    if (!preg_match('/[A-Z]/', $password)) {
+        $errors[] = 'Password must include at least one uppercase letter (A-Z).';
+    }
+    if (!preg_match('/[a-z]/', $password)) {
+        $errors[] = 'Password must include at least one lowercase letter (a-z).';
+    }
+    if (!preg_match('/[0-9]/', $password)) {
+        $errors[] = 'Password must include at least one number (0-9).';
+    }
+    if (!preg_match('/[^a-zA-Z0-9]/', $password)) {
+        $errors[] = 'Password must include at least one special character (e.g. !@#$%^&*).';
+    }
+    return $errors;
 }
 
 /**
  * Guard that enforces admin login.
+ * Rejects logged-in customers with HTTP 403 Forbidden.
+ * Enforces forced password change on first login.
  */
 function require_admin(): void
 {
+    // 1. Strict Authorization Gate: Logged-in customer denied (403) on all admin URLs
+    if (is_logged_in() && !is_admin_logged_in()) {
+        http_response_code(403);
+        send_security_headers();
+        echo "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n";
+        echo "<meta charset=\"UTF-8\"><title>403 Forbidden - Customer Access Denied</title>\n";
+        echo "<link rel=\"stylesheet\" href=\"" . public_url('assets/css/style.css') . "\">\n";
+        echo "</head>\n<body style=\"background:#0f172a;color:#f8fafc;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem;font-family:sans-serif;\">\n";
+        echo "<div style=\"max-width:520px;background:#1e293b;border:1px solid #ef4444;border-radius:12px;padding:2.25rem;text-align:center;box-shadow:0 10px 25px rgba(0,0,0,0.5);\">\n";
+        echo "<div style=\"font-size:3rem;margin-bottom:1rem;\">🚫</div>\n";
+        echo "<h1 style=\"color:#ef4444;font-size:1.5rem;margin-bottom:0.75rem;\">403 Forbidden: Customer Access Denied</h1>\n";
+        echo "<p style=\"color:#cbd5e1;font-size:0.95rem;line-height:1.5;margin-bottom:1.5rem;\">You are authenticated with a customer account. Customer credentials do not have permission to access administration pages or operational management endpoints.</p>\n";
+        echo "<div style=\"display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;\">\n";
+        echo "<a href=\"" . public_url('index.php') . "\" class=\"btn btn-primary\" style=\"text-decoration:none;padding:0.65rem 1.25rem;background:#f59e0b;color:#0f172a;font-weight:700;border-radius:6px;\">Return to Storefront</a>\n";
+        echo "<a href=\"" . public_url('logout.php') . "\" class=\"btn\" style=\"text-decoration:none;padding:0.65rem 1.25rem;background:#334155;color:#f8fafc;border-radius:6px;\">Logout Customer Account</a>\n";
+        echo "</div>\n</div>\n</body>\n</html>";
+        exit;
+    }
+
+    // 2. Unauthenticated check
     if (!is_admin_logged_in()) {
         set_flash('error', 'Admin authentication required.');
-        redirect(admin_url('login.php'));
+        redirect(admin_login_url());
+        exit;
+    }
+
+    // 3. First login: Enforce must_change_password screen
+    if (!empty($_SESSION['admin_must_change_password'])) {
+        $script = basename($_SERVER['SCRIPT_NAME'] ?? '');
+        if ($script !== 'change-password.php' && $script !== 'logout.php') {
+            set_flash('error', 'First login: You must change your initial administrator password before accessing operational controls.');
+            redirect(admin_url('change-password.php'));
+            exit;
+        }
+    }
+}
+
+/**
+ * Record an entry into admin_audit_log table.
+ */
+function admin_audit_log(
+    string $action,
+    string $entity,
+    string|int|null $entityId = null,
+    mixed $oldValue = null,
+    mixed $newValue = null,
+    ?int $adminId = null
+): bool {
+    global $pdo;
+    if (!$pdo && function_exists('get_db_connection')) {
+        $pdo = get_db_connection();
+    }
+    if (!$pdo) {
+        return false;
+    }
+
+    $admin = current_admin();
+    $adminId = $adminId ?? ($admin['id'] ?? null);
+    if (!$adminId) {
+        return false;
+    }
+
+    $ip = function_exists('get_client_ip') ? get_client_ip() : ($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1');
+
+    $oldStr = is_array($oldValue) || is_object($oldValue) ? json_encode($oldValue, JSON_UNESCAPED_UNICODE) : ($oldValue !== null ? (string)$oldValue : null);
+    $newStr = is_array($newValue) || is_object($newValue) ? json_encode($newValue, JSON_UNESCAPED_UNICODE) : ($newValue !== null ? (string)$newValue : null);
+
+    try {
+        $stmt = $pdo->prepare("
+            INSERT INTO admin_audit_log (admin_id, action, entity, entity_id, old_value, new_value, ip, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
+        ");
+        return $stmt->execute([
+            $adminId,
+            $action,
+            $entity,
+            $entityId !== null ? (string)$entityId : null,
+            $oldStr,
+            $newStr,
+            $ip
+        ]);
+    } catch (PDOException $e) {
+        error_log("Failed to insert admin audit log: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Record an admin authentication attempt into admin_login_log table.
+ */
+function admin_log_login(
+    string $username,
+    string $status,
+    ?int $adminId = null,
+    ?string $ip = null,
+    ?string $userAgent = null
+): bool {
+    global $pdo;
+    if (!$pdo && function_exists('get_db_connection')) {
+        $pdo = get_db_connection();
+    }
+    if (!$pdo) {
+        return false;
+    }
+
+    $ip = $ip ?? (function_exists('get_client_ip') ? get_client_ip() : ($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1'));
+    $userAgent = $userAgent ?? substr($_SERVER['HTTP_USER_AGENT'] ?? 'Unknown', 0, 255);
+
+    try {
+        $stmt = $pdo->prepare("
+            INSERT INTO admin_login_log (admin_id, username_attempted, ip, status, user_agent, attempted_at)
+            VALUES (?, ?, ?, ?, ?, NOW())
+        ");
+        return $stmt->execute([
+            $adminId,
+            $username,
+            $ip,
+            $status,
+            $userAgent
+        ]);
+    } catch (PDOException $e) {
+        error_log("Failed to insert admin login log: " . $e->getMessage());
+        return false;
     }
 }

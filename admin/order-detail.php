@@ -24,8 +24,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $newStatus = trim($_POST['status'] ?? '');
         if (in_array($newStatus, ['Placed', 'Dispatched', 'Delivered'], true)) {
+            $oldStmt = $pdo->prepare("SELECT status FROM orders WHERE id = ?");
+            $oldStmt->execute([$orderId]);
+            $oldStatus = $oldStmt->fetchColumn() ?: 'Unknown';
+
             $up = $pdo->prepare("UPDATE orders SET status = ? WHERE id = ?");
             $up->execute([$newStatus, $orderId]);
+
+            admin_audit_log('update', 'order_status', (string)$orderId, $oldStatus, $newStatus);
             set_flash('success', "Order fulfillment status updated to '{$newStatus}'.");
             redirect(admin_url("order-detail.php?id={$orderId}"));
         } else {

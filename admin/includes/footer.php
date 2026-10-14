@@ -7,13 +7,17 @@ declare(strict_types=1);
 ?>
 </main>
 
-<footer style="background: #ffffff; border-top: 1px solid #e2e8f0; padding: 1.5rem 0; font-size: 0.8125rem; color: #64748b; margin-top: auto;">
-    <div class="container" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
-        <div>
-            &copy; <?= date('Y') ?> <strong><?= e(get_setting('business_name', 'Kalika Enterprises')) ?></strong> &bull; Pimpalgaon Baswant, Nashik
+<footer style="background: #FFFFFF; border-top: 1px solid var(--color-border-light, #E2E8F0); padding: 20px 0; font-size: 13px; color: var(--color-text-muted, #4A5568); margin-top: auto;">
+    <div class="container" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span>&copy; <?= date('Y') ?> <strong><?= e(get_setting('business_name', 'Kalika Enterprises')) ?></strong> &bull; Regional Distribution Network</span>
         </div>
-        <div>
-            System Version: <strong>v1.0.0-PROD</strong> &bull; Regional Distribution Control
+        <div style="display: flex; align-items: center; gap: 12px; font-size: 12px; color: #64748B;">
+            <span>Coverage: <strong>Niphad &bull; Dindori &bull; Chandwad &bull; Sinnar &bull; Yeola</strong></span>
+            <span>&bull;</span>
+            <span style="display: inline-flex; align-items: center; gap: 4px;">
+                <span class="admin-status-dot"></span> Operations Portal v1.0.0
+            </span>
         </div>
     </div>
 </footer>

@@ -38,6 +38,7 @@ Designed specifically to be deployed on standard shared PHP hosting (cPanel/Apac
 │   ├── DEPLOYMENT.md           # Step-by-step cPanel / shared PHP hosting deployment guide
 │   ├── BACKUP_RESTORE.md       # Backup procedures (phpMyAdmin, mysqldump, cron) & disaster recovery
 │   ├── ADMIN_GUIDE.md          # Business operations & admin portal user manual
+│   ├── ADMIN_RECOVERY.md       # Lost credential recovery (CLI, phpMyAdmin & emergency reset)
 │   ├── MAINTENANCE.md          # Safe code updates, credential rotation & monthly health checks
 │   ├── HANDOVER.md             # Client handover dossier, credentials & recurring cost schedule
 │   ├── SECURITY.md             # Security audit report, OWASP mitigations & server hardening
@@ -87,11 +88,14 @@ Designed specifically to be deployed on standard shared PHP hosting (cPanel/Apac
 │   ├── customers.php           # Retailer account directory & suspension toggle
 │   ├── settings.php            # Enterprise parameters & policy text editor
 │   ├── messages.php            # Customer inquiries inbox
+│   ├── activity-log.php        # Read-only audit trail with filtering & diff display
 │   ├── login.php               # Admin authentication with brute-force lockout
-│   ├── logout.php              # Admin logout
-│   └── change-password.php     # Admin password rotation
+│   ├── logout.php              # Admin logout (POST only, CSRF verified)
+│   └── change-password.php     # Forced on first login & on-demand password rotation
 ├── tests/
-│   └── smoke.php               # Automated 43-point PHP smoke test suite
+│   ├── smoke.php               # Automated 89-point PHP smoke test suite
+│   ├── auth_lifecycle_suite.php # Automated 30-assertion customer auth suite
+│   └── admin_auth_suite.php    # Automated 44-assertion admin auth suite
 ├── .gitignore
 ├── .htaccess                   # HTTPS redirection, security lockdown, no directory listing
 ├── PROJECT_CONTEXT.md          # Architectural context & rules

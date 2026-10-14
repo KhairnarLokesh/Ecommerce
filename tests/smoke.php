@@ -59,6 +59,8 @@ if ($pdo instanceof PDO) {
     // Check 12 Required InnoDB Tables
     $requiredTables = [
         'admins',
+        'admin_login_log',
+        'admin_audit_log',
         'brands',
         'cart_items',
         'contact_messages',
@@ -186,6 +188,8 @@ $criticalFiles = [
     $root . '/public/cart.php',
     $root . '/public/checkout.php',
     $root . '/public/login.php',
+    $root . '/public/logout.php',
+    $root . '/logout.php',
     $root . '/public/register.php',
     $root . '/public/profile.php',
     $root . '/public/forgot.php',
@@ -207,6 +211,7 @@ $criticalFiles = [
     $root . '/admin/order-detail.php',
     $root . '/admin/settings.php',
     $root . '/admin/messages.php',
+    $root . '/admin/activity-log.php',
     // CSS & JS Assets
     $root . '/public/assets/css/style.css',
     $root . '/public/assets/js/main.js',
@@ -217,7 +222,8 @@ $criticalFiles = [
     $root . '/PROGRESS.md',
     $root . '/docs/DATABASE.md',
     $root . '/docs/TESTING.md',
-    $root . '/docs/SECURITY.md'
+    $root . '/docs/SECURITY.md',
+    $root . '/docs/ADMIN_RECOVERY.md'
 ];
 
 foreach ($criticalFiles as $file) {

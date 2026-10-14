@@ -1,0 +1,813 @@
+/**
+ * Kalika Enterprises - Professional Admin Operations Theme
+ * Fully aligned with Customer Storefront Design Tokens:
+ * Organic Forest & Pine Palette, Obsidian Dark Header, Clean Surface Cards,
+ * Editorial Merriweather Headlines & Open Sans UI Typography.
+ */
+
+/* ==========================================================================
+   1. Core Layout & Reset for Admin
+   ========================================================================== */
+.grid {
+  display: grid;
+}
+
+body.admin-body {
+  background-color: var(--bg-page, #F8F9FA);
+  color: var(--color-text-main, #1C242C);
+  font-family: var(--font-family, 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ==========================================================================
+   2. Professional Admin Topbar (Obsidian Theme)
+   ========================================================================== */
+.admin-topbar {
+  background: var(--bg-dark, #09120E);
+  color: #FFFFFF;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  position: relative;
+  z-index: 110;
+}
+
+.admin-topbar__inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.admin-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.admin-brand__logo {
+  height: 34px;
+  width: auto;
+  object-fit: contain;
+  border-radius: 4px;
+  background: #FFFFFF;
+  padding: 2px 6px;
+}
+
+.admin-brand__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: var(--color-pine, #16372D);
+  color: var(--color-amber-pixel, #F3C98B);
+  font-weight: 800;
+  font-size: 14px;
+  border: 1px solid rgba(243, 201, 139, 0.25);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.admin-brand__text {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-brand__title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #FFFFFF;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+}
+
+.admin-brand__subtitle {
+  font-size: 11px;
+  color: var(--color-mint, #A9C4B7);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 1px;
+}
+
+.admin-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10B981;
+  display: inline-block;
+  box-shadow: 0 0 6px #10B981;
+}
+
+/* Topbar Right Tools */
+.admin-tools {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 13px;
+  flex-wrap: wrap;
+}
+
+.admin-tool-link {
+  color: #D1D5DB;
+  text-decoration: none;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.admin-tool-link:hover {
+  color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.admin-user-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  font-size: 12.5px;
+  color: #E5E7EB;
+}
+
+.admin-user-chip strong {
+  color: #FFFFFF;
+}
+
+.admin-logout-btn {
+  background: rgba(220, 38, 38, 0.15);
+  color: #FCA5A5;
+  border: 1px solid rgba(220, 38, 38, 0.35);
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s ease;
+}
+
+.admin-logout-btn:hover {
+  background: #DC2626;
+  color: #FFFFFF;
+  border-color: #DC2626;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+}
+
+/* ==========================================================================
+   3. Professional Navigation Bar (Pill & Clean Tabs)
+   ========================================================================== */
+.admin-nav-bar {
+  background: #FFFFFF;
+  border-bottom: 1px solid var(--color-border-light, #E2E8F0);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(11, 24, 18, 0.04);
+}
+
+.admin-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow-x: auto;
+  white-space: nowrap;
+  padding: 6px 0;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE 10+ */
+}
+
+.admin-nav-links::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
+}
+
+.admin-nav-links .nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--color-text-muted, #4A5568);
+  text-decoration: none;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid transparent;
+}
+
+.admin-nav-links .nav-link svg {
+  flex-shrink: 0;
+  stroke: currentColor;
+  opacity: 0.8;
+  transition: opacity 0.18s ease;
+}
+
+.admin-nav-links .nav-link:hover {
+  color: var(--color-pine, #16372D);
+  background: var(--color-stock-in-bg, #E8F5EE);
+  border-color: rgba(22, 55, 45, 0.08);
+}
+
+.admin-nav-links .nav-link:hover svg {
+  opacity: 1;
+}
+
+.admin-nav-links .nav-link.active {
+  color: #FFFFFF;
+  background: var(--color-pine, #16372D);
+  border-color: var(--color-pine, #16372D);
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(22, 55, 45, 0.18);
+}
+
+.admin-nav-links .nav-link.active svg {
+  stroke: #FFFFFF;
+  opacity: 1;
+}
+
+.admin-nav-links .badge-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #DC2626;
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  margin-left: 2px;
+  box-shadow: 0 1px 3px rgba(220, 38, 38, 0.4);
+}
+
+/* ==========================================================================
+   4. Admin Main Container & Typography
+   ========================================================================== */
+.admin-main {
+  padding: 32px 16px 56px;
+  min-height: calc(100vh - 160px);
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.admin-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.admin-header-title-wrap .eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-evergreen, #0B5D44);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.admin-header-title-wrap h1 {
+  font-family: var(--font-editorial, 'Merriweather', Georgia, serif);
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--color-text-main, #1C242C);
+  line-height: 1.25;
+  margin: 0 0 6px 0;
+}
+
+.admin-header-title-wrap p {
+  font-size: 14.5px;
+  color: var(--color-text-muted, #4A5568);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ==========================================================================
+   5. Executive Metric Cards Grid
+   ========================================================================== */
+.admin-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+@media (max-width: 1200px) {
+  .admin-kpi-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.admin-dashboard-layout {
+  display: grid;
+  grid-template-columns: 2.2fr 1fr;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+@media (max-width: 992px) {
+  .admin-dashboard-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.admin-kpi-card {
+  background: #FFFFFF;
+  border: 1px solid var(--color-border-light, #E2E8F0);
+  border-radius: 12px;
+  padding: 18px 20px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.admin-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(11, 24, 18, 0.08);
+  border-color: #CBD5E1;
+}
+
+.admin-kpi-card__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.admin-kpi-card__label {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-muted, #4A5568);
+}
+
+.admin-kpi-card__icon-wrap {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-kpi-card__icon-wrap.is-amber {
+  background: #FEF3E2;
+  color: #B45309;
+}
+
+.admin-kpi-card__icon-wrap.is-blue {
+  background: #E0F2FE;
+  color: #0369A1;
+}
+
+.admin-kpi-card__icon-wrap.is-green {
+  background: #E8F5EE;
+  color: #0B5D44;
+}
+
+.admin-kpi-card__icon-wrap.is-indigo {
+  background: #EEF2FF;
+  color: #4338CA;
+}
+
+.admin-kpi-card__icon-wrap.is-rose {
+  background: #FEF2F2;
+  color: #DC2626;
+}
+
+.admin-kpi-card__icon-wrap.is-pine {
+  background: #E8F5EE;
+  color: var(--color-pine, #16372D);
+}
+
+.admin-kpi-card__value {
+  font-size: 30px;
+  font-weight: 700;
+  font-family: var(--font-family, 'Open Sans', sans-serif);
+  color: var(--color-text-main, #1C242C);
+  line-height: 1.1;
+  margin-bottom: 8px;
+}
+
+.admin-kpi-card__link {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-pine, #16372D);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.admin-kpi-card:hover .admin-kpi-card__link {
+  color: var(--color-evergreen, #0B5D44);
+}
+
+.admin-kpi-card:hover .admin-kpi-card__link svg {
+  transform: translateX(3px);
+}
+
+/* ==========================================================================
+   6. Modern Admin Cards & Panels
+   ========================================================================== */
+.card, .admin-card {
+  background: #FFFFFF;
+  border: 1px solid var(--color-border-light, #E2E8F0);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03), 0 4px 16px rgba(11, 24, 18, 0.04);
+  transition: box-shadow 0.2s ease;
+}
+
+.card-header, .admin-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--color-border-light, #E2E8F0);
+}
+
+.card-header h2, .card-header h3,
+.admin-card-header h2, .admin-card-header h3 {
+  font-family: var(--font-editorial, 'Merriweather', Georgia, serif);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text-main, #1C242C);
+  margin: 0;
+}
+
+/* ==========================================================================
+   7. Form Inputs & Labels (Customer Matching)
+   ========================================================================== */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--color-pine, #16372D);
+  display: block;
+  margin-bottom: 8px;
+}
+
+.form-control, select.form-control, textarea.form-control {
+  width: 100%;
+  border: 1.5px solid var(--color-border-light, #E2E8F0);
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--color-text-main, #1C242C);
+  background: #FFFFFF;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+select.form-control {
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%234A5568' stroke-width='2.5' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 36px;
+}
+
+.form-control::placeholder {
+  color: #94A3B8;
+  font-weight: 400;
+}
+
+.form-control:hover {
+  border-color: #CBD5E1;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--color-pine, #16372D);
+  box-shadow: 0 0 0 3px rgba(22, 55, 45, 0.12);
+  background: #FCFFFE;
+}
+
+/* Password Field Wrapper with Toggle */
+.admin-password-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.admin-password-wrap .form-control {
+  padding-right: 44px;
+}
+
+.admin-password-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 6px;
+  color: #64748B;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: color 0.15s ease;
+}
+
+.admin-password-toggle:hover {
+  color: var(--color-pine, #16372D);
+}
+
+/* ==========================================================================
+   8. Buttons (Unified with Pine Brand System)
+   ========================================================================== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: center;
+  padding: 9px 18px;
+  line-height: 1.25;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+.btn-primary, .btn-pine {
+  background-color: var(--color-pine, #16372D) !important;
+  color: #FFFFFF !important;
+  border: 1px solid var(--color-pine, #16372D) !important;
+}
+
+.btn-primary:hover, .btn-pine:hover {
+  background-color: var(--color-pine-hover, #0E251E) !important;
+  border-color: var(--color-pine-hover, #0E251E) !important;
+  box-shadow: 0 2px 8px rgba(22, 55, 45, 0.2);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background-color: #FFFFFF !important;
+  color: var(--color-text-main, #1C242C) !important;
+  border: 1px solid var(--color-border-light, #E2E8F0) !important;
+}
+
+.btn-secondary:hover {
+  background-color: var(--bg-page, #F8F9FA) !important;
+  border-color: #CBD5E1 !important;
+}
+
+.btn-outline {
+  background-color: transparent !important;
+  color: var(--color-pine, #16372D) !important;
+  border: 1.5px solid var(--color-pine, #16372D) !important;
+}
+
+.btn-outline:hover {
+  background-color: var(--color-stock-in-bg, #E8F5EE) !important;
+  border-color: var(--color-pine-hover, #0E251E) !important;
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 13px;
+  border-radius: 5px;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+/* ==========================================================================
+   9. Tables & Status Badges
+   ========================================================================== */
+.admin-table-wrap {
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid var(--color-border-light, #E2E8F0);
+}
+
+.admin-table, table.table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 14px;
+}
+
+.admin-table thead th, table.table thead th {
+  background: #F8FAFC;
+  color: var(--color-text-muted, #4A5568);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 12px 14px;
+  border-bottom: 2px solid var(--color-border-light, #E2E8F0);
+  white-space: nowrap;
+}
+
+.admin-table tbody td, table.table tbody td {
+  padding: 13px 14px;
+  border-bottom: 1px solid var(--color-border-light, #E2E8F0);
+  color: var(--color-text-main, #1C242C);
+  vertical-align: middle;
+}
+
+.admin-table tbody tr:hover, table.table tbody tr:hover {
+  background: #F9FBFA;
+}
+
+/* Status Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.badge-success {
+  background: #E8F5EE;
+  color: #0B5D44;
+  border: 1px solid #B8F5CE;
+}
+
+.badge-warning {
+  background: #FEF3E2;
+  color: #B45309;
+  border: 1px solid #FDE68A;
+}
+
+.badge-info {
+  background: #E0F2FE;
+  color: #0369A1;
+  border: 1px solid #BAE6FD;
+}
+
+.badge-danger {
+  background: #FEF2F2;
+  color: #DC2626;
+  border: 1px solid #FECACA;
+}
+
+/* ==========================================================================
+   10. Admin Login Portal Screen
+   ========================================================================== */
+.admin-auth-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  background-color: var(--bg-page, #F8F9FA);
+  background-image: radial-gradient(circle at 50% 10%, rgba(22, 55, 45, 0.05) 0%, transparent 60%);
+}
+
+.admin-auth-card {
+  width: 100%;
+  max-width: 440px;
+  background: #FFFFFF;
+  border: 1px solid var(--color-border-light, #E2E8F0);
+  border-radius: 12px;
+  padding: 40px;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 4px 16px rgba(11, 24, 18, 0.06),
+    0 12px 40px rgba(11, 24, 18, 0.04);
+}
+
+.admin-auth-card__header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.admin-auth-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  background: var(--bg-dark, #09120E);
+  color: var(--color-amber-pixel, #F3C98B);
+  font-weight: 800;
+  font-size: 20px;
+  margin-bottom: 16px;
+  border: 1.5px solid rgba(243, 201, 139, 0.3);
+  box-shadow: 0 4px 12px rgba(9, 18, 14, 0.15);
+}
+
+.admin-auth-card__eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-evergreen, #0B5D44);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.admin-auth-card__title {
+  font-family: var(--font-editorial, 'Merriweather', Georgia, serif);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-text-main, #1C242C);
+  line-height: 1.25;
+  margin: 0 0 8px 0;
+}
+
+.admin-auth-card__sub {
+  font-size: 14px;
+  color: var(--color-text-muted, #4A5568);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.admin-auth-card__footer {
+  text-align: center;
+  padding-top: 20px;
+  margin-top: 24px;
+  border-top: 1px solid var(--color-border-light, #E2E8F0);
+  font-size: 13.5px;
+}
+
+.admin-auth-card__footer a {
+  color: var(--color-pine, #16372D);
+  text-decoration: none;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 0.15s ease;
+}
+
+.admin-auth-card__footer a:hover {
+  color: var(--color-pine-hover, #0E251E);
+  text-decoration: underline;
+}
+
+.admin-auth-security-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: #64748B;
+  margin-top: 14px;
+}

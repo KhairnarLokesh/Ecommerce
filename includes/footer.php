@@ -42,8 +42,9 @@ declare(strict_types=1);
                 <ul class="footer-links-list">
                     <li><a href="<?= public_url('cart.php') ?>">Cart</a></li>
                     <li><a href="<?= public_url('orders.php') ?>">My Orders</a></li>
-                    <li><a href="<?= public_url('login.php') ?>">Login</a></li>
+                    <li><a href="<?= public_url('login.php') ?>">Customer Login</a></li>
                     <li><a href="<?= public_url('register.php') ?>">Register</a></li>
+                    <li><a href="<?= admin_url('login.php') ?>" style="color: #F3C98B; font-weight: 600;">🔒 Login as Admin</a></li>
                 </ul>
             </div>
 

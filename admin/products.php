@@ -40,6 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } else {
                     $up = $pdo->prepare("UPDATE products SET is_active = ? WHERE id = ?");
                     $up->execute([$newActive, $productId]);
+                    admin_audit_log('update', 'product', (string)$productId, ['is_active' => $currentActive], ['is_active' => $newActive]);
                     $label = ($newActive === 1) ? 'activated' : 'deactivated';
                     set_flash('success', "Product '{$prod['name']}' has been {$label}.");
                 }
@@ -59,11 +60,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Soft delete to protect historical tax invoice records
                 $up = $pdo->prepare("UPDATE products SET is_active = 0 WHERE id = ?");
                 $up->execute([$productId]);
+                admin_audit_log('delete', 'product', (string)$productId, ['name' => $prodName, 'is_active' => 1], ['soft_deleted' => true, 'is_active' => 0]);
                 set_flash('warning', "Product '{$prodName}' has {$orderCount} past customer order line(s). To protect historical tax invoices, it has been soft-deleted (deactivated) instead of permanently removed.");
             } else {
                 // Safe hard delete (cascades to product_variants)
                 $del = $pdo->prepare("DELETE FROM products WHERE id = ?");
                 $del->execute([$productId]);
+                admin_audit_log('delete', 'product', (string)$productId, ['name' => $prodName], null);
                 set_flash('success', "Product '{$prodName}' and its variants have been permanently removed.");
             }
             redirect(admin_url('products.php'));

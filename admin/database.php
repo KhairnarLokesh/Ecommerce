@@ -58,45 +58,45 @@ try {
 }
 ?>
 
-<div style="margin-bottom: 2rem;">
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
-        <div>
-            <h1 style="font-size: 1.75rem; font-weight: 800; color: #0f172a; margin-bottom: 0.25rem;">
-                MySQL Database Explorer
-            </h1>
-            <p style="color: #64748b; font-size: 0.875rem; margin: 0;">
-                Connected to: <strong style="color: #0f172a;"><?= e(DB_NAME) ?></strong> on <strong style="color: #0f172a;"><?= e(DB_HOST) ?>:<?= e(DB_PORT) ?></strong> 
-                (MySQL <?= e($serverVersion) ?>)
-            </p>
+<div class="admin-header-row">
+    <div class="admin-header-title-wrap">
+        <div class="eyebrow">
+            <span class="admin-status-dot"></span>
+            Database Explorer &bull; Live Telemetry
         </div>
-        <div style="display: flex; gap: 0.5rem; align-items: center;">
-            <span class="badge" style="background: #ecfdf5; color: #047857; font-weight: 700; padding: 0.4rem 0.8rem; border-radius: 999px; border: 1px solid #a7f3d0;">
-                ● MySQL Active
-            </span>
-            <a href="<?= admin_url('stock.php') ?>" class="btn btn-sm btn-outline">
-                Edit Stock
-            </a>
-            <a href="<?= admin_url('products.php') ?>" class="btn btn-sm btn-outline">
-                Manage Products
-            </a>
-        </div>
+        <h1>MySQL Database Explorer</h1>
+        <p>
+            Connected to database: <strong style="color: var(--color-pine);"><?= e(DB_NAME) ?></strong> on <strong style="color: var(--color-pine);"><?= e(DB_HOST) ?>:<?= e(DB_PORT) ?></strong> 
+            (Server: MySQL <?= e($serverVersion) ?>)
+        </p>
+    </div>
+    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+        <span class="badge badge-success">
+            ● MySQL Connected
+        </span>
+        <a href="<?= admin_url('stock.php') ?>" class="btn btn-sm btn-outline">
+            Edit Stock
+        </a>
+        <a href="<?= admin_url('products.php') ?>" class="btn btn-sm btn-primary">
+            Manage Products
+        </a>
     </div>
 </div>
 
 <!-- Table Selector Cards -->
-<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 0.75rem; margin-bottom: 2rem;">
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; margin-bottom: 28px;">
     <?php foreach ($allowedTables as $tbl => $label): ?>
         <?php $isActive = ($tbl === $activeTable); ?>
         <a href="?table=<?= urlencode($tbl) ?>" style="text-decoration: none; color: inherit;">
-            <div style="background: <?= $isActive ? '#0f172a' : '#ffffff' ?>; color: <?= $isActive ? '#ffffff' : '#334155' ?>; border: 1px solid <?= $isActive ? '#0f172a' : '#e2e8f0' ?>; border-radius: 10px; padding: 0.85rem 1rem; transition: all 0.15s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
-                <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.8; margin-bottom: 0.25rem;">
+            <div style="background: <?= $isActive ? 'var(--color-pine)' : '#FFFFFF' ?>; color: <?= $isActive ? '#FFFFFF' : 'var(--color-text-main)' ?>; border: 1.5px solid <?= $isActive ? 'var(--color-pine)' : 'var(--color-border-light)' ?>; border-radius: 10px; padding: 14px; transition: all 0.18s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+                <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; opacity: <?= $isActive ? '0.9' : '0.7' ?>; margin-bottom: 4px;">
                     <?= e($label) ?>
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: baseline;">
-                    <code style="font-size: 0.85rem; font-weight: 700; color: <?= $isActive ? '#f59e0b' : '#0284c7' ?>;">
+                    <code style="font-size: 13.5px; font-weight: 700; color: <?= $isActive ? '#FFFFFF' : 'var(--color-pine)' ?>;">
                         <?= e($tbl) ?>
                     </code>
-                    <span style="font-size: 0.8rem; font-weight: 700; background: <?= $isActive ? '#334155' : '#f1f5f9' ?>; padding: 0.1rem 0.45rem; border-radius: 999px;">
+                    <span style="font-size: 12px; font-weight: 700; background: <?= $isActive ? 'rgba(255,255,255,0.2)' : 'var(--color-stock-in-bg)' ?>; color: <?= $isActive ? '#FFFFFF' : 'var(--color-pine)' ?>; padding: 2px 8px; border-radius: 999px;">
                         <?= $counts[$tbl] ?? 0 ?>
                     </span>
                 </div>
@@ -106,16 +106,16 @@ try {
 </div>
 
 <!-- Table Data View -->
-<div style="background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
-    <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+<div class="card" style="padding: 0; overflow: hidden;">
+    <div style="padding: 16px 20px; border-bottom: 1px solid var(--color-border-light); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
         <div>
-            <h2 style="font-size: 1.15rem; font-weight: 700; color: #0f172a; margin: 0;">
-                Table: <code style="color: #2563eb;"><?= e($activeTable) ?></code> 
-                <span style="font-size: 0.85rem; font-weight: 500; color: #64748b; margin-left: 0.5rem;">
+            <h2 style="font-family: var(--font-editorial); font-size: 17px; font-weight: 700; color: var(--color-text-main); margin: 0;">
+                Table: <code style="color: var(--color-pine);"><?= e($activeTable) ?></code> 
+                <span style="font-size: 13px; font-weight: 500; color: var(--color-text-muted); margin-left: 8px;">
                     (Showing <?= count($rows) ?> of <?= $totalRows ?> rows)
                 </span>
             </h2>
-            <p style="color: #64748b; font-size: 0.8rem; margin: 0.25rem 0 0;">
+            <p style="color: var(--color-text-muted); font-size: 13px; margin: 4px 0 0;">
                 <?= e($allowedTables[$activeTable]) ?>
             </p>
         </div>

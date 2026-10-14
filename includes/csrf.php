@@ -7,9 +7,18 @@
 
 declare(strict_types=1);
 
-// Ensure session is active
+// Ensure session is active with secure configuration
+if (!function_exists('start_secure_session')) {
+    if (file_exists(__DIR__ . '/auth.php')) {
+        require_once __DIR__ . '/auth.php';
+    }
+}
 if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+    if (function_exists('start_secure_session')) {
+        start_secure_session(defined('SESSION_NAME_USER') ? SESSION_NAME_USER : 'kalika_user_sess');
+    } else {
+        session_start();
+    }
 }
 
 /**

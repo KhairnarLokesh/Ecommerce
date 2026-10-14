@@ -214,6 +214,9 @@ require_once __DIR__ . '/../includes/header.php';
             <div class="auth-form-card__footer">
                 New store retailer? <a href="<?= public_url('register.php' . (!empty($returnUrl) ? '?return=' . urlencode($returnUrl) : '')) ?>">Register new account</a>
             </div>
+            <div style="text-align: center; margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--color-border-light); font-size: 13px; color: var(--color-text-muted);">
+                Store Owner or Manager? <a href="<?= admin_url('login.php') ?>" style="font-weight: 700; color: var(--color-evergreen); text-decoration: none; margin-left: 4px;">Login as Admin &rarr;</a>
+            </div>
         </div>
     </div>
 </div>

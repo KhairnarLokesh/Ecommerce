@@ -229,11 +229,15 @@ Tracks failed sign-ins for rate limiting against brute force attempts.
 - `attempted_at`: `TIMESTAMP DEFAULT CURRENT_TIMESTAMP`
 
 ### 2.10 `admins`
-Internal store operations credentials.
+Internal store operations and business owner credentials.
 - `id`: `INT UNSIGNED AUTO_INCREMENT PRIMARY KEY`
 - `username`: `VARCHAR(50) NOT NULL UNIQUE`
-- `password_hash`: `VARCHAR(255) NOT NULL`
+- `password_hash`: `VARCHAR(255) NOT NULL` (Bcrypt / Argon2)
+- `must_change_password`: `TINYINT(1) UNSIGNED DEFAULT 1` (Enforces password update on first login or reset)
+- `failed_attempts`: `INT UNSIGNED DEFAULT 0` (Consecutive failure counter)
+- `locked_until`: `DATETIME NULL` (Set to NOW() + 15 MIN on 5 consecutive failures)
 - `last_login`: `TIMESTAMP NULL`
+- `created_at`: `TIMESTAMP DEFAULT CURRENT_TIMESTAMP`
 
 ### 2.11 `settings`
 Key-value store for global configurations, business details, and policies.
@@ -248,6 +252,28 @@ Stores customer and retail inquiry submissions.
 - `area`: `VARCHAR(100) NOT NULL`
 - `message`: `TEXT NOT NULL`
 - `is_read`: `TINYINT(1) DEFAULT 0`
+
+### 2.13 `admin_login_log`
+Authentication audit trail tracking administrator sign-in attempts and lockouts.
+- `id`: `INT UNSIGNED AUTO_INCREMENT PRIMARY KEY`
+- `admin_id`: `INT UNSIGNED NULL`
+- `username_attempted`: `VARCHAR(100) NOT NULL`
+- `ip`: `VARCHAR(45) NOT NULL`
+- `status`: `VARCHAR(20) NOT NULL DEFAULT 'failed'` (`success`, `failed`, `locked`)
+- `user_agent`: `VARCHAR(255) NULL`
+- `attempted_at`: `TIMESTAMP DEFAULT CURRENT_TIMESTAMP`
+
+### 2.14 `admin_audit_log`
+Immutable operational audit trail logging administrative modifications across products, prices, stock, GST, orders, and credentials.
+- `id`: `INT UNSIGNED AUTO_INCREMENT PRIMARY KEY`
+- `admin_id`: `INT UNSIGNED NOT NULL, FK -> admins(id)`
+- `action`: `VARCHAR(50) NOT NULL` (`create`, `update`, `delete`, `password_change`)
+- `entity`: `VARCHAR(50) NOT NULL` (`product`, `variant`, `price`, `gst`, `stock`, `order_status`, `settings`, `admin`)
+- `entity_id`: `VARCHAR(100) NULL`
+- `old_value`: `TEXT NULL`
+- `new_value`: `TEXT NULL`
+- `ip`: `VARCHAR(45) NOT NULL`
+- `created_at`: `TIMESTAMP DEFAULT CURRENT_TIMESTAMP`
 
 ---
 

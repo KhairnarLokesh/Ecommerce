@@ -22,12 +22,15 @@ CREATE TABLE `users` (
     UNIQUE KEY `uq_users_email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 2. Admins (Store Management Staff)
+-- 2. Admins (Store Management / Single-Owner Authentication)
 DROP TABLE IF EXISTS `admins`;
 CREATE TABLE `admins` (
     `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     `username` VARCHAR(50) NOT NULL UNIQUE,
     `password_hash` VARCHAR(255) NOT NULL,
+    `must_change_password` TINYINT(1) UNSIGNED NOT NULL DEFAULT 1,
+    `failed_attempts` INT UNSIGNED NOT NULL DEFAULT 0,
+    `locked_until` DATETIME NULL DEFAULT NULL,
     `last_login` TIMESTAMP NULL DEFAULT NULL,
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     INDEX `idx_admins_username` (`username`)
@@ -198,6 +201,40 @@ CREATE TABLE `contact_messages` (
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     INDEX `idx_contact_is_read` (`is_read`),
     INDEX `idx_contact_created` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 13. Admin Login Log (Authentication Audit & Lockout Tracking)
+DROP TABLE IF EXISTS `admin_login_log`;
+CREATE TABLE `admin_login_log` (
+    `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `admin_id` INT UNSIGNED NULL,
+    `username_attempted` VARCHAR(100) NOT NULL,
+    `ip` VARCHAR(45) NOT NULL,
+    `status` VARCHAR(20) NOT NULL DEFAULT 'failed' COMMENT 'success, failed, locked',
+    `user_agent` VARCHAR(255) NULL,
+    `attempted_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX `idx_admin_login_ip` (`ip`),
+    INDEX `idx_admin_login_username` (`username_attempted`),
+    INDEX `idx_admin_login_status` (`status`),
+    INDEX `idx_admin_login_time` (`attempted_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 14. Admin Audit Log (Activity Trail & Compliance)
+DROP TABLE IF EXISTS `admin_audit_log`;
+CREATE TABLE `admin_audit_log` (
+    `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `admin_id` INT UNSIGNED NOT NULL,
+    `action` VARCHAR(50) NOT NULL COMMENT 'create, update, delete, password_change',
+    `entity` VARCHAR(50) NOT NULL COMMENT 'product, variant, price, gst, stock, order_status, settings, admin',
+    `entity_id` VARCHAR(100) NULL,
+    `old_value` TEXT NULL,
+    `new_value` TEXT NULL,
+    `ip` VARCHAR(45) NOT NULL,
+    `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX `idx_audit_admin` (`admin_id`),
+    INDEX `idx_audit_entity` (`entity`, `entity_id`),
+    INDEX `idx_audit_action` (`action`),
+    INDEX `idx_audit_created` (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;

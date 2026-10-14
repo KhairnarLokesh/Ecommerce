@@ -287,5 +287,26 @@ php tests/auth_lifecycle_suite.php
 4. **Customer Data Isolation (IDOR Defense)**: Customer A cannot view, modify, or download Customer B's profile, orders, or tax invoices.
 5. **Cart & Checkout Authentication Integration**: Guest cart persistence through login, auto-redirection to checkout after authentication, server-side ₹2,000 minimum threshold enforcement, stock validation, and accurate tax calculations.
 
+---
+
+## 8. Automated Admin Authentication Suite (`tests/admin_auth_suite.php`)
+
+Run the dedicated administrative authentication test suite directly via CLI:
+```bash
+php tests/admin_auth_suite.php
+```
+
+### Coverage (44 Test Assertions across 9 Core Requirements):
+1. **Wrong Password & Generic Error**: Authentication failures return the generic message `"Invalid username or password"` to prevent user enumeration and timing attacks; failed attempts are incremented and logged in `admin_login_log`.
+2. **5-Attempt Lockout (15 Minutes)**: Reaching 5 failed attempts locks the account for 15 minutes (`locked_until` set in the future); subsequent attempts while locked are rejected and recorded with status `locked`.
+3. **Expired Session (30-Minute Idle Timeout)**: Inactive sessions exceeding 1,800 seconds are terminated; session data is purged, and the user is redirected with an expiration notice. Active requests continually refresh the activity window.
+4. **Direct URL Access Without Login**: Unauthenticated visitors attempting direct URL access are redirected to `admin_login_url()` with an authentication required flash notice.
+5. **Customer Session Denial (HTTP 403 Forbidden Gate)**: Authenticated retail customer accounts attempting to access ANY `/admin` endpoint are immediately denied with HTTP 403 Forbidden.
+6. **CSRF Removal & Tamper Rejection**: All administrative forms and logout actions require valid CSRF tokens; missing or tampered tokens are rejected.
+7. **First-Login Forced Password Change**: Accounts with `must_change_password = 1` are locked to `admin/change-password.php`; password strength engine enforces minimum 12 characters, uppercase, lowercase, numbers, and special symbols; successful change clears `must_change_password` to `0` and records an audit trail.
+8. **CLI-Only Enforcement for `create_admin.php`**: The initial provisioning utility strictly checks `php_sapi_name() === 'cli'`, rejects HTTP requests with HTTP 403 Forbidden, validates passwords of at least 12 characters, and prints script deletion reminders.
+9. **Activity Audit Log & Login Log Verification**: All CRUD operations on products, variants, prices, GST rates, stock levels, order statuses, content settings, and password updates are permanently written to `admin_audit_log` with IP addresses and timestamps; viewable via the read-only `/admin/activity-log.php` interface.
+
+
 
 

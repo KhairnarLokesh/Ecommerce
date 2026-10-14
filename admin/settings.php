@@ -35,6 +35,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ];
 
         try {
+            // Fetch current settings to track modifications
+            $currentSettings = $pdo->query("SELECT setting_key, setting_value FROM settings")->fetchAll(PDO::FETCH_KEY_PAIR);
+
             $stmt = $pdo->prepare("
                 INSERT INTO settings (setting_key, setting_value)
                 VALUES (?, ?)
@@ -46,7 +49,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($k === 'prices_include_gst') {
                     $val = isset($_POST['prices_include_gst']) ? '1' : '0';
                 }
+                $oldVal = $currentSettings[$k] ?? null;
                 $stmt->execute([$k, $val]);
+
+                if ($oldVal !== $val) {
+                    admin_audit_log('update', 'settings', $k, $oldVal, $val);
+                    if ($k === 'prices_include_gst') {
+                        admin_audit_log('update', 'gst', 'prices_include_gst', $oldVal, $val);
+                    }
+                }
             }
 
             set_flash('success', 'Business settings and policies updated successfully.');

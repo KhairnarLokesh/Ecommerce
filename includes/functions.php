@@ -4,7 +4,7 @@
  * Escaping, currency formatting, flash messages, redirects, and utilities.
  */
 
-declare(strict_types=1);
+declare(strict_types=1); 
 
 /**
  * Escape output for safe HTML embedding (XSS defense).
@@ -68,6 +68,23 @@ function redirect(string $url, int $statusCode = 302): void
 }
 
 /**
+ * Ensure session is securely started using unified session configuration.
+ */
+function ensure_session_started(): void
+{
+    if (session_status() === PHP_SESSION_NONE) {
+        if (!function_exists('start_secure_session') && file_exists(__DIR__ . '/auth.php')) {
+            require_once __DIR__ . '/auth.php';
+        }
+        if (function_exists('start_secure_session')) {
+            start_secure_session(defined('SESSION_NAME_USER') ? SESSION_NAME_USER : 'kalika_user_sess');
+        } else {
+            session_start();
+        }
+    }
+}
+
+/**
  * Set a session flash message.
  *
  * @param string $type Message type ('success', 'error', 'warning', 'info')
@@ -75,9 +92,7 @@ function redirect(string $url, int $statusCode = 302): void
  */
 function set_flash(string $type, string $message): void
 {
-    if (session_status() === PHP_SESSION_NONE) {
-        session_start();
-    }
+    ensure_session_started();
     $_SESSION['_flash_messages'][] = [
         'type'    => $type,
         'message' => $message,
@@ -91,9 +106,7 @@ function set_flash(string $type, string $message): void
  */
 function get_flash_messages(): array
 {
-    if (session_status() === PHP_SESSION_NONE) {
-        session_start();
-    }
+    ensure_session_started();
     $messages = $_SESSION['_flash_messages'] ?? [];
     unset($_SESSION['_flash_messages']);
     return $messages;
@@ -148,6 +161,21 @@ function public_url(string $path = ''): string
 }
 
 /**
+ * Resolve administrative login URL (configurable path).
+ *
+ * @return string Complete admin login URL
+ */
+function admin_login_url(): string
+{
+    $path = defined('ADMIN_LOGIN_PATH') ? ADMIN_LOGIN_PATH : '/admin/login.php';
+    if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+        return $path;
+    }
+    $base = defined('SITE_URL') ? SITE_URL : '';
+    return rtrim($base, '/') . '/' . ltrim($path, '/');
+}
+
+/**
  * Resolve administrative URL.
  *
  * @param string $path Path relative to admin root
@@ -155,6 +183,9 @@ function public_url(string $path = ''): string
  */
 function admin_url(string $path = ''): string
 {
+    if ($path === 'login.php' || $path === '/login.php') {
+        return admin_login_url();
+    }
     $base = defined('ADMIN_URL') ? ADMIN_URL : '/admin';
     return rtrim($base, '/') . '/' . ltrim($path, '/');
 }
@@ -166,9 +197,7 @@ function admin_url(string $path = ''): string
  */
 function get_cart_count(): int
 {
-    if (session_status() === PHP_SESSION_NONE) {
-        session_start();
-    }
+    ensure_session_started();
 
     // Authenticated user cart count check (if DB is available and user is logged in)
     if (!empty($_SESSION['user_id']) && function_exists('get_db_connection')) {

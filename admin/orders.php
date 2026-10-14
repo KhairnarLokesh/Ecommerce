@@ -6,11 +6,11 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/../../config/config.php';
-require_once __DIR__ . '/../../includes/db.php';
-require_once __DIR__ . '/../../includes/csrf.php';
-require_once __DIR__ . '/../../includes/functions.php';
-require_once __DIR__ . '/../../includes/auth.php';
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../includes/csrf.php';
+require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/auth.php';
 
 require_admin();
 
@@ -29,8 +29,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $newStatus = trim($_POST['status'] ?? '');
 
         if ($orderId > 0 && in_array($newStatus, ['Placed', 'Dispatched', 'Delivered'], true) && $pdo) {
+            $oldStmt = $pdo->prepare("SELECT status FROM orders WHERE id = ?");
+            $oldStmt->execute([$orderId]);
+            $oldStatus = $oldStmt->fetchColumn() ?: 'Unknown';
+
             $stmt = $pdo->prepare("UPDATE orders SET status = ? WHERE id = ?");
             $stmt->execute([$newStatus, $orderId]);
+
+            admin_audit_log('update', 'order_status', (string)$orderId, $oldStatus, $newStatus);
             set_flash('success', "Order #{$orderId} status advanced to '{$newStatus}'.");
         }
     }

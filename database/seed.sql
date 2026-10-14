@@ -141,4 +141,11 @@ INSERT INTO `settings` (`setting_key`, `setting_value`) VALUES
 ('refund_policy_text', 'Returns and refunds are accepted within 2 days of delivery for damaged or expired items subject to inspection. Settlement handled offline.')
 ON DUPLICATE KEY UPDATE `setting_value` = VALUES(`setting_value`);
 
+-- 6. SEED ENTERPRISE OWNER ADMIN USERS (Simple Password: admin123 | must_change_password: 0)
+INSERT INTO `admins` (`id`, `username`, `password_hash`, `must_change_password`, `failed_attempts`, `created_at`) VALUES 
+(1, 'admin', '$2y$10$saxaqCfCcXTwDeinLGRiluNef5rwb05KWWSpVXQEMlhVf5TulwTRG', 0, 0, NOW()),
+(2, 'deepak', '$2y$10$saxaqCfCcXTwDeinLGRiluNef5rwb05KWWSpVXQEMlhVf5TulwTRG', 0, 0, NOW()),
+(3, 'deepakpawar', '$2y$10$saxaqCfCcXTwDeinLGRiluNef5rwb05KWWSpVXQEMlhVf5TulwTRG', 0, 0, NOW())
+ON DUPLICATE KEY UPDATE `password_hash` = VALUES(`password_hash`), `must_change_password` = 0;
+
 SET FOREIGN_KEY_CHECKS = 1;

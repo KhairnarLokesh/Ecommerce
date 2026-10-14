@@ -64,6 +64,7 @@ if (getenv('VERCEL') || !empty($_SERVER['VERCEL']) || (isset($_SERVER['HTTP_HOST
 }
 
 defined('ADMIN_URL') or define('ADMIN_URL', SITE_URL . '/admin');
+defined('ADMIN_LOGIN_PATH') or define('ADMIN_LOGIN_PATH', getenv('ADMIN_LOGIN_PATH') ?: '/admin/login.php');
 
 // App Paths
 defined('ROOT_PATH') or define('ROOT_PATH', dirname(__DIR__));
@@ -87,6 +88,7 @@ defined('DEFAULT_PRICES_INCLUDE_GST') or define('DEFAULT_PRICES_INCLUDE_GST', 1)
 defined('SESSION_NAME_USER') or define('SESSION_NAME_USER', 'kalika_user_sess');
 defined('SESSION_NAME_ADMIN') or define('SESSION_NAME_ADMIN', 'kalika_admin_sess');
 defined('SESSION_LIFETIME') or define('SESSION_LIFETIME', 86400 * 7); // 7 days
+defined('ADMIN_SESSION_IDLE_TIMEOUT') or define('ADMIN_SESSION_IDLE_TIMEOUT', 1800); // 30-minute idle timeout
 
 // Demo OTP Configuration (Disabled by default in production; enabled in dev/test)
 defined('DEMO_OTP_ENABLED') or define('DEMO_OTP_ENABLED', (getenv('DEMO_OTP_ENABLED') !== false ? filter_var(getenv('DEMO_OTP_ENABLED'), FILTER_VALIDATE_BOOLEAN) : (APP_ENV !== 'production')));

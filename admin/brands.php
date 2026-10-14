@@ -35,31 +35,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $slug = strtolower(trim((string)preg_replace('/[^A-Za-z0-9-]+/', '-', $name), '-'));
                 }
 
-                if ($action === 'add') {
-                    // Check duplicate slug
-                    $check = $pdo->prepare("SELECT id FROM brands WHERE slug = ? LIMIT 1");
-                    $check->execute([$slug]);
-                    if ($check->fetch()) {
-                        $slug .= '-' . time();
-                    }
+                try {
+                    if ($action === 'add') {
+                        // Check duplicate slug
+                        $check = $pdo->prepare("SELECT id FROM brands WHERE slug = ? LIMIT 1");
+                        $check->execute([$slug]);
+                        if ($check->fetch()) {
+                            $slug .= '-' . time();
+                        }
 
-                    $stmt = $pdo->prepare("
-                        INSERT INTO brands (name, slug, description, is_active)
-                        VALUES (?, ?, ?, ?)
-                    ");
-                    $stmt->execute([$name, $slug, $description, $isActive]);
-                    set_flash('success', "Brand '{$name}' created successfully.");
-                    redirect(admin_url('brands.php'));
-                } else {
-                    // Edit
-                    $stmt = $pdo->prepare("
-                        UPDATE brands
-                        SET name = ?, slug = ?, description = ?, is_active = ?
-                        WHERE id = ?
-                    ");
-                    $stmt->execute([$name, $slug, $description, $isActive, $brandId]);
-                    set_flash('success', "Brand '{$name}' updated successfully.");
-                    redirect(admin_url('brands.php'));
+                        $stmt = $pdo->prepare("
+                            INSERT INTO brands (name, slug, description, is_active)
+                            VALUES (?, ?, ?, ?)
+                        ");
+                        $stmt->execute([$name, $slug, $description, $isActive]);
+                        set_flash('success', "Brand '{$name}' created successfully.");
+                        redirect(admin_url('brands.php'));
+                    } else {
+                        // Edit
+                        $stmt = $pdo->prepare("
+                            UPDATE brands
+                            SET name = ?, slug = ?, description = ?, is_active = ?
+                            WHERE id = ?
+                        ");
+                        $stmt->execute([$name, $slug, $description, $isActive, $brandId]);
+                        set_flash('success', "Brand '{$name}' updated successfully.");
+                        redirect(admin_url('brands.php'));
+                    }
+                } catch (PDOException $e) {
+                    error_log('Database error in brands.php: ' . $e->getMessage());
+                    $error = 'Database error: ' . $e->getMessage();
                 }
             }
         } elseif ($action === 'toggle') {
@@ -67,12 +72,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $currentStatus = (int)($_POST['current_status'] ?? 0);
             $newStatus = ($currentStatus === 1) ? 0 : 1;
 
-            $stmt = $pdo->prepare("UPDATE brands SET is_active = ? WHERE id = ?");
-            $stmt->execute([$newStatus, $brandId]);
+            try {
+                $stmt = $pdo->prepare("UPDATE brands SET is_active = ? WHERE id = ?");
+                $stmt->execute([$newStatus, $brandId]);
 
-            $label = ($newStatus === 1) ? 'activated' : 'deactivated';
-            set_flash('success', "Brand has been {$label}.");
-            redirect(admin_url('brands.php'));
+                $label = ($newStatus === 1) ? 'activated' : 'deactivated';
+                set_flash('success', "Brand has been {$label}.");
+                redirect(admin_url('brands.php'));
+            } catch (PDOException $e) {
+                error_log('Database error toggling brand: ' . $e->getMessage());
+                $error = 'Database error: ' . $e->getMessage();
+            }
         }
     }
 }

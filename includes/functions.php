@@ -221,16 +221,41 @@ function product_image_url(?string $image): string
     if (empty($image)) {
         return '';
     }
-    // If a Bing/Google images search link was pasted, extract the direct media URL
+
+    $image = trim($image);
+
+    // 1. Pexels webpage URL -> convert to direct Pexels CDN image URL
+    // e.g. https://www.pexels.com/photo/a-person-s-hand-holding-a-bottle-of-whiskey-13722220/
+    if (preg_match('#pexels\.com/photo/(?:.*-)?(\d+)/?#i', $image, $m)) {
+        return "https://images.pexels.com/photos/{$m[1]}/pexels-photo-{$m[1]}.jpeg?auto=compress&cs=tinysrgb&w=800";
+    }
+
+    // 2. Bing Images search wrapper -> extract real mediaurl
     if (preg_match('#[?&]mediaurl=([^&]+)#i', $image, $m)) {
         return urldecode($m[1]);
     }
+
+    // 3. Google Images preview wrapper -> extract real imgurl
     if (preg_match('#[?&]imgurl=([^&]+)#i', $image, $m)) {
         return urldecode($m[1]);
     }
+
+    // 4. Imgur webpage URL -> direct CDN link
+    if (preg_match('#^https?://(?:www\.)?imgur\.com/([a-zA-Z0-9]+)$#i', $image, $m)) {
+        return "https://i.imgur.com/{$m[1]}.jpg";
+    }
+
+    // 5. Unsplash photo page URL -> direct images.unsplash.com CDN
+    if (preg_match('#unsplash\.com/photos/(?:.*-)?([a-zA-Z0-9_-]+)/?$#i', $image, $m) && !str_contains($image, 'images.unsplash.com')) {
+        return "https://images.unsplash.com/photo-{$m[1]}?auto=format&fit=crop&w=800&q=80";
+    }
+
+    // 6. Direct HTTP/HTTPS link
     if (preg_match('#^https?://#i', $image)) {
         return $image;
     }
+
+    // 7. Local upload filename
     return public_url('uploads/products/' . rawurlencode($image));
 }
 

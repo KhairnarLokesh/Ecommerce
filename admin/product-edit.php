@@ -80,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // 1. External Image URL or existing filename input
             $imageUrlInput = trim($_POST['image_url'] ?? '');
             if (!empty($imageUrlInput)) {
-                $imageFilename = $imageUrlInput;
+                $imageFilename = product_image_url($imageUrlInput);
             }
 
             // 2. File Upload handling (if a file was selected)

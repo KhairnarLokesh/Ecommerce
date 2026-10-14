@@ -162,6 +162,10 @@ require_once __DIR__ . '/../includes/header.php';
 
             <!-- Left: Payment Action Box -->
             <div class="dd-card">
+                <div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 16px; margin-bottom: 16px; border-bottom: 1px solid var(--color-border-light); flex-wrap: wrap; gap: 12px;">
+                    <img src="<?= public_url('assets/img/logo.svg') ?>" alt="Kalika Enterprises" style="height: 38px; width: auto; max-width: 220px;">
+                    <span style="font-size: 11px; font-weight: 700; color: #047857; background: #d1fae5; padding: 4px 10px; border-radius: 999px;">OFFICIAL DISTRIBUTOR CHECKOUT</span>
+                </div>
                 <div class="dd-card__header">
                     <div>
                         <h2 class="dd-card__title">Online Payment via Razorpay</h2>
@@ -314,7 +318,7 @@ require_once __DIR__ . '/../includes/header.php';
                 currency: "INR",
                 name: "Kalika Enterprises",
                 description: "Wholesale Order #<?= e($order['order_no']) ?>",
-                image: "<?= public_url('assets/img/logo.svg') ?>",
+                image: "<?= public_url('assets/img/logo.png') ?>",
                 order_id: <?= json_encode($razorpayOrderId) ?>,
                 prefill: {
                     name: <?= json_encode($order['customer_name']) ?>,

@@ -307,8 +307,11 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
 
                 <!-- Payment Method Selection -->
-                <div class="form-group" style="margin-top: 20px;">
-                    <label class="form-label" style="margin-bottom: 10px;">Select Payment Method *</label>
+                <div class="form-group" style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--color-border-light);">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                        <label class="form-label" style="margin-bottom: 0;">Select Payment Method *</label>
+                        <img src="<?= public_url('assets/img/logo.svg') ?>" alt="Kalika Enterprises" style="height: 26px; width: auto;">
+                    </div>
 
                     <div style="display: flex; flex-direction: column; gap: 12px;">
                         <!-- Option 1: Online via Razorpay -->

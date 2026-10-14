@@ -167,8 +167,12 @@ $businessGstin = get_setting('business_gstin', 'Pending Confirmation');
             <div style="font-size: 0.875rem; color: #334155; margin-top: 0.35rem;">
                 <strong>Invoice No:</strong> <?= e($order['order_no']) ?><br>
                 <strong>Date:</strong> <?= date('d M Y', strtotime($order['created_at'])) ?><br>
-                <strong>Payment:</strong> Offline on Delivery<br>
-                <strong>Status:</strong> <?= e($order['status']) ?>
+                <strong>Payment Method:</strong> <?= ($order['payment_method'] ?? 'online') === 'online' ? 'Online (Razorpay)' : 'Cash on Delivery' ?><br>
+                <strong>Payment Status:</strong> <?= strtoupper(e(str_replace('_', ' ', $order['payment_status'] ?? 'pending'))) ?><br>
+                <?php if (!empty($order['razorpay_order_id'])): ?>
+                    <strong>Gateway Order Ref:</strong> <?= e($order['razorpay_order_id']) ?><br>
+                <?php endif; ?>
+                <strong>Fulfillment Status:</strong> <?= e($order['status']) ?>
             </div>
         </div>
     </div>
@@ -270,8 +274,8 @@ $businessGstin = get_setting('business_gstin', 'Pending Confirmation');
                 <p style="font-weight: 700; margin: 0 0 0.35rem; color: #334155;">Terms &amp; Wholesale Conditions:</p>
                 <ol style="margin: 0; padding-left: 1.25rem;">
                     <li>Goods supplied strictly for authorized commercial distribution and retail sale.</li>
-                    <li>Payment settlement is accepted offline upon physical van delivery as agreed with management.</li>
-                    <li>Return / Damage claims must be notified within 2 days of delivery with intact packaging.</li>
+                    <li>Payment settlement: <?= ($order['payment_method'] ?? 'online') === 'online' ? 'Processed online via Razorpay gateway.' : 'Settled upon physical van arrival as agreed.' ?></li>
+                    <li>Return / Damage claims must be notified within 2 days of delivery with intact packaging. Refund is initiated within 2 days of approval, subject to applicable conditions; the time to reach your account depends on your bank/payment method.</li>
                     <li>Free delivery applies for orders meeting the ₹2,000 threshold across Niphad, Dindori, Chandwad, Sinnar, and Yeola.</li>
                 </ol>
             </div>

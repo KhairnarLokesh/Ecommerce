@@ -169,3 +169,20 @@ This file tracks the implementation milestones across all 11 phases of the proje
   - [x] Direct Email OTP integration via SMTP mailer (`includes/mailer.php`)
   - [ ] Low-stock administrative email alerts
   - [ ] Sales & territory reporting
+
+---
+
+### [x] Phase 12 – Razorpay Payment Gateway Integration
+- **Status**: Completed
+- **Deliverables**:
+  - [x] **Inspection & Baseline**: Non-destructive integration points mapped without altering core business rules (₹2,000 minimum order, free delivery, GST inclusive/exclusive logic, WhatsApp exclusion).
+  - [x] **Database Schema**: Additive migrations applied (`database/migrations/001_add_razorpay_payment_tables.sql` & rollback script `001_rollback_razorpay_payment_tables.sql`). Created `payments`, `refunds`, `webhook_events`, and `payment_audit_log` tables. Expanded `orders` schema with `payment_status`, `payment_method`, `razorpay_order_id`, `paid_at`, `expires_at`.
+  - [x] **REST Client & Gateway Engine**: Built `includes/razorpay.php` with cURL & HTTPS stream context fallback, orders API, verification, capture, refund endpoints, and row-locked idempotent status transitions (`order_mark_paid`).
+  - [x] **Stock Reservation & Expiry**: Decrements inventory on pending order checkout; locks for 30 minutes; releases stock back on cancellation or expiration. Built `cron/cleanup_pending_orders.php` and lazy checkout cleanup.
+  - [x] **Customer Payment Modal & Verification**: Built `public/payment.php` (Razorpay Standard modal, countdown timer, retry, manual release) and `public/payment-verify.php` (HMAC verification, server-side amount cross-check, idempotent paid marking).
+  - [x] **Webhook Ingestion**: Built `public/webhooks/razorpay.php` (HMAC validation, event deduplication, handlers for `order.paid`, `payment.captured`, `payment.authorized`, `payment.failed`, `refund.processed`).
+  - [x] **Admin Operations & Fulfillment Guard**: Added payment filters, CSV export columns, and strict guard blocking `Dispatched`/`Delivered` on unpaid online orders. Added "Re-check with Razorpay", "Confirm Cash Collected" for COD, and admin refund processor with stock restocking in `admin/order-detail.php`.
+  - [x] **Policy & UI Consistency**: Updated `public/policies.php`, `public/cart.php`, `public/about.php`, `includes/footer.php`, `public/invoice.php`, and `public/order.php` to reflect online & COD payment options while strictly preserving the WhatsApp ordering exclusion.
+  - [x] **Automated Testing Suite**: Built `tests/razorpay_integration_suite.php` (46 assertions passing 100%). Updated `tests/smoke.php` (100 checks passing 100%). Full regression test pass across all 221 assertions in the repository.
+  - [x] **Documentation**: Created [`docs/PAYMENT_INTEGRATION.md`](file:///e:/Freelance%20Project/docs/PAYMENT_INTEGRATION.md) and synchronized [`docs/DATABASE.md`](file:///e:/Freelance%20Project/docs/DATABASE.md).
+

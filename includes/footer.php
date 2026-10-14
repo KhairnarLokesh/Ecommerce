@@ -68,7 +68,7 @@ declare(strict_types=1);
                 &copy; <?= date('Y') ?> <?= e(get_setting('business_name', 'Kalika Enterprises')) ?>. Food and beverage distribution.
             </div>
             <div>
-                Offline payment on delivery (Cash / Van UPI) &bull; No online payment &bull; No WhatsApp orders
+                Razorpay Online Payment &bull; Cash on Delivery &bull; No WhatsApp orders
             </div>
         </div>
     </div>

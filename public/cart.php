@@ -107,7 +107,7 @@ require_once __DIR__ . '/../includes/header.php';
             Wholesale Cart
         </div>
         <h1 class="txn-hero__title">Your Wholesale Order</h1>
-        <p class="txn-hero__sub">Minimum order <?= format_currency($minOrder) ?> &bull; Free regional delivery &bull; Offline payment on delivery</p>
+        <p class="txn-hero__sub">Minimum order <?= format_currency($minOrder) ?> &bull; Free regional delivery &bull; Razorpay Online or Cash on Delivery</p>
     </div>
 </section>
 
@@ -328,7 +328,7 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
                 <div class="summary-panel__footer">
                     <div class="summary-terms">
-                        <p>&bull; <strong>No Online Payment:</strong> Settle offline on delivery.</p>
+                        <p>&bull; <strong>Flexible Payment:</strong> Settle securely online via Razorpay or Cash on Delivery.</p>
                         <p>&bull; <strong>24-Hr Confirmation:</strong> Dispatch desk verifies quantities.</p>
                         <p>&bull; <strong>Service Areas:</strong> Niphad, Dindori, Chandwad, Sinnar, Yeola.</p>
                     </div>

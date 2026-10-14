@@ -68,10 +68,14 @@ if ($pdo instanceof PDO) {
         'order_items',
         'orders',
         'password_otps',
+        'payment_audit_log',
+        'payments',
         'product_variants',
         'products',
+        'refunds',
         'settings',
-        'users'
+        'users',
+        'webhook_events'
     ];
 
     $existingTables = [];
@@ -187,6 +191,11 @@ $criticalFiles = [
     $root . '/public/policies.php',
     $root . '/public/cart.php',
     $root . '/public/checkout.php',
+    $root . '/public/payment.php',
+    $root . '/public/payment-verify.php',
+    $root . '/public/webhooks/razorpay.php',
+    $root . '/cron/cleanup_pending_orders.php',
+    $root . '/includes/razorpay.php',
     $root . '/public/login.php',
     $root . '/public/logout.php',
     $root . '/logout.php',

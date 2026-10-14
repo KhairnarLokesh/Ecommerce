@@ -81,6 +81,11 @@ if ($path === '' || $path === 'index.php') {
             $targetFile .= '.php';
         }
     }
+} elseif (str_starts_with($path, 'cron/')) {
+    $targetFile = $rootDir . '/' . $path;
+    if (!str_ends_with($targetFile, '.php') && is_file($targetFile . '.php')) {
+        $targetFile .= '.php';
+    }
 } else {
     // Map top-level paths (e.g. /products.php, /cart.php) to public/
     $targetFile = $rootDir . '/public/' . $path;

@@ -15,6 +15,8 @@ require_once __DIR__ . '/../includes/auth.php';
 require_admin();
 
 $statusFilter = trim($_GET['status'] ?? '');
+$paymentStatusFilter = trim($_GET['payment_status'] ?? '');
+$paymentMethodFilter = trim($_GET['payment_method'] ?? '');
 $searchQuery = trim($_GET['q'] ?? '');
 $dateFrom = trim($_GET['date_from'] ?? '');
 $dateTo = trim($_GET['date_to'] ?? '');
@@ -28,16 +30,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $orderId = (int)($_POST['order_id'] ?? 0);
         $newStatus = trim($_POST['status'] ?? '');
 
-        if ($orderId > 0 && in_array($newStatus, ['Placed', 'Dispatched', 'Delivered'], true) && $pdo) {
-            $oldStmt = $pdo->prepare("SELECT status FROM orders WHERE id = ?");
-            $oldStmt->execute([$orderId]);
-            $oldStatus = $oldStmt->fetchColumn() ?: 'Unknown';
+        if ($orderId > 0 && in_array($newStatus, ['Awaiting Payment', 'Placed', 'Dispatched', 'Delivered', 'Cancelled'], true) && $pdo) {
+            $ordStmt = $pdo->prepare("SELECT status, payment_method, payment_status FROM orders WHERE id = ?");
+            $ordStmt->execute([$orderId]);
+            $ordData = $ordStmt->fetch();
 
-            $stmt = $pdo->prepare("UPDATE orders SET status = ? WHERE id = ?");
-            $stmt->execute([$newStatus, $orderId]);
+            if ($ordData) {
+                $oldStatus = $ordData['status'];
 
-            admin_audit_log('update', 'order_status', (string)$orderId, $oldStatus, $newStatus);
-            set_flash('success', "Order #{$orderId} status advanced to '{$newStatus}'.");
+                // Strict Rule: Do not allow Dispatched or Delivered on an unpaid online order
+                if (in_array($newStatus, ['Dispatched', 'Delivered'], true) && $ordData['payment_method'] === 'online' && $ordData['payment_status'] !== 'paid') {
+                    set_flash('error', "Cannot dispatch order #{$orderId}: Online payment is currently unpaid ('{$ordData['payment_status']}').");
+                } else {
+                    $stmt = $pdo->prepare("UPDATE orders SET status = ? WHERE id = ?");
+                    $stmt->execute([$newStatus, $orderId]);
+
+                    admin_audit_log('update', 'order_status', (string)$orderId, $oldStatus, $newStatus);
+                    set_flash('success', "Order #{$orderId} status updated to '{$newStatus}'.");
+                }
+            }
         }
     }
     redirect(admin_url('orders.php' . (!empty($_SERVER['QUERY_STRING']) ? '?' . $_SERVER['QUERY_STRING'] : '')));
@@ -47,9 +58,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $whereClauses = [];
 $params = [];
 
-if (!empty($statusFilter) && in_array($statusFilter, ['Placed', 'Dispatched', 'Delivered'], true)) {
+if (!empty($statusFilter) && in_array($statusFilter, ['Awaiting Payment', 'Placed', 'Dispatched', 'Delivered', 'Cancelled'], true)) {
     $whereClauses[] = "o.status = ?";
     $params[] = $statusFilter;
+}
+
+if (!empty($paymentStatusFilter) && in_array($paymentStatusFilter, ['pending', 'paid', 'failed', 'refund_pending', 'partially_refunded', 'refunded'], true)) {
+    $whereClauses[] = "o.payment_status = ?";
+    $params[] = $paymentStatusFilter;
+}
+
+if (!empty($paymentMethodFilter) && in_array($paymentMethodFilter, ['online', 'cod'], true)) {
+    $whereClauses[] = "o.payment_method = ?";
+    $params[] = $paymentMethodFilter;
 }
 
 if (!empty($searchQuery)) {
@@ -114,6 +135,10 @@ if ($isExport) {
         'GST Total (INR)',
         'Delivery Charge (INR)',
         'Grand Total (INR)',
+        'Payment Method',
+        'Payment Status',
+        'Razorpay Order ID',
+        'Paid At',
         'Status',
         'Date Placed'
     ]);
@@ -128,6 +153,10 @@ if ($isExport) {
             $ord['gst_total'],
             $ord['delivery_charge'],
             $ord['grand_total'],
+            $ord['payment_method'] ?? 'online',
+            $ord['payment_status'] ?? 'pending',
+            $ord['razorpay_order_id'] ?? '',
+            $ord['paid_at'] ? date('Y-m-d H:i:s', strtotime($ord['paid_at'])) : '',
             $ord['status'],
             date('Y-m-d H:i:s', strtotime($ord['created_at']))
         ]);
@@ -148,7 +177,7 @@ require_once __DIR__ . '/includes/header.php';
         <div>
             <h1 style="font-size: 1.75rem; margin-bottom: 0.25rem;">Wholesale Orders Pipeline</h1>
             <p style="font-size: 0.9375rem; color: var(--text-muted); margin-bottom: 0;">
-                Dispatch management, order status tracking, and offline collection records.
+                Dispatch management, order status tracking, online gateway settlements, and cash collections.
             </p>
         </div>
         <div>
@@ -174,38 +203,63 @@ require_once __DIR__ . '/includes/header.php';
     <form action="<?= admin_url('orders.php') ?>" method="GET" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
         <!-- Status Filter -->
         <div style="flex: 1; min-width: 140px;">
-            <label class="form-label" style="font-size: 0.75rem; margin-bottom: 0.25rem;">Status:</label>
+            <label class="form-label" style="font-size: 0.75rem; margin-bottom: 0.25rem;">Fulfillment Status:</label>
             <select name="status" class="form-control" style="font-size: 0.875rem;" onchange="this.form.submit()">
-                <option value="">All Statuses</option>
-                <option value="Placed" <?= $statusFilter === 'Placed' ? 'selected' : '' ?>>Placed (New)</option>
-                <option value="Dispatched" <?= $statusFilter === 'Dispatched' ? 'selected' : '' ?>>Dispatched (On Van)</option>
+                <option value="">All Fulfillment Statuses</option>
+                <option value="Awaiting Payment" <?= $statusFilter === 'Awaiting Payment' ? 'selected' : '' ?>>Awaiting Payment (Pending Gateway)</option>
+                <option value="Placed" <?= $statusFilter === 'Placed' ? 'selected' : '' ?>>Placed (Desk Verification)</option>
+                <option value="Dispatched" <?= $statusFilter === 'Dispatched' ? 'selected' : '' ?>>Dispatched (On Route Van)</option>
                 <option value="Delivered" <?= $statusFilter === 'Delivered' ? 'selected' : '' ?>>Delivered (Complete)</option>
+                <option value="Cancelled" <?= $statusFilter === 'Cancelled' ? 'selected' : '' ?>>Cancelled</option>
+            </select>
+        </div>
+
+        <!-- Payment Status Filter -->
+        <div style="flex: 1; min-width: 140px;">
+            <label class="form-label" style="font-size: 0.75rem; margin-bottom: 0.25rem;">Payment Status:</label>
+            <select name="payment_status" class="form-control" style="font-size: 0.875rem;" onchange="this.form.submit()">
+                <option value="">All Payment Statuses</option>
+                <option value="pending" <?= $paymentStatusFilter === 'pending' ? 'selected' : '' ?>>Pending</option>
+                <option value="paid" <?= $paymentStatusFilter === 'paid' ? 'selected' : '' ?>>Paid (Verified)</option>
+                <option value="failed" <?= $paymentStatusFilter === 'failed' ? 'selected' : '' ?>>Failed</option>
+                <option value="partially_refunded" <?= $paymentStatusFilter === 'partially_refunded' ? 'selected' : '' ?>>Partially Refunded</option>
+                <option value="refunded" <?= $paymentStatusFilter === 'refunded' ? 'selected' : '' ?>>Refunded</option>
+            </select>
+        </div>
+
+        <!-- Payment Method Filter -->
+        <div style="flex: 1; min-width: 120px;">
+            <label class="form-label" style="font-size: 0.75rem; margin-bottom: 0.25rem;">Payment Method:</label>
+            <select name="payment_method" class="form-control" style="font-size: 0.875rem;" onchange="this.form.submit()">
+                <option value="">All Methods</option>
+                <option value="online" <?= $paymentMethodFilter === 'online' ? 'selected' : '' ?>>Online (Razorpay)</option>
+                <option value="cod" <?= $paymentMethodFilter === 'cod' ? 'selected' : '' ?>>Cash on Delivery</option>
             </select>
         </div>
 
         <!-- Date Range: From -->
-        <div style="flex: 1; min-width: 140px;">
+        <div style="flex: 1; min-width: 130px;">
             <label class="form-label" style="font-size: 0.75rem; margin-bottom: 0.25rem;">From Date:</label>
             <input type="date" name="date_from" class="form-control" value="<?= e($dateFrom) ?>" style="font-size: 0.875rem;">
         </div>
 
         <!-- Date Range: To -->
-        <div style="flex: 1; min-width: 140px;">
+        <div style="flex: 1; min-width: 130px;">
             <label class="form-label" style="font-size: 0.75rem; margin-bottom: 0.25rem;">To Date:</label>
             <input type="date" name="date_to" class="form-control" value="<?= e($dateTo) ?>" style="font-size: 0.875rem;">
         </div>
 
         <!-- Search Input -->
-        <div style="flex: 2; min-width: 220px;">
-            <label class="form-label" style="font-size: 0.75rem; margin-bottom: 0.25rem;">Search Order / Retailer:</label>
-            <input type="text" name="q" class="form-control" placeholder="Order No, Mobile, Shop name..." value="<?= e($searchQuery) ?>" style="font-size: 0.875rem;">
+        <div style="flex: 2; min-width: 200px;">
+            <label class="form-label" style="font-size: 0.75rem; margin-bottom: 0.25rem;">Search Order / Retailer / RZP ID:</label>
+            <input type="text" name="q" class="form-control" placeholder="Order No, Mobile, Shop, rzp_order..." value="<?= e($searchQuery) ?>" style="font-size: 0.875rem;">
         </div>
 
         <div>
             <button type="submit" class="btn btn-primary btn-sm" style="padding: 0.65rem 1.25rem;">
                 Filter
             </button>
-            <?php if (!empty($statusFilter) || !empty($searchQuery) || !empty($dateFrom) || !empty($dateTo)): ?>
+            <?php if (!empty($statusFilter) || !empty($paymentStatusFilter) || !empty($paymentMethodFilter) || !empty($searchQuery) || !empty($dateFrom) || !empty($dateTo)): ?>
                 <a href="<?= admin_url('orders.php') ?>" class="btn btn-outline btn-sm" style="margin-left: 0.35rem;">
                     Reset
                 </a>
@@ -231,14 +285,15 @@ require_once __DIR__ . '/includes/header.php';
                     <th style="padding: 0.75rem 0.5rem;">Customer &amp; Town</th>
                     <th style="padding: 0.75rem 0.5rem; text-align: center;">Items / Qty</th>
                     <th style="padding: 0.75rem 0.5rem; text-align: right;">Grand Total</th>
-                    <th style="padding: 0.75rem 0.5rem; text-align: center;">Status</th>
+                    <th style="padding: 0.75rem 0.5rem; text-align: center;">Payment</th>
+                    <th style="padding: 0.75rem 0.5rem; text-align: center;">Fulfillment</th>
                     <th style="padding: 0.75rem 0.5rem; text-align: right;">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (empty($orders)): ?>
                     <tr>
-                        <td colspan="7" style="padding: 3.5rem 1rem; text-align: center; color: var(--text-muted);">
+                        <td colspan="8" style="padding: 3.5rem 1rem; text-align: center; color: var(--text-muted);">
                             No orders found matching the filter parameters.
                         </td>
                     </tr>
@@ -247,10 +302,23 @@ require_once __DIR__ . '/includes/header.php';
                         <?php
                         $st = $ord['status'];
                         $badge = match ($st) {
-                            'Delivered'  => 'badge-success',
-                            'Dispatched' => 'badge-info',
-                            default      => 'badge-warning',
+                            'Delivered'        => 'badge-success',
+                            'Dispatched'       => 'badge-info',
+                            'Cancelled'        => 'badge-danger',
+                            'Awaiting Payment' => 'badge-warning',
+                            default            => 'badge-warning',
                         };
+
+                        $payStatus = $ord['payment_status'] ?? 'pending';
+                        $payBadgeStyle = match ($payStatus) {
+                            'paid'               => 'background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0;',
+                            'partially_refunded' => 'background: #fef3c7; color: #b45309; border: 1px solid #fde68a;',
+                            'refunded'           => 'background: #f3e8ff; color: #7e22ce; border: 1px solid #e9d5ff;',
+                            'failed'             => 'background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca;',
+                            default              => 'background: #fef9c3; color: #854d0e; border: 1px solid #fde047;',
+                        };
+
+                        $isOnline = ($ord['payment_method'] ?? 'online') === 'online';
                         ?>
                         <tr style="border-bottom: 1px solid var(--border-light); font-size: 0.9375rem;">
                             <!-- Order Number -->
@@ -258,6 +326,11 @@ require_once __DIR__ . '/includes/header.php';
                                 <a href="<?= admin_url('order-detail.php?id=' . (int)$ord['id']) ?>" style="color: inherit; text-decoration: underline;">
                                     <?= e($ord['order_no']) ?>
                                 </a>
+                                <?php if (!empty($ord['razorpay_order_id'])): ?>
+                                    <div style="font-size: 11px; font-weight: 500; color: var(--text-muted); font-family: monospace;">
+                                        <?= e($ord['razorpay_order_id']) ?>
+                                    </div>
+                                <?php endif; ?>
                             </td>
 
                             <!-- Date Placed -->
@@ -281,7 +354,17 @@ require_once __DIR__ . '/includes/header.php';
                                 <?= format_currency($ord['grand_total']) ?>
                             </td>
 
-                            <!-- Status Badge & Quick Advance -->
+                            <!-- Payment Method & Status -->
+                            <td style="padding: 0.875rem 0.5rem; text-align: center;">
+                                <div style="font-size: 11.5px; font-weight: 600; color: var(--color-primary); margin-bottom: 3px;">
+                                    <?= $isOnline ? '💳 Online' : '💵 COD' ?>
+                                </div>
+                                <span style="font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; text-transform: uppercase; <?= $payBadgeStyle ?>">
+                                    <?= e(str_replace('_', ' ', $payStatus)) ?>
+                                </span>
+                            </td>
+
+                            <!-- Status Badge -->
                             <td style="padding: 0.875rem 0.5rem; text-align: center;">
                                 <span class="badge <?= $badge ?>">
                                     <?= e($st) ?>

@@ -103,3 +103,9 @@ defined('SMTP_PASS') or define('SMTP_PASS', getenv('SMTP_PASS') ?: 'yirh bcuy vm
 defined('SMTP_FROM_EMAIL') or define('SMTP_FROM_EMAIL', getenv('SMTP_FROM_EMAIL') ?: 'lkhairnar580@gmail.com');
 defined('SMTP_FROM_NAME') or define('SMTP_FROM_NAME', getenv('SMTP_FROM_NAME') ?: 'Kalika Enterprises');
 
+// Razorpay Payment Gateway Configuration
+defined('RAZORPAY_MODE') or define('RAZORPAY_MODE', getenv('RAZORPAY_MODE') ?: 'test');
+defined('RAZORPAY_KEY_ID') or define('RAZORPAY_KEY_ID', getenv('RAZORPAY_KEY_ID') ?: '');
+defined('RAZORPAY_KEY_SECRET') or define('RAZORPAY_KEY_SECRET', getenv('RAZORPAY_KEY_SECRET') ?: '');
+defined('RAZORPAY_WEBHOOK_SECRET') or define('RAZORPAY_WEBHOOK_SECRET', getenv('RAZORPAY_WEBHOOK_SECRET') ?: '');
+

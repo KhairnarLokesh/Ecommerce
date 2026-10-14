@@ -312,9 +312,15 @@ if ($pdo) {
 
                             <!-- Public Visibility Toggle -->
                             <td style="padding: 0.75rem 0.5rem; text-align: center;">
-                                <span class="badge <?= $isActive ? 'badge-stock-in' : 'badge-stock-out' ?>">
-                                    <?= $isActive ? 'Live' : 'Hidden' ?>
-                                </span>
+                                <?php if ($isActive && (int)$p['variant_count'] === 0): ?>
+                                    <span class="badge" style="background: #fef3c7; color: #b45309; font-size: 0.7rem; font-weight: 700;" title="Marked active, but customers cannot see or order it until at least one pack size variant is added.">
+                                        Needs Variant
+                                    </span>
+                                <?php else: ?>
+                                    <span class="badge <?= $isActive ? 'badge-stock-in' : 'badge-stock-out' ?>">
+                                        <?= $isActive ? 'Live' : 'Hidden' ?>
+                                    </span>
+                                <?php endif; ?>
                             </td>
 
                             <!-- Actions -->

@@ -221,6 +221,13 @@ function product_image_url(?string $image): string
     if (empty($image)) {
         return '';
     }
+    // If a Bing/Google images search link was pasted, extract the direct media URL
+    if (preg_match('#[?&]mediaurl=([^&]+)#i', $image, $m)) {
+        return urldecode($m[1]);
+    }
+    if (preg_match('#[?&]imgurl=([^&]+)#i', $image, $m)) {
+        return urldecode($m[1]);
+    }
     if (preg_match('#^https?://#i', $image)) {
         return $image;
     }

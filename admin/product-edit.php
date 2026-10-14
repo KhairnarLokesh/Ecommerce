@@ -207,8 +207,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             admin_audit_log('create', 'gst', (string)$newId, null, $gstPercent);
                         }
 
-                        set_flash('success', "Product '{$name}' created! Now add at least one size variant below.");
-                        redirect(admin_url("product-edit.php?id={$newId}"));
+                        // Optional: Create initial variant immediately if specified
+                        $initSize = trim($_POST['initial_size_label'] ?? '');
+                        $initPrice = (float)($_POST['initial_price'] ?? 0);
+                        $initStock = (int)($_POST['initial_stock_qty'] ?? 100);
+
+                        if (!empty($initSize) && $initPrice > 0) {
+                            $vStmt = $pdo->prepare("
+                                INSERT INTO product_variants (product_id, size_label, price, stock_qty, stock_status, is_active)
+                                VALUES (?, ?, ?, ?, 'in_stock', 1)
+                            ");
+                            $vStmt->execute([$newId, $initSize, $initPrice, $initStock]);
+                            set_flash('success', "Product '{$name}' and variant '{$initSize}' created! Product is now LIVE for customers.");
+                        } else {
+                            set_flash('success', "Product '{$name}' created! Now add at least one pack size variant below to make it visible to customers.");
+                        }
+
+                        redirect(admin_url("product-edit.php?id={$newId}#variantsSection"));
                     }
                 } catch (PDOException $e) {
                     error_log('Database error in product-edit: ' . $e->getMessage());
@@ -466,6 +481,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <label class="form-label" for="prod_desc">Wholesale Packaging &amp; Description</label>
             <textarea id="prod_desc" name="description" class="form-control" rows="3" placeholder="Case packing details, bottle specifications, authorized distribution notes..."><?= e($product['description'] ?? $_POST['description'] ?? '') ?></textarea>
         </div>
+
+        <?php if (!$isEditing): ?>
+            <!-- Initial Size Variant for 1-Step Publishing -->
+            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: var(--radius-sm); padding: 1.25rem; margin-bottom: 1.5rem;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 0.5rem;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#166534" stroke-width="2.2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                    <strong style="color: #166534; font-size: 0.9375rem;">Initial Pack Size &amp; Pricing (Publish Live in 1 Step)</strong>
+                </div>
+                <p style="font-size: 0.8125rem; color: #166534; margin-bottom: 1rem; line-height: 1.4;">
+                    Customers require at least one pack size and price to see and purchase this product on the storefront.
+                </p>
+                <div class="grid grid-cols-3" style="gap: 1rem;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label" for="init_size" style="font-size: 0.8125rem; color: #166534;">Pack / Bottle Size</label>
+                        <input type="text" id="init_size" name="initial_size_label" class="form-control" placeholder="e.g. 500ml Bottle, 1 Box, 200g">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label" for="init_price" style="font-size: 0.8125rem; color: #166534;">Unit Rate (₹)</label>
+                        <input type="number" step="0.01" min="0" id="init_price" name="initial_price" class="form-control" placeholder="e.g. 20.00">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label" for="init_stock" style="font-size: 0.8125rem; color: #166534;">Initial Stock Qty</label>
+                        <input type="number" min="0" id="init_stock" name="initial_stock_qty" class="form-control" value="100">
+                    </div>
+                </div>
+            </div>
+        <?php endif; ?>
 
         <!-- Active Toggle -->
         <div class="form-group" style="background: #f8fafc; padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-light); margin-bottom: 1.5rem;">
